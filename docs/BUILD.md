@@ -24,6 +24,12 @@ boot/build-initramfs.sh
 - Итог: `build/initramfs.img` (~30 МБ).
 
 ## 3. Boot-бандл (Android boot-image v4)
+Два режима:
+- **ztsubaki** (рабочий для uke): только `boot`+`init_boot`; стоковые
+  `vendor_boot`/`dtbo`/`vbmeta` не трогаем. `boot/build-bundle-ztsubaki.sh`.
+- **gts9wifi** (не подошёл Xiaomi ABL): все пять + невалидный `dtbo`.
+  `boot/build-bundle.sh`.
+
 ```sh
 boot/build-bundle.sh --image <Image> --dtb <uke.dtb> --initramfs <initramfs.img> \
     --cmdline boot/cmdline.txt --bootconfig boot/bootconfig.txt --out build/fedora-boot

@@ -20,7 +20,8 @@
 ```sh
 kernel/build.sh                 # vmlinuz.efi + DTB + модули (KVER 7.2.0-rc2-uke)
 boot/build-initramfs.sh         # dracut в arm64-контейнере
-boot/build-bundle.sh --vmlinuz build/uke-build/arch/arm64/boot/vmlinuz.efi \
+# ВАЖНО: на uke работает только ztsubaki-схема (boot+init_boot),
+boot/build-bundle-ztsubaki.sh --vmlinuz build/uke-build/arch/arm64/boot/vmlinuz.efi \
     --dtb build/uke-build/arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dtb \
     --initramfs build/initramfs.img \
     --cmdline boot/cmdline.txt --bootconfig boot/bootconfig.txt --out build/fedora-boot

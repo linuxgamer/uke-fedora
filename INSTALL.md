@@ -27,10 +27,21 @@ boot/build-bundle.sh \
 sudo DNF_FORCEARCH=aarch64 DNF_REPOSDIR="$PWD/rootfs/fedora-repos" ./rootfs/build-rootfs.sh
 ```
 
-## 3. Прошивка
-- **fastboot**: `boot`, `init_boot`, `vendor_boot`, `dtbo`, `vbmeta` (A/B: слот `a`).
-- **TWRP**: zip-инсталлер (позже).
-- `userdata`: ext4 с UUID из `boot/cmdline.txt`, распаковка rootfs.
+## 3. Прошивка (ztsubaki-схема)
+Меняем **только** `boot` + `init_boot`; стоковые `vendor_boot`/`dtbo`/`vbmeta`
+**не трогаем** (Xiaomi ABL их не принимает — см. Known-Issues #9).
+```sh
+boot/build-initramfs-minimal.sh
+boot/build-bundle-ztsubaki.sh \
+    --vmlinuz build/uke-build/arch/arm64/boot/vmlinuz.efi \
+    --dtb build/uke-build/arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dtb \
+    --init-boot build/initramfs-minimal.lz4 \
+    --cmdline boot/cmdline.txt --out build/fedora-boot-z
+# fastboot (активный слот a):
+fastboot flash boot_a      build/fedora-boot-z/boot.img
+fastboot flash init_boot_a build/fedora-boot-z/init_boot.img
+```
+- `userdata`: ext4 с меткой `uke_root` (initramfs находит по ней, fallback).
 
 ## 4. Первая загрузка
 - Консоль `ttyMSM0`, USB-net `172.16.42.1` (SSH).

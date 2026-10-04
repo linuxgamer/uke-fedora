@@ -15,6 +15,8 @@ echo "KVER: ${KVER}"
 docker run --rm --network host -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" -v "${ROOT}:/work" -w /work quay.io/fedora/fedora:44 \
     bash -lc "
 set -euxo pipefail
+rm -f /etc/yum.repos.d/*.repo
+cp /work/rootfs/fedora-repos/*.repo /etc/yum.repos.d/
 dnf -y install dracut cpio lz4 kmod iproute >/dev/null
 # модули ядра
 mkdir -p /usr/lib/modules

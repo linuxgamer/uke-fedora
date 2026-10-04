@@ -12,7 +12,7 @@
 | 6 | Wi-Fi WCN6750: firmware в формате WPSS (`NON-HLOS.bin`), нужна упаковка под ath11k | open |
 | 7 | Аудио (WCD939x/WSA/FS19xx) не настроено | open |
 | 8 | Датчики/зарядка не портированы | open |
-| 9 | ABL uke может не принять наш `vendor_boot`/`dtbo` (в отличие от Samsung) | open |
+| 9 | **Подтверждено:** Xiaomi ABL не принимает gts9wifi-схему (свой vendor_boot/dtbo/vbmeta) → fastboot. Решение: ztsubaki (boot+init_boot) | fixed-by-design |
 | 10 | Fedora rootfs ещё не грузился на железе | open |
 
 ## Fixed
