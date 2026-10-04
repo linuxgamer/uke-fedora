@@ -5,8 +5,8 @@ Snapdragon 7+ Gen 3) с **mainline-ядром**. Загрузка — через
 boot-цепочку (ABL), без второго загрузчика и без UEFI. Сборка — `pmbootstrap` +
 device-пакеты Nura.
 
-Статус: **ядро и драйверы собираются; устройство получено (разблокирован bootloader)**.
-Дальше — `pmbootstrap` и первая загрузка.
+Статус: **ядро, initramfs и boot-бандл собираются**; rootfs Fedora — следующий шаг;
+прошивка — вручную (fastboot/TWRP).
 
 ## Документы
 
@@ -20,6 +20,10 @@ device-пакеты Nura.
 | [`docs/STOCK-SUPER.md`](docs/STOCK-SUPER.md) | `super.img`: модули, fstab, firmware-раскладка |
 | [`docs/PANEL-TOUCH.md`](docs/PANEL-TOUCH.md) | панель O82 и тач NT36532 |
 | [`docs/FEDORA-PIVOT.md`](docs/FEDORA-PIVOT.md) | обоснование и план перехода на Fedora |
+| [`docs/BUILD.md`](docs/BUILD.md) | пайплайн сборки (kernel → initramfs → bundle → rootfs) |
+| [`docs/Known-Issues.md`](docs/Known-Issues.md) | реестр проблем |
+| [`docs/Hardware-Notes.md`](docs/Hardware-Notes.md) | заметки по подсистемам |
+| [`docs/PORT-KIT.md`](docs/PORT-KIT.md) | инвентарь извлечения из стока |
 | [`INSTALL.md`](INSTALL.md) | установка (Fedora, TWRP/fastboot) |
 | [`TODO.md`](TODO.md) | задачи |
 

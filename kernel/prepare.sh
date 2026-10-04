@@ -23,12 +23,14 @@ if [[ ! -d "${BASE}/.git" ]]; then
 fi
 
 echo "== worktree =="
+BASE_HEAD="$(git -C "${BASE}" rev-parse HEAD)"
 if [[ -e "${TREE}/.git" ]]; then
-	git -C "${TREE}" reset --hard HEAD
+	git -C "${TREE}" reset --hard "${BASE_HEAD}"
 	git -C "${TREE}" clean -fd
+	rm -f "${TREE}/localversion-uke"
 else
 	[[ -e "${TREE}" ]] && rm -rf "${TREE}"
-	git -C "${BASE}" worktree add --detach "${TREE}" HEAD
+	git -C "${BASE}" worktree add --detach "${TREE}" "${BASE_HEAD}"
 fi
 
 echo "== патчи =="
@@ -40,7 +42,7 @@ done <"${ROOT}/kernel/patches/series"
 
 echo "== board-DTS =="
 cp "${FILES}/${DTS_NAME}.dts" "${QCOM}/"
-grep -q "${DTS_NAME}.dtb" "${QCOM}/Makefile" || \
+grep -q "${DTS_NAME}.dtb" "${QCOM}/Makefile" ||
 	printf 'dtb-$(CONFIG_ARCH_QCOM)\t+= %s.dtb\n' "${DTS_NAME}" >>"${QCOM}/Makefile"
 python3 - "${TREE}/Documentation/devicetree/bindings/arm/qcom.yaml" <<'PY'
 import sys
@@ -57,7 +59,7 @@ PY
 echo "== драйвер панели =="
 PANEL="${TREE}/drivers/gpu/drm/panel"
 cp "${FILES}/panel-xiaomi-o82.c" "${PANEL}/"
-grep -q "DRM_PANEL_XIAOMI_O82" "${PANEL}/Makefile" || \
+grep -q "DRM_PANEL_XIAOMI_O82" "${PANEL}/Makefile" ||
 	printf 'obj-$(CONFIG_DRM_PANEL_XIAOMI_O82)\t+= panel-xiaomi-o82.o\n' >>"${PANEL}/Makefile"
 grep -q "config DRM_PANEL_XIAOMI_O82" "${PANEL}/Kconfig" || cat >>"${PANEL}/Kconfig" <<'K'
 config DRM_PANEL_XIAOMI_O82
@@ -71,7 +73,7 @@ cp "${FILES}/xiaomi,o82.yaml" "${TREE}/Documentation/devicetree/bindings/display
 echo "== драйвер тача =="
 TS="${TREE}/drivers/input/touchscreen"
 cp "${FILES}/nt36532-uke.c" "${TS}/"
-grep -q "TOUCHSCREEN_NT36532_UKE" "${TS}/Makefile" || \
+grep -q "TOUCHSCREEN_NT36532_UKE" "${TS}/Makefile" ||
 	printf 'obj-$(CONFIG_TOUCHSCREEN_NT36532_UKE)\t+= nt36532-uke.o\n' >>"${TS}/Makefile"
 grep -q "config TOUCHSCREEN_NT36532_UKE" "${TS}/Kconfig" || cat >>"${TS}/Kconfig" <<'K'
 config TOUCHSCREEN_NT36532_UKE
@@ -79,5 +81,10 @@ config TOUCHSCREEN_NT36532_UKE
 	depends on SPI
 	depends on OF
 K
+
+# Коммитим подготовленное дерево: иначе setlocalversion добавит "+" к KVER.
+git -C "${TREE}" add -A
+git -C "${TREE}" -c user.email=uke@local -c user.name=uke \
+	commit -q -m "uke: prepared kernel tree" 2>/dev/null || true
 
 echo "Готово: ${TREE}"
