@@ -38,14 +38,14 @@ boot/build-bundle.sh --image <Image> --dtb <uke.dtb> --initramfs <initramfs.img>
 Два режима:
 ```sh
 # A) host-native (быстро): dnf x86_64, scriptlets через qemu/binfmt
-sudo DNF_FORCEARCH=aarch64 DNF_REPOSDIR="$PWD/build/fedora-repos" ./rootfs/build-rootfs.sh
+sudo DNF_FORCEARCH=aarch64 DNF_REPOSDIR="$PWD/rootfs/fedora-repos" ./rootfs/build-rootfs.sh
 
 # B) в arm64 Fedora-контейнере (нативно, но требует контейнер)
 docker run --rm --network host -v "$PWD:/work" -w /work \
     quay.io/fedora/fedora:44 ./rootfs/build-rootfs.sh
 ```
 - Fedora 44 `@core`, overlay, модули, firmware. Итог: `build/fedora/uke-fedora-rootfs.tar.gz` (~460 МБ).
-- Host-режим: `build/fedora-repos/` (repo-файлы Яндекс-зеркала + GPG).
+- Host-режим: `rootfs/fedora-repos/` (repo-файлы Яндекс-зеркала + GPG).
 
 ## Требования к хосту
 `docker` + `qemu-user-static-binfmt` (arm64-эмуляция), `bc`, `clang`, `llvm`,

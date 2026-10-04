@@ -24,7 +24,7 @@ boot/build-bundle.sh --vmlinuz build/uke-build/arch/arm64/boot/vmlinuz.efi \
     --dtb build/uke-build/arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dtb \
     --initramfs build/initramfs.img \
     --cmdline boot/cmdline.txt --bootconfig boot/bootconfig.txt --out build/fedora-boot
-sudo DNF_FORCEARCH=aarch64 DNF_REPOSDIR="$PWD/build/fedora-repos" ./rootfs/build-rootfs.sh
+sudo DNF_FORCEARCH=aarch64 DNF_REPOSDIR="$PWD/rootfs/fedora-repos" ./rootfs/build-rootfs.sh
 ```
 
 ## Правила

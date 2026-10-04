@@ -24,7 +24,7 @@ boot/build-bundle.sh \
 
 ## 2. Rootfs
 ```sh
-sudo DNF_FORCEARCH=aarch64 DNF_REPOSDIR="$PWD/build/fedora-repos" ./rootfs/build-rootfs.sh
+sudo DNF_FORCEARCH=aarch64 DNF_REPOSDIR="$PWD/rootfs/fedora-repos" ./rootfs/build-rootfs.sh
 ```
 
 ## 3. Прошивка
