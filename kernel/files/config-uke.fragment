@@ -62,3 +62,6 @@ CONFIG_TOUCHSCREEN_NT36532_UKE=m
 
 # --- Стабильный KVER (7.2.0-rc2-uke) ---
 # CONFIG_LOCALVERSION_AUTO is not set
+
+# --- EFI zboot (Fedora-нативный vmlinuz.efi) ---
+CONFIG_EFI_ZBOOT=y

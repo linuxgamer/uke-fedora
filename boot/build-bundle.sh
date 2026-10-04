@@ -22,7 +22,7 @@ vbmeta_size=131072        # 128 КиБ
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --image) image_in="$2"; shift 2 ;;
+        --vmlinuz) vmlinuz="$2"; shift 2 ;;
         --dtb) dtb="$2"; shift 2 ;;
         --initramfs) initramfs="$2"; shift 2 ;;
         --cmdline) cmdline_file="$2"; shift 2 ;;
@@ -32,7 +32,7 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-for f in "$image_in" "$dtb" "$initramfs" "$cmdline_file" "$bootconfig"; do
+for f in "$vmlinuz" "$dtb" "$initramfs" "$cmdline_file" "$bootconfig"; do
     [ -f "$f" ] || { echo "missing input: $f" >&2; exit 1; }
 done
 for f in "$repo_root/tools/mkbootimg.py" "$repo_root/tools/avbtool"; do
@@ -52,8 +52,8 @@ add_hash_footer() {
         --partition_size "$partition_size" --salt "$salt"
 }
 
-# Наш Image — несжатый; ABL ждёт сжатый kernel.
-gzip -9 -c "$image_in" > "$tmp/Image.gz"
+# Fedora vmlinuz.efi — это EFI zboot; ABL нужен сырой сжатый payload.
+python3 "$repo_root/boot/extract-zboot-payload.py" "$vmlinuz" "$tmp/Image.gz"
 
 # init_boot: пустой generic cpio в legacy LZ4.
 mkdir -p "$tmp/empty-ramdisk"

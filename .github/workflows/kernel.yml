@@ -39,7 +39,7 @@ jobs:
             cp /work/boot/dracut/dracut.conf.d/uke.conf /usr/lib/dracut/dracut.conf.d/
             dracut --kver "$KVER" --force /tmp/initramfs.img
             bash /work/boot/build-bundle.sh \
-                --image "/boot/vmlinuz-$KVER" \
+                --vmlinuz "/boot/vmlinuz-$KVER" \
                 --dtb "/boot/dtbs-$KVER/qcom/sm7675-xiaomi-uke.dtb" \
                 --initramfs /tmp/initramfs.img \
                 --cmdline /work/boot/cmdline.txt \

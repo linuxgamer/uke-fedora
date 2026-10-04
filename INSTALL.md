@@ -15,7 +15,7 @@
 ```sh
 kernel/build.sh
 boot/build-bundle.sh \
-    --image build/uke-build/arch/arm64/boot/Image \
+    --vmlinuz build/uke-build/arch/arm64/boot/vmlinuz.efi \
     --dtb   build/uke-build/arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dtb \
     --initramfs <initramfs.gz> \
     --cmdline boot/cmdline.txt --bootconfig boot/bootconfig.txt \

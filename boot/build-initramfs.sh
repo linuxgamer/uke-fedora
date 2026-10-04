@@ -22,7 +22,7 @@ rm -rf /usr/lib/modules/${KVER}
 cp -a /work/build/uke-modules/usr/lib/modules/${KVER} /usr/lib/modules/
 # kernel image (dracut любит его видеть)
 mkdir -p /boot
-cp /work/build/uke-build/arch/arm64/boot/Image /boot/vmlinuz-${KVER}
+cp /work/build/uke-build/arch/arm64/boot/vmlinuz.efi /boot/vmlinuz-${KVER}
 # firmware (GPU и др.) в /usr/lib/firmware
 tar xzf /work/rootfs/firmware.tar.gz -C /usr 2>/dev/null || true
 # dracut-модуль + конфиг
