@@ -41,7 +41,14 @@ boot/build-bundle-ztsubaki.sh \
 fastboot flash boot_a      build/fedora-boot-z/boot.img
 fastboot flash init_boot_a build/fedora-boot-z/init_boot.img
 ```
-- `userdata`: ext4 с меткой `uke_root` (initramfs находит по ней, fallback).
+- `userdata`: ext4 с меткой `uke_root` (initramfs находит по ней/по ext4).
+
+### Если TWRP не может форматнуть userdata (dm-7 busy)
+Обход — образ через fastboot:
+```sh
+./rootfs/mk-internal-storage-fastboot.sh 8     # ext4 8G -> sparse (~950M)
+fastboot flash userdata build/fedora/uke-rootfs.sparse.img
+```
 
 ## 4. Первая загрузка
 - Консоль `ttyMSM0`, USB-net `172.16.42.1` (SSH).
