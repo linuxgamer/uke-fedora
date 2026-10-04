@@ -1,0 +1,32 @@
+name: Boot bundle (fast)
+on:
+  workflow_dispatch:
+    inputs:
+      image_url: { description: "Image URL", type: string }
+      dtb_url:   { description: "DTB URL", type: string }
+      initramfs_url: { description: "initramfs URL", type: string }
+      release_tag: { description: "Release tag", default: "", type: string }
+permissions:
+  contents: write
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch inputs and build
+        run: |
+          set -euxo pipefail
+          curl -fL "${{ inputs.image_url }}" -o /tmp/Image
+          curl -fL "${{ inputs.dtb_url }}" -o /tmp/uke.dtb
+          curl -fL "${{ inputs.initramfs_url }}" -o /tmp/initramfs.img
+          bash boot/build-bundle.sh --image /tmp/Image --dtb /tmp/uke.dtb \
+              --initramfs /tmp/initramfs.img --cmdline boot/cmdline.txt \
+              --bootconfig boot/bootconfig.txt --out out-bundle
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REL: ${{ inputs.release_tag }}
+        run: |
+          gh release view "$REL" >/dev/null 2>&1 || gh release create "$REL" --title "$REL" --notes "CI build"
+          gh release upload "$REL" --clobber out-bundle/*.img

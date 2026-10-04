@@ -1,3 +1,0 @@
-# Файлы, нужные в initramfs (GPU zap/gmu грузятся до rootfs).
-lib/firmware/qcom/sm7675/gen71100_zap.mbn
-lib/firmware/qcom/sm7675/gen71100_gmu.bin

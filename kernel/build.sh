@@ -15,8 +15,8 @@ MAKE=(make -C "${TREE}" O="${OUT}" ARCH=arm64 LLVM=1 LOCALVERSION="${LOCALVERSIO
 
 "${ROOT}/kernel/prepare.sh"
 
-"${MAKE[@]}" defconfig
-cat "${FRAG}" >>"${OUT}/.config"
+cp "${ROOT}/kernel/files/config-mainline.aarch64" "${OUT}/.config"
+"${TREE}/scripts/kconfig/merge_config.sh" -m -O "${OUT}" "${OUT}/.config" "${FRAG}" >/dev/null
 "${MAKE[@]}" olddefconfig
 "${MAKE[@]}" -j"$(nproc)" Image "${DTS}" modules
 

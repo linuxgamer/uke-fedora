@@ -1,0 +1,31 @@
+name: Fedora rootfs
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to publish to (required)"
+        default: ""
+        type: string
+env:
+  KVER: 7.2.0-rc2-uke
+permissions:
+  contents: write
+jobs:
+  build-rootfs:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - name: Require a release tag
+        run: '[ -n "${{ inputs.release_tag }}" ] || { echo "release_tag required" >&2; exit 1; }'
+      - uses: actions/checkout@v4
+      - name: Build rootfs
+        run: |
+          docker run --rm -e KVER -v "$PWD:/work" -w /work quay.io/fedora/fedora:44 \
+              ./rootfs/build-rootfs.sh
+      - name: Publish to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REL: ${{ inputs.release_tag }}
+        run: |
+          gh release view "$REL" >/dev/null 2>&1 || gh release create "$REL" --title "$REL" --notes "CI build"
+          gh release upload "$REL" --clobber build/fedora/uke-fedora-rootfs.tar.gz

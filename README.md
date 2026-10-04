@@ -31,10 +31,11 @@ device-пакеты Nura.
 
 | Путь | Содержимое |
 |---|---|
-| `kernel/` | mainline-ядро: `files/` (DTS, драйверы, конфиг), `patches/`, `prepare.sh`, `build.sh` |
-| `boot/` | Android boot-image-v4 бандл (`build-bundle.sh`), cmdline, bootconfig, dracut |
-| `rootfs/` | Fedora rootfs (`build-rootfs.sh`), overlay, установка |
-| `tools/` | host-скрипты (mkbootimg, avbtool, извлечение стока, конвертеры) |
+| `kernel/` | mainline-ядро: `files/` (DTS, драйверы, config-mainline+fragment), `patches/`, `prepare.sh`, `build.sh`, `kernel.spec` |
+| `boot/` | Android boot-image-v4 бандл (`build-bundle.sh`), initramfs (`build-initramfs.sh`), dracut |
+| `rootfs/` | Fedora rootfs (`build-rootfs.sh`), `mk-internal-storage.sh`, `mk-sd-card.sh`, overlay |
+| `tools/` | mkbootimg, avbtool, make-twrp-zip, извлечение стока, конвертеры |
+| `.github/workflows/` | CI: kernel, rootfs, boot-bundle, full-set |
 | `docs/` | исследование, план, prior art |
 | `references/` | клоны доноров (не коммитятся) |
 | `attic/` | старые наработки (pmOS-пакеты) |
