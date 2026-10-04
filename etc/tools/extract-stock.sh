@@ -4,7 +4,7 @@
 # Пример: tools/extract-stock.sh ~/Загрузки/uke_global_images_OS3.0.303.0.WOZMIXM_16.0
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 FW="${1:?usage: extract-stock.sh <firmware_dir>}"
 IMG="${FW}/images"
 OUT="${ROOT}/build/stock/extracted"

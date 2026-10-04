@@ -7,10 +7,10 @@
 ## Сделано
 - [x] Оценка окружения (EndeavourOS, 389 ГБ, android/dt-инструменты).
 - [x] Клон базы: `build/src/linux-palawan` (`kernel/scripts/fetch-base.sh`).
-- [x] Клоны доноров: `references/ztsubaki-uke-linux`, `references/MCC45TR-uke-linux`.
+- [x] Клоны доноров: `etc/references/ztsubaki-uke-linux`, `etc/references/MCC45TR-uke-linux`.
 - [x] Gap-анализ: palawan уже содержит платформу; ztsubaki-драйверы `cliffs` не нужны.
 - [x] Черновики: `kernel/config/uke.fragment`, `boot/cmdline.txt`, `boot/bootconfig.txt`, `device/deviceinfo`.
-- [x] Скачан downstream uke DTS: `references/downstream-uke/` (MiCode `uke-v-oss`).
+- [x] Скачан downstream uke DTS: `etc/references/downstream-uke/` (MiCode `uke-v-oss`).
 
 ## Требует sudo (пакеты Arch)
 - [ ] `bc` (нужен Kbuild).
@@ -24,7 +24,7 @@
 - [ ] Согласовать `uke.dts`: чистая board-DTS vs stock DTB + overlay на первом этапе.
 
 ## Далее
-- [x] Извлечь DTB/DTBO из стока + декомпиляция (`tools/extract-stock.sh`).
+- [x] Извлечь DTB/DTBO из стока + декомпиляция (`etc/tools/extract-stock.sh`).
 - [x] Извлечь `super.img` → `vendor`/`odm`/`*_dlkm`; `modules.load`, `fstab.qcom`, firmware
       (`docs/STOCK-SUPER.md`).
 - [x] Черновик `kernel/dts/sm7675-xiaomi-uke.dts` (на базе `lamma-qrd.dts`).

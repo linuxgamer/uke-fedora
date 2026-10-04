@@ -12,7 +12,7 @@
 ## Сборка
 
 1. Сгенерировать firmware-тарбол:
-   `tools/make-firmware-tar.sh build/stock/rootfs pmos/firmware-xiaomi-uke`
+   `etc/tools/make-firmware-tar.sh build/stock/rootfs pmos/firmware-xiaomi-uke`
 2. Инициализировать `pmbootstrap` и указать локальный aports (каталог `pmos/`,
    содержащий пакеты):
    ```sh

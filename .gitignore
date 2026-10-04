@@ -15,8 +15,8 @@
 /extracted/
 
 # reference clones: fetch, do not vendor
-/references/*
-!/references/README.md
+/etc/references/*
+!/etc/references/README.md
 
 # scratch clones (e.g. kernel/module searches)
 /temp/

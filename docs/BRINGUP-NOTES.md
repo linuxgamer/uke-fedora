@@ -75,11 +75,11 @@ ztsubaki переносить не нужно** — на 7.2 это уже ес�
 - [x] Клонировать palawan, ztsubaki, MCC45TR.
 - [x] Gap-анализ платформы.
 - [x] Черновик `kernel/config/uke.fragment`.
-- [x] Downstream uke DTS: `references/downstream-uke/`.
+- [x] Downstream uke DTS: `etc/references/downstream-uke/`.
 - [x] Черновик `kernel/dts/sm7675-xiaomi-uke.dts` (на базе `lamma-qrd.dts`).
 - [x] Из downstream уточнены: панель O82 (reset gpio2, vsp/vsn gpio74/75, L8B 1.9В),
       подсветка 2x KTZ8866 @0x11 (i2c0/i2c12), тач NT36532 IRQ gpio54, отсутствие модема.
-- [x] Разбор стоковой прошивки: `docs/STOCK-DTB.md`, `tools/extract-stock.sh`.
+- [x] Разбор стоковой прошивки: `docs/STOCK-DTB.md`, `etc/tools/extract-stock.sh`.
 - [x] DTS добавлен в `Makefile` + binding `xiaomi,uke` (`kernel/scripts/prepare-tree.sh`).
 - [x] **DTB компилируется без ошибок** (`kernel/scripts/build-dtb.sh`, cpp+dtc).
 - [x] Найден и исправлен баг базы: `palawan.dtsi` — пропущена `;` в `compatible`

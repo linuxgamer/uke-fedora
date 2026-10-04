@@ -5,7 +5,8 @@ Snapdragon 7+ Gen 3) с **mainline-ядром**. Загрузка — через
 boot-цепочку (ABL), без второго загрузчика и без UEFI. Сборка — `pmbootstrap` +
 device-пакеты Nura.
 
-Статус: **исследование и подготовка**. Устройства пока нет.
+Статус: **ядро и драйверы собираются; устройство получено (разблокирован bootloader)**.
+Дальше — `pmbootstrap` и первая загрузка.
 
 ## Документы
 
@@ -19,19 +20,20 @@ device-пакеты Nura.
 | [`docs/STOCK-SUPER.md`](docs/STOCK-SUPER.md) | `super.img`: модули, fstab, firmware-раскладка |
 | [`docs/PANEL-TOUCH.md`](docs/PANEL-TOUCH.md) | панель O82 (сделано) и план по тачу NT36532 |
 | [`pmos/README.md`](pmos/README.md) | пакеты Nura и порядок сборки/установки |
-| [`todo.md`](todo.md) | ближайшие задачи офлайн-фазы |
+| [`etc/TODO.md`](etc/TODO.md) | ближайшие задачи |
 
 ## Layout
 
 | Путь | Содержимое |
 |---|---|
 | `docs/` | исследование, план, prior art |
-| `kernel/` | mainline-ядро: база, патчи, DTS, конфиг, скрипты |
-| `boot/` | упаковка `boot`/`init_boot`, cmdline, bootconfig, флеш-скрипты |
-| `device/` | `deviceinfo`, udev, UCM, списки firmware, раскладка разделов |
-| `pmos/` | пакеты Nura (APKBUILD) и конфиг `pmbootstrap` |
-| `tools/` | host-скрипты (извлечение firmware, сбор логов) |
-| `references/` | клоны доноров (gts9wifi и др.) |
+| `kernel/` | mainline-ядро: база, патчи, DTS, драйверы, скрипты |
+| `pmos/` | пакеты Nura (APKBUILD) |
+| `device/` | `deviceinfo`, udev, UCM, списки firmware |
+| `etc/boot/` | `cmdline`, `bootconfig` |
+| `etc/tools/` | host-скрипты (извлечение стока, firmware, конвертеры) |
+| `etc/references/` | клоны доноров (не коммитятся) |
+| `etc/TODO.md` | задачи |
 
 `kernel/` и `device/` — источники; `pmos/` упаковывает их в пакеты Nura.
 
