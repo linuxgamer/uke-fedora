@@ -66,6 +66,13 @@ while [ $i -lt 40 ]; do
     sleep 1; i=$((i+1))
 done
 echo "uke-initramfs: dev=$dev"
+# fallback: первый ext4-раздел (если метка/root= не совпали)
+if [ -z "$dev" ]; then
+    for b in /dev/sda* /dev/sdb* /dev/sdc* /dev/mmcblk*; do
+        [ -b "$b" ] || continue
+        if blkid "$b" 2>/dev/null | grep -q '"ext4"'; then dev="$b"; break; fi
+    done
+fi
 [ -n "$dev" ] || { echo "root device not found"; exec sh; }
 mount -t ext4 -o rw "$dev" /newroot || { echo "mount failed"; exec sh; }
 exec switch_root /newroot /usr/lib/systemd/systemd
