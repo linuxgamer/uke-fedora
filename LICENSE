@@ -1,0 +1,16 @@
+SPDX-License-Identifier: GPL-2.0-only
+
+Unless otherwise stated, the source code in this repository (kernel patches,
+device tree sources, drivers, scripts) is licensed under the GNU General Public
+License version 2 only (GPL-2.0-only).
+
+Kernel patches and drivers are derivative works of GPL-2.0 code and retain the
+original copyright and license notices:
+  - palawan-mainline/linux (Alexandr Zubtsov and contributors)
+  - downstream Novatek nt36xxx driver (Novatek Inc.)
+  - panel-novatek-nt35950.c (AngeloGioacchino Del Regno)
+  - Xiaomi MiCode kernel/devicetree sources
+
+Documentation (docs/, README files) may be reused under CC-BY-SA-4.0.
+
+Proprietary firmware blobs are NOT included in this repository.

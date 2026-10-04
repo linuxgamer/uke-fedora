@@ -1,0 +1,9 @@
+# bootconfig из стокового vendor_boot (uke, OS3.0.302.0.WOZCNXM).
+# На раннем этапе vendor_boot НЕ трогаем, поэтому это справочный список,
+# а не то, что мы упаковываем. Менять только осознанно.
+androidboot.hardware=qcom
+androidboot.memcg=1
+androidboot.usbcontroller=a600000.dwc3
+androidboot.load_modules_parallel=true
+androidboot.vendor.qspa=true
+androidboot.hypervisor.protected_vm.supported=false

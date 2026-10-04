@@ -1,0 +1,26 @@
+# Список файлов в firmware.tar.gz (пути = целевые в пакете).
+# Черновик: точные имена/раскладка уточняются на железе.
+# Источники: build/stock/rootfs/{vendor,odm}/firmware, NON-HLOS.bin.
+
+# GPU (Adreno 732 / GMU 735)
+lib/firmware/qcom/sm7675/gen71100_gmu.bin
+lib/firmware/qcom/sm7675/gen71100_zap.mbn
+lib/firmware/qcom/sm7675/gen71100_sqe.fw
+lib/firmware/qcom/sm7675/gen70900_gmu.bin
+lib/firmware/qcom/sm7675/gen70900_sqe.fw
+lib/firmware/qcom/sm7675/gen70900_zap.mbn
+
+# Тачскрин Novatek NT36532 (O82)
+lib/firmware/novatek_nt36532_o82_fw_csot.bin
+lib/firmware/novatek_nt36532_o82_fw_tm.bin
+lib/firmware/novatek_nt36532_o82_mp_csot.bin
+lib/firmware/novatek_nt36532_o82_mp_tm.bin
+
+# Аудио (Foursemi smartpa)
+lib/firmware/fs19xx.fsm
+
+# WLAN/BT WCN6750 (требует переупаковки WPSS -> ath11k)
+lib/firmware/ath11k/WCN6750/hw1.0/amss.bin
+lib/firmware/ath11k/WCN6750/hw1.0/m3.bin
+lib/firmware/ath11k/WCN6750/hw1.0/board-2.bin
+lib/firmware/ath11k/WCN6750/hw1.0/regdb.bin

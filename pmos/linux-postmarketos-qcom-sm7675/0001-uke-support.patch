@@ -1,0 +1,2495 @@
+diff --git a/Documentation/devicetree/bindings/arm/qcom.yaml b/Documentation/devicetree/bindings/arm/qcom.yaml
+index aede24772..192041114 100644
+--- a/Documentation/devicetree/bindings/arm/qcom.yaml
++++ b/Documentation/devicetree/bindings/arm/qcom.yaml
+@@ -87,6 +87,12 @@ properties:
+               - qcom,palawan-qrd
+           - const: qcom,palawan
+ 
++      - items:
++          - enum:
++              - qcom,lamma-qrd
++              - xiaomi,uke
++          - const: qcom,lamma
++
+       - items:
+           - enum:
+               - microsoft,dempsey
+diff --git a/Documentation/devicetree/bindings/display/panel/xiaomi,o82.yaml b/Documentation/devicetree/bindings/display/panel/xiaomi,o82.yaml
+new file mode 100644
+index 000000000..282f7e30f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/display/panel/xiaomi,o82.yaml
+@@ -0,0 +1,42 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/display/panel/xiaomi,o82.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Xiaomi O82 dual-DSI DSC LCD panel
++
++maintainers:
++  - uke-linux-port
++
++description: |
++  Dual-DSI (bonded) DSC LCD panel used in the Xiaomi Pad 7 (uke).
++
++properties:
++  compatible:
++    const: xiaomi,o82
++
++  reg:
++    maxItems: 1
++
++  reset-gpios:
++    maxItems: 1
++
++  vddio-supply:
++    description: I/O supply (1.9V)
++
++  vsp-supply:
++    description: Positive panel supply (5.8V)
++
++  vsn-supply:
++    description: Negative panel supply (5.8V)
++
++  port: true
++
++required:
++  - compatible
++  - reg
++  - reset-gpios
++  - port
++
++additionalProperties: false
+diff --git a/arch/arm64/boot/dts/qcom/Makefile b/arch/arm64/boot/dts/qcom/Makefile
+index e10e25171..4c39a578d 100644
+--- a/arch/arm64/boot/dts/qcom/Makefile
++++ b/arch/arm64/boot/dts/qcom/Makefile
+@@ -459,3 +459,4 @@ x1p42100-lenovo-thinkbook-16-el2-dtbs	:= x1p42100-lenovo-thinkbook-16.dtb x1-el2
+ dtb-$(CONFIG_ARCH_QCOM)	+= x1p42100-lenovo-thinkbook-16.dtb x1p42100-lenovo-thinkbook-16-el2.dtb
+ x1p64100-microsoft-denali-el2-dtbs	:= x1p64100-microsoft-denali.dtb x1-el2.dtbo
+ dtb-$(CONFIG_ARCH_QCOM)	+= x1p64100-microsoft-denali.dtb x1p64100-microsoft-denali-el2.dtb
++dtb-$(CONFIG_ARCH_QCOM)	+= sm7675-xiaomi-uke.dtb
+diff --git a/arch/arm64/boot/dts/qcom/palawan.dtsi b/arch/arm64/boot/dts/qcom/palawan.dtsi
+index df8ff6334..5ba6dec56 100644
+--- a/arch/arm64/boot/dts/qcom/palawan.dtsi
++++ b/arch/arm64/boot/dts/qcom/palawan.dtsi
+@@ -3075,7 +3075,7 @@ usb_1_hsphy: phy@88e3000 {
+ 
+ 		usb_dp_qmpphy: phy@88e8000 {
+ 			compatible = "qcom,palawan-qmp-usb3-dp-phy",
+-				     "qcom,palawan-qmp-usb3-dp-phy",
++				     "qcom,sc8280xp-qmp-usb43dp-phy";
+ 			reg = <0 0x088e8000 0 0x3000>;
+ 
+ 			clocks = <&gcc GCC_USB3_PRIM_PHY_AUX_CLK>,
+diff --git a/arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dts b/arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dts
+new file mode 100644
+index 000000000..6222fc638
+--- /dev/null
++++ b/arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dts
+@@ -0,0 +1,1138 @@
++// SPDX-License-Identifier: BSD-3-Clause
++/*
++ * Copyright (c) 2026, Alexandr Zubtsov <devizure@mainlining.org>
++ *
++ * ЧЕРНОВИК board DTS для Xiaomi Pad 7 (uke, SM7675 / lamma).
++ * База: lamma-qrd.dts (palawan-mainline palawan/v7.2-rc2).
++ * uke-специфика сверена с downstream MiCode uke-v-oss (uke-sm8635.dtsi).
++ * Требует проверки на реальном устройстве. Место в дереве:
++ *   arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dts
++ *
++ * Открытые TODO по uke (см. также docs/BRINGUP-NOTES.md):
++ *   - панель O82: DUAL DSI + DSC; в palawan.dtsi только mdss_dsi0, нужен dsi1
++ *     и драйвер панели (reset gpio2, vsp/vsn gpio74/75, vddil8b=L8B 1.9V)
++ *   - тачскрин Novatek NT36532E (CSOT/TM), драйвер в mainline не подтверждён
++ *   - подсветка 2x KTZ8866 @0x11 на i2c0/i2c12 (mainline compatible ok)
++ *   - WCD939x USB2-роут (downstream: qcom,wcd_usbss) + param-override eUSB2
++ *   - таблица регуляторов: скопирована из lamma-qrd, требует сверки с uke
++ * Память и reserved-memory уже в palawan.dtsi (размер заполняет загрузчик).
++ */
++
++/dts-v1/;
++
++#include <dt-bindings/leds/common.h>
++#include <dt-bindings/regulator/qcom,rpmh-regulator.h>
++#include "lamma.dtsi"
++#include "pm7550.dtsi" /* PMXR2230 */
++#include "pm7550ba.dtsi"
++#include "pmr735a.dtsi"
++#include "pm8010.dtsi"
++#define PMK8550VE_SID 3
++#include "pm8550ve.dtsi"
++#include "pm8550vs.dtsi"
++#include "pmk8550.dtsi"
++
++/ {
++	model = "Xiaomi Pad 7";
++	compatible = "xiaomi,uke", "qcom,lamma";
++
++	aliases {
++		serial0 = &uart5;
++		serial1 = &uart10;
++	};
++
++	chosen {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		stdout-path = "serial0:115200n8";
++
++		/*
++		 * Ранний bring-up: ABL-фреймбуфер uke (подтверждён ztsubaki).
++		 * Включить для simplefb-консоли; требует сохранить splash_region
++		 * (43 МиБ) как no-map, иначе кэш-алиасинг с обычной RAM.
++		 */
++		framebuffer@e3940000 {
++			compatible = "simple-framebuffer";
++			reg = <0 0xe3940000 0 0x01a13000>;
++			width = <3200>;
++			height = <2136>;
++			stride = <12800>;
++			format = "a8r8g8b8";
++			status = "disabled"; /* TODO: включить для simplefb-консоли */
++		};
++	};
++
++	gpio-keys {
++		compatible = "gpio-keys";
++
++		pinctrl-0 = <&volume_up_n>;
++		pinctrl-names = "default";
++
++		key-volume-up {
++			label = "Volume Up";
++			linux,code = <KEY_VOLUMEUP>;
++			gpios = <&pm7550_gpios 6 GPIO_ACTIVE_LOW>;
++			debounce-interval = <15>;
++			linux,can-disable;
++			wakeup-source;
++		};
++	};
++
++	pmic-glink {
++		compatible = "qcom,lamma-pmic-glink",
++			     "qcom,sm8550-pmic-glink",
++			     "qcom,pmic-glink";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		/* bring-up: USB только peripheral, role-switch не используем */
++		status = "disabled";
++		orientation-gpios = <&tlmm 122 GPIO_ACTIVE_HIGH>;
++
++		connector@0 {
++			compatible = "usb-c-connector";
++			reg = <0>;
++
++			power-role = "dual";
++			data-role = "dual";
++
++			ports {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				port@0 {
++					reg = <0>;
++
++					pmic_glink_hs_in: endpoint {
++						remote-endpoint = <&usb_1_dwc3_hs>;
++					};
++				};
++
++				port@1 {
++					reg = <1>;
++
++					pmic_glink_ss_in: endpoint {
++						remote-endpoint = <0>;
++					};
++				};
++
++				port@2 {
++					reg = <2>;
++
++					pmic_glink_sbu: endpoint {
++						remote-endpoint = <0>;
++					};
++				};
++			};
++		};
++	};
++
++	vph_pwr: vph-pwr-regulator {
++		compatible = "regulator-fixed";
++
++		regulator-name = "vph_pwr";
++		regulator-min-microvolt = <3700000>;
++		regulator-max-microvolt = <3700000>;
++
++		regulator-always-on;
++		regulator-boot-on;
++	};
++};
++
++&apps_rsc {
++	regulators-0 {
++		compatible = "qcom,pm7550-rpmh-regulators";
++		qcom,pmic-id = "b";
++
++		vreg_bob: bob {
++			regulator-name = "vreg_bob";
++			regulator-min-microvolt = <3008000>;
++			regulator-max-microvolt = <3960000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_s1b_2p04: smps1 {
++			regulator-name = "vreg_s1b_2p04";
++			regulator-min-microvolt = <1856000>;
++			regulator-max-microvolt = <2040000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_s2b_1p4: smps2 {
++			regulator-name = "vreg_s2b_1p4";
++			regulator-min-microvolt = <1256000>;
++			regulator-max-microvolt = <1408000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_s3b_1p04: smps3 {
++			regulator-name = "vreg_s3b_1p04";
++			regulator-min-microvolt = <968000>;
++			regulator-max-microvolt = <1040000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l1b_0p96: ldo1 {
++			regulator-name = "vreg_l1b_0p96";
++			regulator-min-microvolt = <880000>;
++			regulator-max-microvolt = <960000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l2b_0p95: ldo2 {
++			regulator-name = "vreg_l2b_0p95";
++			regulator-min-microvolt = <880000>;
++			regulator-max-microvolt = <952000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l3b_0p92: ldo3 {
++			regulator-name = "vreg_l3b_0p92";
++			regulator-min-microvolt = <880000>;
++			regulator-max-microvolt = <920000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l4b_1p2: ldo4 {
++			regulator-name = "vreg_l4b_1p2";
++			regulator-min-microvolt = <1200000>;
++			regulator-max-microvolt = <1200000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l5b_1p2: ldo5 {
++			regulator-name = "vreg_l5b_1p2";
++			regulator-min-microvolt = <1200000>;
++			regulator-max-microvolt = <1200000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l7b_1p8: ldo7 {
++			regulator-name = "vreg_l7b_1p8";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l8b_1p8: ldo8 {
++			regulator-name = "vreg_l8b_1p8";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l9b_0p81: ldo9 {
++			regulator-name = "vreg_l9b_0p81";
++			regulator-min-microvolt = <760000>;
++			regulator-max-microvolt = <816000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l10b_0p93: ldo10 {
++			regulator-name = "vreg_l10b_0p93";
++			regulator-min-microvolt = <872000>;
++			regulator-max-microvolt = <936000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l11b_1p8: ldo11 {
++			regulator-name = "vreg_l11b_1p8";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l12b: ldo12 {
++			regulator-name = "vreg_l12b";
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++			/*
++			 * Remove min/max voltages for this regulator as initial
++			 * voltage of  L12B is set to be 2.4v/2.96v during PON
++			 * depending upon the UFS mode. UFS is the only client
++			 * on this and this regulator will only be voted
++			 * for enabling/disabling conditions.
++			 */
++		};
++
++		vreg_l13b_3p54: ldo13 {
++			regulator-name = "vreg_l13b_3p54";
++			regulator-min-microvolt = <2704000>;
++			regulator-max-microvolt = <3304000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l16b_3p54: ldo16 {
++			regulator-name = "vreg_l16b_3p54";
++			regulator-min-microvolt = <2904000>;
++			regulator-max-microvolt = <3544000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l17b_3p3: ldo17 {
++			regulator-name = "vreg_l17b_3p3";
++			regulator-min-microvolt = <2704000>;
++			regulator-max-microvolt = <3304000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l18b_3p0: ldo18 {
++			regulator-name = "vreg_l18b_3p0";
++			regulator-min-microvolt = <2000000>;
++			regulator-max-microvolt = <3000000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l19b_3p0: ldo19 {
++			regulator-name = "vreg_l19b_3p0";
++			regulator-min-microvolt = <2600000>;
++			regulator-max-microvolt = <3544000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l20b_3p54: ldo20 {
++			regulator-name = "vreg_l20b_3p54";
++			regulator-min-microvolt = <1624000>;
++			regulator-max-microvolt = <3544000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l21b_3p54: ldo21 {
++			regulator-name = "vreg_l21b_3p54";
++			regulator-min-microvolt = <1624000>;
++			regulator-max-microvolt = <3544000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l22b_3p4: ldo22 {
++			regulator-name = "vreg_l22b_3p4";
++			regulator-min-microvolt = <2704000>;
++			regulator-max-microvolt = <3400000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l23b_3p54: ldo23 {
++			regulator-name = "vreg_l23b_3p54";
++			regulator-min-microvolt = <1656000>;
++			regulator-max-microvolt = <3544000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++
++	regulators-1 {
++		compatible = "qcom,pm8550vs-rpmh-regulators";
++		qcom,pmic-id = "c";
++
++		vreg_l1c_0p97: ldo1 {
++			regulator-name = "vreg_l1c_0p97";
++			regulator-min-microvolt = <904000>;
++			regulator-max-microvolt = <976000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l3c_1p25: ldo3 {
++			regulator-name = "vreg_l3c_1p25";
++			regulator-min-microvolt = <1200000>;
++			regulator-max-microvolt = <1256000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++
++	regulators-2 {
++		compatible = "qcom,pm8550vs-rpmh-regulators";
++		qcom,pmic-id = "d";
++
++		vreg_l1d_0p96: ldo1 {
++			regulator-name = "vreg_l1d_0p96";
++			regulator-min-microvolt = <872000>;
++			regulator-max-microvolt = <960000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l3d_1p28: ldo3 {
++			regulator-name = "vreg_l3d_1p28";
++			regulator-min-microvolt = <1144000>;
++			regulator-max-microvolt = <1264000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++
++	regulators-3 {
++		compatible = "qcom,pmr735a-rpmh-regulators";
++		qcom,pmic-id = "e";
++
++		vreg_s1e_1p12: smps1 {
++			regulator-name = "vreg_s1e_1p12";
++			regulator-min-microvolt = <1012000>;
++			regulator-max-microvolt = <1120000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_s2e_0p57: smps2 {
++			regulator-name = "vreg_s2e_0p57";
++			regulator-min-microvolt = <300000>;
++			regulator-max-microvolt = <572000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_s3e_2p4: smps3 {
++			regulator-name = "vreg_s3e_2p4";
++			regulator-min-microvolt = <1600000>;
++			regulator-max-microvolt = <2400000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l1e_0p91: ldo1 {
++			regulator-name = "vreg_l1e_0p91";
++			regulator-min-microvolt = <488000>;
++			regulator-max-microvolt = <912000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l2e_0p97: ldo2 {
++			regulator-name = "vreg_l2e_0p97";
++			regulator-min-microvolt = <920000>;
++			regulator-max-microvolt = <968000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l3e_0p87: ldo3 {
++			regulator-name = "vreg_l3e_0p87";
++			regulator-min-microvolt = <504000>;
++			regulator-max-microvolt = <872000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l4e_2p0: ldo4 {
++			regulator-name = "vreg_l4e_2p0";
++			regulator-min-microvolt = <1624000>;
++			regulator-max-microvolt = <2000000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l5e_1p3: ldo5 {
++			regulator-name = "vreg_l5e_1p3";
++			regulator-min-microvolt = <1104000>;
++			regulator-max-microvolt = <1304000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l6e_1p3: ldo6 {
++			regulator-name = "vreg_l6e_1p3";
++			regulator-min-microvolt = <1080000>;
++			regulator-max-microvolt = <1304000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l7e_3p3: ldo7 {
++			regulator-name = "vreg_l7b_3p3";
++			regulator-min-microvolt = <1624000>;
++			regulator-max-microvolt = <3304000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++
++	regulators-4 {
++		compatible = "qcom,pmg1110-rpmh-regulators";
++		qcom,pmic-id = "j";
++
++		vreg_s1j_1p12: smps1 {
++			regulator-name = "vreg_s1j_1p12";
++			regulator-min-microvolt = <504000>;
++			regulator-max-microvolt = <868000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++
++	regulators-5 {
++		compatible = "qcom,pm8010-rpmh-regulators";
++		qcom,pmic-id = "m";
++
++		vreg_l1m_1p1: ldo1 {
++			regulator-name = "vreg_l1m_1p1";
++			regulator-min-microvolt = <1104000>;
++			regulator-max-microvolt = <1104000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l2m_1p056: ldo2 {
++			regulator-name = "vreg_l2m_1p056";
++			regulator-min-microvolt = <1056000>;
++			regulator-max-microvolt = <1056000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l3m_2p8: ldo3 {
++			regulator-name = "vreg_l3m_2p8";
++			regulator-min-microvolt = <2800000>;
++			regulator-max-microvolt = <2800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l4m_2p8: ldo4 {
++			regulator-name = "vreg_l4m_2p8";
++			regulator-min-microvolt = <2800000>;
++			regulator-max-microvolt = <2800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l6m_2p8: ldo6 {
++			regulator-name = "vreg_l6m_2p8";
++			regulator-min-microvolt = <2800000>;
++			regulator-max-microvolt = <2800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l7m_2p8: ldo7 {
++			regulator-name = "vreg_l7m_2p8";
++			regulator-min-microvolt = <2800000>;
++			regulator-max-microvolt = <2800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++
++	regulators-6 {
++		compatible = "qcom,pm8010-rpmh-regulators";
++		qcom,pmic-id = "n";
++
++		vreg_l1n_1p1: ldo1 {
++			regulator-name = "vreg_l1n_1p1";
++			regulator-min-microvolt = <1104000>;
++			regulator-max-microvolt = <1104000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l2n_1p056: ldo2 {
++			regulator-name = "vreg_l2n_1p056";
++			regulator-min-microvolt = <1056000>;
++			regulator-max-microvolt = <1056000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l3n_1p8: ldo3 {
++			regulator-name = "vreg_l3n_1p8";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l4n_1p8: ldo4 {
++			regulator-name = "vreg_l4n_1p8";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l5n_1p8: ldo5 {
++			regulator-name = "vreg_l5n_1p8";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l6n_2p8: ldo6 {
++			regulator-name = "vreg_l6n_2p8";
++			regulator-min-microvolt = <2800000>;
++			regulator-max-microvolt = <2800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l7n_3p3: ldo7 {
++			regulator-name = "vreg_l7n_3p3";
++			regulator-min-microvolt = <3304000>;
++			regulator-max-microvolt = <3304000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++};
++
++&gpi_dma0 {
++	status = "okay";
++};
++
++&gpi_dma1 {
++	status = "okay";
++};
++
++&gpu {
++	status = "okay";
++};
++
++&gpu_zap_shader {
++	firmware-name = "qcom/palawan/gen71100_zap.mbn";
++};
++
++&ipa {
++	qcom,gsi-loader = "self";
++	memory-region = <&ipa_fw_mem>;
++	firmware-name = "qcom/palawan/ipa_fws.mbn";
++	status = "okay";
++};
++
++&iris {
++	status = "okay";
++};
++
++&lpass_tlmm {
++	spkr_1_sd_n_active: spkr-1-sd-n-active-state {
++		pins = "gpio13";
++		function = "gpio";
++		drive-strength = <16>;
++		bias-disable;
++		output-low;
++	};
++};
++
++&mdss {
++	status = "okay";
++};
++
++/*
++ * Панель uke — O82, DUAL DSI + DSC (LCD, video mode, TDDI).
++ * Варианты (по panel-id): O82 42 02 0B / O82 36 02 0A.
++ * Reset: gpio2. ESD IRQ: gpio168/169 (драйвером пока не обрабатывается).
++ * Reset sequence: <0 10 1 3 0 3 1 15>.
++ * Питание: vddio=L8B(1.9V), vsp=gpio74(5.8V), vsn=gpio75(5.8V).
++ * Формат: 30 bpp, DSC 10->8bpp, slice 800x24; dual DSI; 120/144/90 Гц.
++ * Драйвер: kernel/drivers/panel-xiaomi-o82.c (черновик).
++ */
++&mdss_dsi0 {
++	vdda-supply = <&vreg_l4b_1p2>;
++
++	status = "okay";
++
++	panel@0 {
++		compatible = "xiaomi,o82";
++		reg = <0>;
++
++		reset-gpios = <&tlmm 2 GPIO_ACTIVE_HIGH>;
++
++		vddio-supply = <&vreg_l8b_1p8>;
++		vsp-supply = <&display_panel_vsp>;
++		vsn-supply = <&display_panel_vsn>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++
++				panel0_in: endpoint {
++					remote-endpoint = <&mdss_dsi0_out>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++
++				panel1_in: endpoint {
++					remote-endpoint = <&mdss_dsi1_out>;
++				};
++			};
++		};
++	};
++};
++
++&mdss_dsi0_out {
++	remote-endpoint = <&panel0_in>;
++	data-lanes = <0 1 2 3>;
++};
++
++&mdss_dsi1 {
++	vdda-supply = <&vreg_l4b_1p2>;
++
++	status = "okay";
++};
++
++&mdss_dsi1_out {
++	remote-endpoint = <&panel1_in>;
++	data-lanes = <0 1 2 3>;
++};
++
++&mdss_dsi1_phy {
++	vdds-supply = <&vreg_l2b_0p95>;
++
++	status = "okay";
++};
++
++&mdss_dsi0_phy {
++	vdds-supply = <&vreg_l2b_0p95>;
++
++	status = "okay";
++};
++
++&mdss_dp0 {
++	status = "okay";
++};
++
++/* Питание панели uke: vsp/vsn через фиксированные регуляторы на GPIO74/75. */
++/ {
++	display_panel_vsp: regulator-vsp {
++		compatible = "regulator-fixed";
++		regulator-name = "display_panel_vsp";
++		regulator-min-microvolt = <5800000>;
++		regulator-max-microvolt = <5800000>;
++		regulator-enable-ramp-delay = <233>;
++		gpio = <&tlmm 74 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++		regulator-boot-on;
++	};
++
++	display_panel_vsn: regulator-vsn {
++		compatible = "regulator-fixed";
++		regulator-name = "display_panel_vsn";
++		regulator-min-microvolt = <5800000>;
++		regulator-max-microvolt = <5800000>;
++		regulator-enable-ramp-delay = <233>;
++		gpio = <&tlmm 75 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++		regulator-boot-on;
++	};
++};
++
++/* uke: L8B питает панель (vddil8b) при 1.9 В (в lamma-qrd — 1.8 В). */
++&vreg_l8b_1p8 {
++	regulator-min-microvolt = <1900000>;
++	regulator-max-microvolt = <1900000>;
++};
++
++/*
++ * Подсветка uke — 2x KTZ8866 (левая/правая половины), адрес 0x11.
++ * Downstream: qupv3_se0_i2c и qupv3_se12_i2c.
++ * В mainline драйвер KTZ8866 есть, но compatible `kinetic,ktz8866`
++ * (downstream `ktz,ktz8866`) — согласовать. GPIO hwen/enp/enn/panelid уточнить.
++ */
++&i2c0 {
++	status = "okay";
++
++	backlight@11 {
++		compatible = "kinetic,ktz8866";
++		reg = <0x11>;
++	};
++};
++
++&i2c12 {
++	status = "okay";
++
++	backlight@11 {
++		compatible = "kinetic,ktz8866";
++		reg = <0x11>;
++	};
++};
++
++&pon_pwrkey {
++	status = "okay";
++};
++
++&pon_resin {
++	linux,code = <KEY_VOLUMEDOWN>;
++
++	status = "okay";
++};
++
++&pm7550_flash {
++	status = "okay";
++
++	led-0 {
++		function = LED_FUNCTION_FLASH;
++		color = <LED_COLOR_ID_YELLOW>;
++		led-sources = <1>, <4>;
++		led-max-microamp = <500000>;
++		flash-max-microamp = <2000000>;
++		flash-max-timeout-us = <1280000>;
++		function-enumerator = <0>;
++	};
++
++	led-1 {
++		function = LED_FUNCTION_FLASH;
++		color = <LED_COLOR_ID_WHITE>;
++		led-sources = <2>, <3>;
++		led-max-microamp = <500000>;
++		flash-max-microamp = <2000000>;
++		flash-max-timeout-us = <1280000>;
++		function-enumerator = <1>;
++	};
++};
++
++&pm7550_gpios {
++	volume_up_n: volume-up-n-state {
++		pins = "gpio6";
++		function = "normal";
++		power-source = <1>;
++		bias-pull-up;
++		input-enable;
++	};
++};
++
++&pm7550_pwm {
++	status = "okay";
++
++	multi-led {
++		color = <LED_COLOR_ID_RGB>;
++		function = LED_FUNCTION_STATUS;
++
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		led@1 {
++			reg = <1>;
++			color = <LED_COLOR_ID_RED>;
++		};
++
++		led@2 {
++			reg = <2>;
++			color = <LED_COLOR_ID_GREEN>;
++		};
++
++		led@3 {
++			reg = <3>;
++			color = <LED_COLOR_ID_BLUE>;
++		};
++	};
++};
++
++&pm7550ba_eusb2_repeater {
++	vdd3-supply = <&vreg_l17b_3p3>;
++	vdd18-supply = <&vreg_l7b_1p8>;
++
++	/*
++	 * TODO: downstream uke задаёт qcom,param-override-seq
++	 * (обычный / factory / host). Перенести при проверке USB.
++	 */
++};
++
++&pm8550vs_c {
++	status = "okay";
++};
++
++&pm8550vs_d {
++	status = "okay";
++};
++
++&pm8550vs_e {
++	status = "okay";
++};
++
++&pm8550vs_g {
++	status = "okay";
++};
++
++&qupv3_id_0 {
++	status = "okay";
++};
++
++&qupv3_id_1 {
++	status = "okay";
++};
++
++&remoteproc_adsp {
++	firmware-name = "qcom/lamma/adsp2.mbn",
++			"qcom/lamma/adsp2_dtb.mbn";
++	status = "okay";
++};
++
++&remoteproc_cdsp {
++	firmware-name = "qcom/palawan/cdsp.mbn",
++			"qcom/palawan/cdsp_dtb.mbn";
++	status = "okay";
++};
++
++&remoteproc_mpss {
++	/* uke: модема нет (downstream отключает mpss_mem/modem_pas) */
++	status = "disabled";
++};
++
++&remoteproc_wpss {
++	firmware-name = "qcom/palawan/wpss.mbn";
++
++	status = "okay";
++};
++
++&sleep_clk {
++	clock-frequency = <32764>;
++};
++
++/*
++ * Тачскрин uke — Novatek NT36532E (варианты CSOT / TM), SPI, TDDI.
++ * Downstream (qupv3_se4_spi): IRQ gpio54, lcd_id gpio26, reset не задан.
++ * Драйвер: kernel/drivers/nt36532-uke.c (черновик mainline-порта).
++ * TODO: уточнить reset, питание (vdd/vddio) и вариант CSOT/TM.
++ */
++&spi4 {
++	status = "okay";
++
++	touchscreen@0 {
++		compatible = "novatek,NVT-ts";
++		reg = <0>;
++
++		interrupt-parent = <&tlmm>;
++		interrupts = <54 IRQ_TYPE_LEVEL_LOW>;
++
++		vdd-supply = <&vreg_l22b_3p4>;
++		vddio-supply = <&vreg_l8b_1p8>;
++
++		firmware-name = "novatek_nt36532_o82_fw_csot.bin";
++
++		spi-max-frequency = <10000000>;
++
++		pinctrl-0 = <&ts_irq>;
++		pinctrl-names = "default";
++
++		/* TODO: lcd_id gpio26, reset, CSOT/TM профиль */
++	};
++};
++
++&tlmm {
++	gpio-reserved-ranges = <56 5>;
++
++	bt_default: bt-default-state {
++		bt-en-pins {
++			pins = "gpio156";
++			function = "gpio";
++			drive-strength = <16>;
++			bias-disable;
++		};
++
++		sw-ctrl-pins {
++			pins = "gpio80";
++			function = "gpio";
++			bias-pull-down;
++		};
++	};
++
++	disp0_reset_n_active: disp0-reset-n-active-state {
++		pins = "gpio2"; /* uke: O82 panel reset */
++		function = "gpio";
++		drive-strength = <8>;
++		bias-disable;
++	};
++
++	disp0_reset_n_suspend: disp0-reset-n-suspend-state {
++		pins = "gpio2"; /* uke: O82 panel reset */
++		function = "gpio";
++		drive-strength = <2>;
++		bias-pull-down;
++	};
++
++	mdp_vsync: mdp-vsync-state {
++		pins = "gpio77";
++		function = "mdp_vsync";
++		drive-strength = <2>;
++		bias-pull-down;
++	};
++
++	spkr_2_sd_n_active: spkr-2-sd-n-active-state {
++		pins = "gpio76";
++		function = "gpio";
++		drive-strength = <16>;
++		bias-disable;
++		output-low;
++	};
++
++	ts_irq: ts-irq-state {
++		pins = "gpio54"; /* uke: Novatek NT36532 IRQ */
++		function = "gpio";
++		drive-strength = <8>;
++		bias-pull-up;
++		output-disable;
++	};
++
++	wcd_default: wcd-reset-n-active-state {
++		pins = "gpio12";
++		function = "gpio";
++		drive-strength = <16>;
++		bias-disable;
++		output-low;
++	};
++};
++
++&uart5 {
++	status = "okay";
++};
++
++&uart10 {
++	status = "okay";
++
++	bluetooth {
++		compatible = "qcom,wcn6750-bt";
++
++		vddrfacmn-supply = <&vreg_s3b_1p04>;
++		vddaon-supply = <&vreg_s3b_1p04>;
++		vddwlcx-supply = <&vreg_s3b_1p04>;
++		vddwlmx-supply = <&vreg_s3b_1p04>;
++		vddrfa0p8-supply = <&vreg_s3b_1p04>;
++		vddrfa1p3-supply = <&vreg_s2b_1p4>;
++		vddrfa1p8-supply = <&vreg_s1b_2p04>;
++		vddrfa2p2-supply = <&vreg_s3e_2p4>;
++
++		max-speed = <3200000>;
++	};
++};
++
++&ufs_mem_hc {
++	reset-gpios = <&tlmm 178 GPIO_ACTIVE_LOW>;
++
++	vcc-supply = <&vreg_l12b>;
++	vcc-max-microamp = <1200000>;
++	vccq-supply = <&vreg_l3d_1p28>;
++	vccq-max-microamp = <1200000>;
++
++	status = "okay";
++};
++
++&ufs_mem_phy {
++	vdda-phy-supply = <&vreg_l1d_0p96>;
++	vdda-pll-supply = <&vreg_l4b_1p2>;
++
++	status = "okay";
++};
++
++/*
++ * TODO: uke маршрутизирует USB2 D+/D- через WCD939x
++ * (downstream: &usb0 { qcom,wcd_usbss = <&wcd_usbss>; }).
++ * Для bring-up — peripheral (gadget), затем добавить WCD939x-роут.
++ */
++&usb_1 {
++	dr_mode = "peripheral";
++
++	status = "okay";
++};
++
++/* Обратная ссылка графа pmic-glink<->dwc3 (pmic-glink при bring-up disabled). */
++&usb_1_dwc3_hs {
++	remote-endpoint = <&pmic_glink_hs_in>;
++};
++
++&usb_1_hsphy {
++	vdd-supply = <&vreg_l2b_0p95>;
++	vdda12-supply = <&vreg_l4b_1p2>;
++
++	phys = <&pm7550ba_eusb2_repeater>;
++
++	status = "okay";
++};
++
++&usb_dp_qmpphy {
++	vdda-phy-supply = <&vreg_l4b_1p2>;
++	vdda-pll-supply = <&vreg_l3b_0p92>;
++
++	status = "okay";
++};
++
++&usb_dp_qmpphy_out {
++	remote-endpoint = <0>;
++};
++
++&wifi {
++	status = "okay";
++};
++
++&xo_board {
++	clock-frequency = <76800000>;
++};
+diff --git a/drivers/gpu/drm/panel/Kconfig b/drivers/gpu/drm/panel/Kconfig
+index 7450b2762..ae102feac 100644
+--- a/drivers/gpu/drm/panel/Kconfig
++++ b/drivers/gpu/drm/panel/Kconfig
+@@ -1346,3 +1346,11 @@ config DRM_PANEL_XINPENG_XPP055C272
+ 	  XPP055C272 controller for 720x1280 LCD panels with MIPI/RGB/SPI
+ 	  system interfaces.
+ endmenu
++
++config DRM_PANEL_XIAOMI_O82
++	tristate "Xiaomi O82 dual-DSI DSC panel"
++	depends on OF
++	depends on DRM_MIPI_DSI
++	depends on BACKLIGHT_CLASS_DEVICE
++	help
++	  Xiaomi Pad 7 (uke) O82 dual-DSI DSC LCD panel.
+diff --git a/drivers/gpu/drm/panel/Makefile b/drivers/gpu/drm/panel/Makefile
+index c2c5cf817..4bbb5a7cd 100644
+--- a/drivers/gpu/drm/panel/Makefile
++++ b/drivers/gpu/drm/panel/Makefile
+@@ -131,3 +131,4 @@ obj-$(CONFIG_DRM_PANEL_VISIONOX_VTDR6130) += panel-visionox-vtdr6130.o
+ obj-$(CONFIG_DRM_PANEL_VISIONOX_R66451) += panel-visionox-r66451.o
+ obj-$(CONFIG_DRM_PANEL_WIDECHIPS_WS2401) += panel-widechips-ws2401.o
+ obj-$(CONFIG_DRM_PANEL_XINPENG_XPP055C272) += panel-xinpeng-xpp055c272.o
++obj-$(CONFIG_DRM_PANEL_XIAOMI_O82)	+= panel-xiaomi-o82.o
+diff --git a/drivers/gpu/drm/panel/panel-xiaomi-o82.c b/drivers/gpu/drm/panel/panel-xiaomi-o82.c
+new file mode 100644
+index 000000000..fb843cb43
+--- /dev/null
++++ b/drivers/gpu/drm/panel/panel-xiaomi-o82.c
+@@ -0,0 +1,449 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Xiaomi Pad 7 (uke) O82 dual-DSI DSC LCD panel driver.
++ *
++ * ЧЕРНОВИК. Каркас основан на panel-novatek-nt35950.c (AngeloGioacchino Del Regno).
++ * Init-последовательность сконвертирована из downstream MiCode (uke-v-oss)
++ * через tools/dsi-cmds.py. Требует проверки на реальном железе.
++ *
++ * Панель: 3200x2136 (2x 1600), DSI video mode, DSC 10bpc -> 8bpp,
++ * slice 800x24, режимы 120/144/90 Гц. Reset gpio2, ESD IRQ gpio168/169.
++ */
++
++#include <linux/backlight.h>
++#include <linux/delay.h>
++#include <linux/gpio/consumer.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_graph.h>
++#include <linux/regulator/consumer.h>
++
++#include <drm/display/drm_dsc.h>
++#include <drm/display/drm_dsc_helper.h>
++#include <drm/drm_connector.h>
++#include <drm/drm_mipi_dsi.h>
++#include <drm/drm_modes.h>
++#include <drm/drm_panel.h>
++
++#define O82_NUM_SUPPLIES	3
++
++struct o82_panel {
++	struct drm_panel panel;
++	struct drm_connector *connector;
++	struct mipi_dsi_device *dsi[2];
++	struct regulator_bulk_data supplies[O82_NUM_SUPPLIES];
++	struct gpio_desc *reset_gpio;
++	bool prepared;
++};
++
++static inline struct o82_panel *to_o82_panel(struct drm_panel *panel)
++{
++	return container_of(panel, struct o82_panel, panel);
++}
++
++/* reset-sequence downstream: <0 10> <1 3> <0 3> <1 15> */
++static void o82_reset(struct o82_panel *ctx)
++{
++	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
++	msleep(10);
++	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
++	msleep(3);
++	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
++	msleep(3);
++	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
++	msleep(15);
++}
++
++static int o82_on(struct o82_panel *ctx)
++{
++	struct mipi_dsi_device *dsi = ctx->dsi[0];
++	struct mipi_dsi_multi_context dsi_ctx = { .dsi = dsi };
++
++	ctx->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
++	ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
++
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x27);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xd0, 0x31);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xd1, 0x20);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xd2, 0x38);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xde, 0x43);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xdf, 0x02);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x08, 0x24, 0x0a);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x0c, 0x1e, 0x00);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x10, 0x1e, 0x00);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x80, 0x57, 0x09);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x84, 0x2d, 0x00);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x88, 0x2d, 0x00);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x23);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x00, 0x80);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x01, 0x84);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x05, 0xf6);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x06, 0x02);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x11, 0x03);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x12, 0x2a);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x15, 0xd0);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x16, 0x16);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x29, 0x0a);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x30, 0xff);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x31, 0xfe);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x32, 0xfd);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x33, 0xfb);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x34, 0xf8);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x35, 0xf5);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x36, 0xf3);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x37, 0xf2);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x38, 0xf2);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x39, 0xf2);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x3a, 0xef);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x3b, 0xec);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x3d, 0xe9);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x3f, 0xe5);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x40, 0xe5);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x41, 0xe5);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x2a, 0x13);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x45, 0xff);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x46, 0xf4);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x47, 0xe7);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x48, 0xda);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x49, 0xcd);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x4a, 0xc0);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x4b, 0xb3);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x4c, 0xb1);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x4d, 0xb1);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x4e, 0xb1);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x4f, 0x95);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x50, 0x79);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x51, 0x5c);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x52, 0x58);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x53, 0x58);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x54, 0x58);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x23);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x58, 0xff);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x59, 0xfb);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x5a, 0xf7);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x5b, 0xf3);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x5c, 0xef);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x5d, 0xe3);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x5e, 0xd9);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x5f, 0xd7);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x60, 0xd7);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x61, 0xd7);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x62, 0xc9);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x63, 0xb9);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x64, 0xac);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x65, 0xaa);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x66, 0xaa);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x67, 0xaa);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x25);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x0f, 0x20);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x2a);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xc4, 0x82);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x26);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x3b, 0x06);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x4b, 0x06);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x22);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xc4, 0x06);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0xf0);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfa, 0x05);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x76, 0x16);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x20);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x30, 0x00);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x10);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x51, 0x0f, 0xff);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x53, 0x24);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x3b, 0x03, 0x94, 0x1a, 0x04, 0x04, 0x00);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x90, 0x03);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x91, 0xab, 0x28, 0x00, 0x18, 0xd2, 0x00, 0x02, 0xb2, 0x02, 0x9f, 0x00, 0x0b, 0x04, 0x86, 0x02, 0xdc);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x92, 0x10, 0xf0);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x9d, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb3, 0x40);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb2, 0x91);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x11);
++	mipi_dsi_msleep(&dsi_ctx, 120);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x29);
++
++	ctx->dsi[0]->mode_flags &= ~MIPI_DSI_MODE_LPM;
++	ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
++
++	return dsi_ctx.accum_err;
++}
++
++static int o82_off(struct o82_panel *ctx)
++{
++	struct mipi_dsi_device *dsi = ctx->dsi[0];
++	struct mipi_dsi_multi_context dsi_ctx = { .dsi = dsi };
++
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x28);
++	mipi_dsi_msleep(&dsi_ctx, 20);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x10);
++	mipi_dsi_msleep(&dsi_ctx, 100);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x4f);
++
++	return dsi_ctx.accum_err;
++}
++
++static int o82_prepare(struct drm_panel *panel)
++{
++	struct o82_panel *ctx = to_o82_panel(panel);
++	int ret;
++
++	if (ctx->prepared)
++		return 0;
++
++	ret = regulator_bulk_enable(O82_NUM_SUPPLIES, ctx->supplies);
++	if (ret < 0)
++		return ret;
++
++	o82_reset(ctx);
++
++	ret = o82_on(ctx);
++	if (ret < 0)
++		regulator_bulk_disable(O82_NUM_SUPPLIES, ctx->supplies);
++	else
++		ctx->prepared = true;
++
++	return ret;
++}
++
++static int o82_unprepare(struct drm_panel *panel)
++{
++	struct o82_panel *ctx = to_o82_panel(panel);
++
++	if (!ctx->prepared)
++		return 0;
++
++	o82_off(ctx);
++	regulator_bulk_disable(O82_NUM_SUPPLIES, ctx->supplies);
++	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
++	ctx->prepared = false;
++
++	return 0;
++}
++
++/*
++ * Режимы. TODO: clock/dual-DSI split уточнить на железе.
++ * hdisplay — на один линк (1600); при bonded DSI MSM может ожидать полную 3200.
++ */
++static const struct drm_display_mode o82_modes[] = {
++	{ /* 120 Hz */
++		.clock = 483714,
++		.hdisplay = 1600,
++		.hsync_start = 1600 + 113,
++		.hsync_end = 1600 + 113 + 16,
++		.htotal = 1600 + 113 + 16 + 16,
++		.vdisplay = 2136,
++		.vsync_start = 2136 + 26,
++		.vsync_end = 2136 + 26 + 2,
++		.vtotal = 2136 + 26 + 2 + 146,
++		.width_mm = 238,
++		.height_mm = 163,
++	},
++	{ /* 144 Hz */
++		.clock = 580457,
++		.hdisplay = 1600,
++		.hsync_start = 1600 + 18,
++		.hsync_end = 1600 + 18 + 16,
++		.htotal = 1600 + 18 + 16 + 16,
++		.vdisplay = 2136,
++		.vsync_start = 2136 + 26,
++		.vsync_end = 2136 + 26 + 2,
++		.vtotal = 2136 + 26 + 2 + 146,
++		.width_mm = 238,
++		.height_mm = 163,
++	},
++	{ /* 90 Hz */
++		.clock = 362786,
++		.hdisplay = 1600,
++		.hsync_start = 1600 + 304,
++		.hsync_end = 1600 + 304 + 16,
++		.htotal = 1600 + 304 + 16 + 16,
++		.vdisplay = 2136,
++		.vsync_start = 2136 + 26,
++		.vsync_end = 2136 + 26 + 2,
++		.vtotal = 2136 + 26 + 2 + 146,
++		.width_mm = 238,
++		.height_mm = 163,
++	},
++};
++
++static int o82_get_modes(struct drm_panel *panel,
++			 struct drm_connector *connector)
++{
++	struct o82_panel *ctx = to_o82_panel(panel);
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(o82_modes); i++) {
++		struct drm_display_mode *mode;
++
++		mode = drm_mode_duplicate(connector->dev, &o82_modes[i]);
++		if (!mode)
++			return -ENOMEM;
++
++		drm_mode_set_name(mode);
++		mode->type |= DRM_MODE_TYPE_DRIVER;
++		if (i == 0)
++			mode->type |= DRM_MODE_TYPE_PREFERRED;
++		drm_mode_probed_add(connector, mode);
++	}
++
++	connector->display_info.bpc = 10;
++	connector->display_info.width_mm = o82_modes[0].width_mm;
++	connector->display_info.height_mm = o82_modes[0].height_mm;
++	ctx->connector = connector;
++
++	return ARRAY_SIZE(o82_modes);
++}
++
++static const struct drm_panel_funcs o82_panel_funcs = {
++	.prepare = o82_prepare,
++	.unprepare = o82_unprepare,
++	.get_modes = o82_get_modes,
++};
++
++static const char * const o82_supply_names[O82_NUM_SUPPLIES] = {
++	"vddio",
++	"vsp",
++	"vsn",
++};
++
++static int o82_probe(struct mipi_dsi_device *dsi)
++{
++	struct device *dev = &dsi->dev;
++	struct device_node *dsi_r;
++	struct mipi_dsi_host *dsi_r_host;
++	struct o82_panel *ctx;
++	struct drm_dsc_config *dsc;
++	int i, num_dsis = 1, ret;
++
++	ctx = devm_drm_panel_alloc(dev, struct o82_panel, panel,
++				   &o82_panel_funcs, DRM_MODE_CONNECTOR_DSI);
++	if (IS_ERR(ctx))
++		return PTR_ERR(ctx);
++
++	for (i = 0; i < O82_NUM_SUPPLIES; i++)
++		ctx->supplies[i].supply = o82_supply_names[i];
++
++	ret = devm_regulator_bulk_get(dev, O82_NUM_SUPPLIES, ctx->supplies);
++	if (ret)
++		return dev_err_probe(dev, ret, "Failed to get regulators\n");
++
++	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_ASIS);
++	if (IS_ERR(ctx->reset_gpio))
++		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
++				     "Failed to get reset gpio\n");
++
++	/* DSI1: вторичный линк (bonded dual-DSI). */
++	dsi_r = of_graph_get_remote_node(dsi->dev.of_node, 1, -1);
++	if (!dsi_r) {
++		dev_err(dev, "Cannot get secondary DSI node\n");
++		return -ENODEV;
++	}
++	dsi_r_host = of_find_mipi_dsi_host_by_node(dsi_r);
++	of_node_put(dsi_r);
++	if (!dsi_r_host)
++		return dev_err_probe(dev, -EPROBE_DEFER, "Cannot get secondary DSI host\n");
++
++	{
++		const struct mipi_dsi_device_info info = {
++			.type = "o82",
++			.channel = 0,
++			.node = NULL,
++		};
++		ctx->dsi[1] = mipi_dsi_device_register_full(dsi_r_host, &info);
++	}
++	if (IS_ERR(ctx->dsi[1])) {
++		dev_err(dev, "Cannot register secondary DSI device\n");
++		return PTR_ERR(ctx->dsi[1]);
++	}
++	num_dsis++;
++
++	ctx->dsi[0] = dsi;
++	mipi_dsi_set_drvdata(dsi, ctx);
++
++	/* DSC: 10 bpc -> 8 bpp, slice 800x24, 2 slices на линк. */
++	dsc = devm_kzalloc(dev, sizeof(*dsc), GFP_KERNEL);
++	if (!dsc) {
++		ret = -ENOMEM;
++		goto err_unregister;
++	}
++	dsc->dsc_version_major = 0x1;
++	dsc->dsc_version_minor = 0x1;
++	dsc->slice_height = 24;
++	dsc->slice_width = 800;
++	dsc->slice_count = 2;
++	dsc->bits_per_component = 10;
++	dsc->bits_per_pixel = 8 << 4;
++	dsc->block_pred_enable = true;
++	dsi->dsc = dsc;
++
++	ret = drm_panel_of_backlight(&ctx->panel);
++	if (ret)
++		goto err_unregister;
++
++	drm_panel_add(&ctx->panel);
++
++	for (i = 0; i < num_dsis; i++) {
++		ctx->dsi[i]->lanes = 4;
++		ctx->dsi[i]->format = MIPI_DSI_FMT_RGB101010;
++		ctx->dsi[i]->mode_flags = MIPI_DSI_MODE_VIDEO |
++					  MIPI_DSI_MODE_VIDEO_BURST |
++					  MIPI_DSI_MODE_NO_EOT_PACKET |
++					  MIPI_DSI_CLOCK_NON_CONTINUOUS |
++					  MIPI_DSI_MODE_LPM;
++
++		ret = mipi_dsi_attach(ctx->dsi[i]);
++		if (ret < 0) {
++			dev_err_probe(dev, ret, "Cannot attach to DSI%d host\n", i);
++			goto err_panel_remove;
++		}
++	}
++
++	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
++	return 0;
++
++err_panel_remove:
++	drm_panel_remove(&ctx->panel);
++err_unregister:
++	mipi_dsi_device_unregister(ctx->dsi[1]);
++	return ret;
++}
++
++static void o82_remove(struct mipi_dsi_device *dsi)
++{
++	struct o82_panel *ctx = mipi_dsi_get_drvdata(dsi);
++
++	mipi_dsi_detach(ctx->dsi[0]);
++	mipi_dsi_detach(ctx->dsi[1]);
++	mipi_dsi_device_unregister(ctx->dsi[1]);
++	drm_panel_remove(&ctx->panel);
++}
++
++static const struct of_device_id o82_of_match[] = {
++	{ .compatible = "xiaomi,o82" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, o82_of_match);
++
++static struct mipi_dsi_driver o82_driver = {
++	.probe = o82_probe,
++	.remove = o82_remove,
++	.driver = {
++		.name = "panel-xiaomi-o82",
++		.of_match_table = o82_of_match,
++	},
++};
++module_mipi_dsi_driver(o82_driver);
++
++MODULE_AUTHOR("uke-linux-port");
++MODULE_DESCRIPTION("Xiaomi Pad 7 O82 dual-DSI DSC LCD panel");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
+index 9b9ae8ac3..e580605b0 100644
+--- a/drivers/input/touchscreen/Kconfig
++++ b/drivers/input/touchscreen/Kconfig
+@@ -1415,3 +1415,10 @@ config TOUCHSCREEN_HIMAX_HX83112B
+ 	  module will be called himax_hx83112b.
+ 
+ endif
++
++config TOUCHSCREEN_NT36532_UKE
++	tristate "Novatek NT36532 touchscreen (Xiaomi Pad 7)"
++	depends on SPI
++	depends on OF
++	help
++	  Novatek NT36532 TDDI touchscreen in the Xiaomi Pad 7 (uke).
+diff --git a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
+index bfd9de833..4babd78fd 100644
+--- a/drivers/input/touchscreen/Makefile
++++ b/drivers/input/touchscreen/Makefile
+@@ -119,3 +119,4 @@ obj-$(CONFIG_TOUCHSCREEN_IQS5XX)	+= iqs5xx.o
+ obj-$(CONFIG_TOUCHSCREEN_IQS7211)	+= iqs7211.o
+ obj-$(CONFIG_TOUCHSCREEN_ZINITIX)	+= zinitix.o
+ obj-$(CONFIG_TOUCHSCREEN_HIMAX_HX83112B)	+= himax_hx83112b.o
++obj-$(CONFIG_TOUCHSCREEN_NT36532_UKE)	+= nt36532-uke.o
+diff --git a/drivers/input/touchscreen/nt36532-uke.c b/drivers/input/touchscreen/nt36532-uke.c
+new file mode 100644
+index 000000000..2dd38c2c8
+--- /dev/null
++++ b/drivers/input/touchscreen/nt36532-uke.c
+@@ -0,0 +1,742 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Novatek NT36532 touchscreen (Xiaomi Pad 7 / uke).
++ *
++ * ЧЕРНОВИК mainline-порта. Протокол, регистровая модель и firmware update
++ * перенесены из downstream `nt36xxx`
++ * (Xiaomi-Pad-7-Pro-Resources/android_kernel_xiaomi_sm8635-modules).
++ *
++ * Реализовано:
++ *  - SPI (mode 0, read/write с маской 0x80/0x7F и dummy-байтом);
++ *  - регистровый доступ (set_page/write_addr), чтение fw info, reset-state, статуса;
++ *  - reset/boot MCU, firmware download (header parse + SRAM write + checksum);
++ *  - threaded IRQ, разбор пакета (6 байт/палец, checksum 65), report MT-B.
++ * TODO: ESD/WDT-recovery, стилус, MP-тест. Требует проверки на железе.
++ */
++
++#include <linux/delay.h>
++#include <linux/firmware.h>
++#include <linux/gpio/consumer.h>
++#include <linux/input.h>
++#include <linux/input/mt.h>
++#include <linux/input/touchscreen.h>
++#include <linux/interrupt.h>
++#include <linux/module.h>
++#include <linux/mutex.h>
++#include <linux/of.h>
++#include <linux/regulator/consumer.h>
++#include <linux/spi/spi.h>
++
++#define NT36532_MAX_TOUCHES		10
++#define NT36532_POINT_DATA_LEN		65
++#define NT36532_CHECKSUM_LEN		65
++#define NT36532_FORCE_MAX		1000
++#define NT36532_XBUF_LEN		(63 * 1024 + 1 + 1)
++#define NT36532_DEFAULT_X		3200
++#define NT36532_DEFAULT_Y		2136
++
++#define NT36532_TRANSFER_LEN		(63 * 1024)
++#define NT36532_ENG_RST_ADDR		0x7FFF80
++
++/* Event map (см. downstream nt36xxx.h). */
++#define EVENT_HOST_CMD			0x50
++#define EVENT_HANDSHAKING		0x51
++#define EVENT_RESET_COMPLETE		0x60
++#define EVENT_FWINFO			0x78
++
++#define RESET_STATE_INIT		0xA0
++#define RESET_STATE_REK			0xA1
++#define RESET_STATE_MAX			0xAF
++
++#define FLASH_SECTOR_SIZE		SIZE_4KB
++#define FLASH_END_FLAG_LEN		3
++
++/* mem_map NT36523 (используется NT36532). */
++#define MMAP_EVENT_BUF_ADDR		0x2FE00
++#define MMAP_RW_FLASH_DATA_ADDR		0x24002
++#define MMAP_BOOT_RDY_ADDR		0x3F10D
++#define MMAP_TX_AUTO_COPY_EN		0x3F7E8
++#define MMAP_BLD_CRC_EN_ADDR		0x3F30E
++#define MMAP_R_ILM_CHECKSUM_ADDR	0x3F120
++
++struct nt36532_bin_map {
++	char name[12];
++	u32 bin_addr;
++	u32 sram_addr;
++	u32 size;
++	u32 crc;
++};
++
++struct nt36532 {
++	struct spi_device *spi;
++	struct input_dev *input;
++	struct touchscreen_properties prop;
++	struct gpio_desc *reset_gpio;
++	struct regulator_bulk_data supplies[2];
++	const char *fw_name;
++
++	struct mutex lock;
++	struct mutex xbuf_lock;
++	u8 *txbuf;
++	u8 *rxbuf;
++	u32 abs_x_max;
++	u32 abs_y_max;
++
++	u32 swrst_n8_addr;
++	u32 fw_ver;
++	u16 nvt_pid;
++	u8 x_num;
++	u8 y_num;
++	u8 max_button_num;
++	u8 hw_crc;
++
++	const struct firmware *fw_entry;
++	u8 *fwbuf;
++	struct nt36532_bin_map *bin_map;
++	u32 partition;
++};
++
++/* ------------------------------------------------------------------ */
++/* SPI / регистровый доступ                                            */
++/* ------------------------------------------------------------------ */
++
++static int nt36532_spi_xfer(struct nt36532 *ts, u8 *buf, size_t len, bool read)
++{
++	struct spi_transfer xfer = {
++		.tx_buf = ts->txbuf,
++		.len = len + 1,
++	};
++	struct spi_message msg;
++	int ret;
++
++	memset(ts->txbuf, 0, len + 1);
++	if (read) {
++		buf[0] &= 0x7f;
++		xfer.rx_buf = ts->rxbuf;
++	} else {
++		buf[0] |= 0x80;
++	}
++	memcpy(ts->txbuf, buf, len);
++
++	spi_message_init(&msg);
++	spi_message_add_tail(&xfer, &msg);
++	ret = spi_sync(ts->spi, &msg);
++	if (!ret && read)
++		memcpy(buf + 1, ts->rxbuf + 2, len - 1);
++
++	return ret;
++}
++
++static int nt36532_write(struct nt36532 *ts, u8 *buf, size_t len)
++{
++	return nt36532_spi_xfer(ts, buf, len, false);
++}
++
++static int nt36532_read(struct nt36532 *ts, u8 *buf, size_t len)
++{
++	return nt36532_spi_xfer(ts, buf, len, true);
++}
++
++static int nt36532_set_page(struct nt36532 *ts, u32 addr)
++{
++	u8 buf[3] = { 0xFF, (addr >> 15) & 0xff, (addr >> 7) & 0xff };
++
++	return nt36532_write(ts, buf, 3);
++}
++
++static int nt36532_write_addr(struct nt36532 *ts, u32 addr, u8 data)
++{
++	u8 buf[3];
++	int ret;
++
++	ret = nt36532_set_page(ts, addr);
++	if (ret)
++		return ret;
++
++	buf[0] = addr & 0x7f;
++	buf[1] = data;
++
++	return nt36532_write(ts, buf, 2);
++}
++
++/* ------------------------------------------------------------------ */
++/* Состояние FW / fw info                                              */
++/* ------------------------------------------------------------------ */
++
++static int nt36532_clear_fw_status(struct nt36532 *ts)
++{
++	u8 buf[2];
++	int i, ret;
++
++	for (i = 0; i < 20; i++) {
++		ret = nt36532_set_page(ts, MMAP_EVENT_BUF_ADDR | EVENT_HANDSHAKING);
++		if (ret)
++			return ret;
++
++		buf[0] = EVENT_HANDSHAKING;
++		buf[1] = 0x00;
++		nt36532_write(ts, buf, 2);
++
++		buf[0] = EVENT_HANDSHAKING;
++		buf[1] = 0xff;
++		nt36532_read(ts, buf, 2);
++		if (buf[1] == 0x00)
++			return 0;
++
++		usleep_range(10000, 11000);
++	}
++
++	return -EIO;
++}
++
++static int nt36532_check_fw_reset_state(struct nt36532 *ts, u8 state)
++{
++	u8 buf[6];
++	int i, retry_max = (state == RESET_STATE_INIT) ? 10 : 50;
++
++	nt36532_set_page(ts, MMAP_EVENT_BUF_ADDR | EVENT_RESET_COMPLETE);
++
++	for (i = 0; i < retry_max; i++) {
++		buf[0] = EVENT_RESET_COMPLETE;
++		buf[1] = 0x00;
++		nt36532_read(ts, buf, 6);
++
++		if (buf[1] >= state && buf[1] <= RESET_STATE_MAX)
++			return 0;
++
++		usleep_range(10000, 11000);
++	}
++
++	dev_err(&ts->spi->dev, "reset state timeout, buf[1]=0x%02x\n", buf[1]);
++	return -EIO;
++}
++
++static int nt36532_get_fw_info(struct nt36532 *ts)
++{
++	u8 buf[39];
++	int i, ret;
++
++	for (i = 0; i < 3; i++) {
++		ret = nt36532_set_page(ts, MMAP_EVENT_BUF_ADDR | EVENT_FWINFO);
++		if (ret)
++			return ret;
++
++		buf[0] = EVENT_FWINFO;
++		ret = nt36532_read(ts, buf, 39);
++		if (ret)
++			return ret;
++
++		if ((u8)(buf[1] + buf[2]) == 0xff)
++			break;
++	}
++
++	if ((u8)(buf[1] + buf[2]) != 0xff) {
++		dev_err(&ts->spi->dev, "FW info broken\n");
++		return -EIO;
++	}
++
++	ts->fw_ver = buf[1];
++	ts->x_num = buf[3];
++	ts->y_num = buf[4];
++	ts->abs_x_max = (buf[5] << 8) | buf[6];
++	ts->abs_y_max = (buf[7] << 8) | buf[8];
++	ts->max_button_num = buf[11];
++	ts->nvt_pid = (buf[36] << 8) | buf[35];
++
++	dev_info(&ts->spi->dev, "fw_ver=0x%02x pid=0x%04x x=%u y=%u\n",
++		 ts->fw_ver, ts->nvt_pid, ts->abs_x_max, ts->abs_y_max);
++
++	return 0;
++}
++
++/* ------------------------------------------------------------------ */
++/* Reset / boot                                                        */
++/* ------------------------------------------------------------------ */
++
++static void nt36532_eng_reset(struct nt36532 *ts)
++{
++	nt36532_write_addr(ts, NT36532_ENG_RST_ADDR, 0x5a);
++	mdelay(1);
++}
++
++static void nt36532_sw_reset_idle(struct nt36532 *ts)
++{
++	if (ts->swrst_n8_addr)
++		nt36532_write_addr(ts, ts->swrst_n8_addr, 0xaa);
++	msleep(20);
++}
++
++static void nt36532_bootloader_reset(struct nt36532 *ts)
++{
++	if (ts->swrst_n8_addr)
++		nt36532_write_addr(ts, ts->swrst_n8_addr, 0x69);
++	mdelay(5);
++}
++
++static void nt36532_boot_ready(struct nt36532 *ts)
++{
++	nt36532_write_addr(ts, MMAP_BOOT_RDY_ADDR, 1);
++	mdelay(5);
++	if (!ts->hw_crc) {
++		nt36532_write_addr(ts, MMAP_BOOT_RDY_ADDR, 0);
++		/* POR_CD: 0xA0 при отсутствии hw crc (адрес см. downstream) */
++	}
++}
++
++/* ------------------------------------------------------------------ */
++/* Firmware download                                                   */
++/* ------------------------------------------------------------------ */
++
++static u32 nt36532_byte_to_word(const u8 *p)
++{
++	return p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
++}
++
++static u32 nt36532_checksum32(const u8 *data, size_t len)
++{
++	u32 sum = 0;
++	size_t i;
++
++	for (i = 0; i < len + 1; i++)
++		sum += data[i];
++	sum += len;
++
++	return ~sum + 1;
++}
++
++static int nt36532_bin_header_parser(struct nt36532 *ts, const u8 *fw, size_t fwsize)
++{
++	u32 end = nt36532_byte_to_word(fw);
++	u8 info_sec_num = 0, ovly_info, ovly_sec_num;
++	u32 pos, list;
++
++	pos = 0x30;
++	while (pos < end) {
++		info_sec_num++;
++		pos += 0x10;
++	}
++
++	ovly_info = (fw[0x28] & 0x10) >> 4;
++	ovly_sec_num = ovly_info ? (fw[0x28] & 0x0f) : 0;
++
++	ts->partition = 2 + ovly_sec_num + info_sec_num;
++	ts->bin_map = kcalloc(ts->partition + 1, sizeof(*ts->bin_map), GFP_KERNEL);
++	if (!ts->bin_map)
++		return -ENOMEM;
++
++	for (list = 0; list < ts->partition; list++) {
++		struct nt36532_bin_map *b = &ts->bin_map[list];
++
++		if (list < 2) {
++			b->bin_addr = nt36532_byte_to_word(&fw[0 + list * 12]);
++			b->sram_addr = nt36532_byte_to_word(&fw[4 + list * 12]);
++			b->size = nt36532_byte_to_word(&fw[8 + list * 12]);
++			snprintf(b->name, sizeof(b->name), list ? "DLM" : "ILM");
++		} else if (list < 2 + info_sec_num) {
++			pos = 0x30 + 0x10 * (list - 2);
++			b->sram_addr = nt36532_byte_to_word(&fw[pos]);
++			b->size = nt36532_byte_to_word(&fw[pos + 4]);
++			b->bin_addr = nt36532_byte_to_word(&fw[pos + 8]);
++			snprintf(b->name, sizeof(b->name), "Info-%u", list - 2);
++		} else {
++			pos = ts->bin_map[1].bin_addr +
++			      0x10 * (list - 2 - info_sec_num);
++			b->sram_addr = nt36532_byte_to_word(&fw[pos]);
++			b->size = nt36532_byte_to_word(&fw[pos + 4]);
++			b->bin_addr = nt36532_byte_to_word(&fw[pos + 8]);
++			snprintf(b->name, sizeof(b->name), "Ovly-%u",
++				 list - 2 - info_sec_num);
++		}
++
++		if (ts->hw_crc)
++			b->crc = nt36532_byte_to_word(&fw[0x18 + list * 4]);
++		else if (b->bin_addr + b->size < fwsize)
++			b->crc = nt36532_checksum32(&fw[b->bin_addr], b->size);
++
++		if (b->bin_addr + b->size > fwsize)
++			return -EINVAL;
++	}
++
++	return 0;
++}
++
++static int nt36532_write_sram(struct nt36532 *ts, const u8 *fw,
++			      u32 sram_addr, u32 size, u32 bin_addr)
++{
++	u32 i, count;
++	int ret;
++
++	count = DIV_ROUND_UP(size, NT36532_TRANSFER_LEN);
++
++	for (i = 0; i < count; i++) {
++		u32 len = min_t(u32, size, NT36532_TRANSFER_LEN);
++
++		ret = nt36532_set_page(ts, sram_addr);
++		if (ret)
++			return ret;
++
++		ts->fwbuf[0] = sram_addr & 0x7f;
++		memcpy(ts->fwbuf + 1, &fw[bin_addr], len);
++		ret = nt36532_write(ts, ts->fwbuf, len + 1);
++		if (ret)
++			return ret;
++
++		sram_addr += NT36532_TRANSFER_LEN;
++		bin_addr += NT36532_TRANSFER_LEN;
++		size -= len;
++	}
++
++	return 0;
++}
++
++static int nt36532_write_firmware(struct nt36532 *ts, const u8 *fw, size_t fwsize)
++{
++	u32 list;
++	int ret;
++
++	memset(ts->fwbuf, 0, NT36532_TRANSFER_LEN + 1);
++
++	for (list = 0; list < ts->partition; list++) {
++		struct nt36532_bin_map *b = &ts->bin_map[list];
++		u32 size = b->size;
++
++		if (!size)
++			continue;
++		if (b->bin_addr + size > fwsize)
++			return -EINVAL;
++
++		ret = nt36532_write_sram(ts, fw, b->sram_addr, size + 1, b->bin_addr);
++		if (ret)
++			return ret;
++	}
++
++	return 0;
++}
++
++static int nt36532_check_fw_checksum(struct nt36532 *ts)
++{
++	u32 len = ts->partition * 4;
++	u8 *buf = ts->fwbuf;
++	u32 list;
++	int ret;
++
++	memset(buf, 0, len + 1);
++	nt36532_set_page(ts, MMAP_R_ILM_CHECKSUM_ADDR);
++	buf[0] = MMAP_R_ILM_CHECKSUM_ADDR & 0x7f;
++	ret = nt36532_read(ts, buf, len + 1);
++	if (ret)
++		return ret;
++
++	for (list = 0; list < ts->partition; list++) {
++		u32 fw_sum = nt36532_byte_to_word(&buf[1 + list * 4]);
++
++		if (!ts->bin_map[list].size)
++			continue;
++		if (ts->bin_map[list].crc != fw_sum)
++			return -EIO;
++	}
++
++	return 0;
++}
++
++static int nt36532_download_firmware(struct nt36532 *ts)
++{
++	int ret, retry;
++
++	for (retry = 0; retry <= 2; retry++) {
++		if (ts->reset_gpio) {
++			gpiod_set_value_cansleep(ts->reset_gpio, 0);
++			mdelay(1);
++		}
++		nt36532_eng_reset(ts);
++		if (ts->reset_gpio) {
++			gpiod_set_value_cansleep(ts->reset_gpio, 1);
++			mdelay(10);
++		}
++		nt36532_bootloader_reset(ts);
++		nt36532_sw_reset_idle(ts);
++		nt36532_clear_fw_status(ts);
++
++		nt36532_write_addr(ts, MMAP_EVENT_BUF_ADDR | EVENT_RESET_COMPLETE, 0x00);
++
++		ret = nt36532_write_firmware(ts, ts->fw_entry->data,
++					     ts->fw_entry->size);
++		if (ret)
++			continue;
++
++		nt36532_boot_ready(ts);
++
++		ret = nt36532_check_fw_reset_state(ts, RESET_STATE_INIT);
++		if (ret)
++			continue;
++
++		ret = nt36532_check_fw_checksum(ts);
++		if (!ret)
++			return 0;
++	}
++
++	return ret ?: -EIO;
++}
++
++static int nt36532_update_firmware(struct nt36532 *ts)
++{
++	int ret;
++
++	ret = request_firmware(&ts->fw_entry, ts->fw_name, &ts->spi->dev);
++	if (ret) {
++		dev_warn(&ts->spi->dev, "firmware '%s' not found: %d\n",
++			 ts->fw_name, ret);
++		return ret;
++	}
++
++	ts->fwbuf = kzalloc(NT36532_TRANSFER_LEN + 1 + 1, GFP_KERNEL);
++	if (!ts->fwbuf) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	ret = nt36532_bin_header_parser(ts, ts->fw_entry->data, ts->fw_entry->size);
++	if (ret)
++		goto out;
++
++	ret = nt36532_download_firmware(ts);
++	if (ret)
++		dev_err(&ts->spi->dev, "firmware download failed: %d\n", ret);
++	else
++		dev_info(&ts->spi->dev, "firmware updated\n");
++
++out:
++	kfree(ts->bin_map);
++	ts->bin_map = NULL;
++	kfree(ts->fwbuf);
++	ts->fwbuf = NULL;
++	release_firmware(ts->fw_entry);
++	ts->fw_entry = NULL;
++	return ret;
++}
++
++/* ------------------------------------------------------------------ */
++/* Обработка прерывания (report MT-B)                                  */
++/* ------------------------------------------------------------------ */
++
++static int nt36532_point_checksum(const u8 *buf)
++{
++	u8 checksum = 0;
++	int i;
++
++	for (i = 0; i < NT36532_CHECKSUM_LEN - 1; i++)
++		checksum += buf[i + 1];
++	checksum = ~checksum + 1;
++
++	return checksum != buf[NT36532_CHECKSUM_LEN];
++}
++
++static irqreturn_t nt36532_irq(int irq, void *data)
++{
++	struct nt36532 *ts = data;
++	u8 point_data[NT36532_POINT_DATA_LEN + 1] = {0};
++	u8 press_id[NT36532_MAX_TOUCHES] = {0};
++	int finger_cnt = 0;
++	int ret, i;
++
++	mutex_lock(&ts->lock);
++
++	ret = nt36532_read(ts, point_data, NT36532_POINT_DATA_LEN + 1);
++	if (ret || nt36532_point_checksum(point_data))
++		goto out;
++
++	for (i = 0; i < NT36532_MAX_TOUCHES; i++) {
++		unsigned int position = 1 + 6 * i;
++		u8 input_id = point_data[position] >> 3;
++		unsigned int x, y, w, p;
++
++		if (input_id == 0 || input_id > NT36532_MAX_TOUCHES)
++			continue;
++		if ((point_data[position] & 0x07) != 0x01 &&
++		    (point_data[position] & 0x07) != 0x02)
++			continue;
++
++		x = (point_data[position + 1] << 4) | (point_data[position + 3] >> 4);
++		y = (point_data[position + 2] << 4) | (point_data[position + 3] & 0x0f);
++		if (x > ts->abs_x_max || y > ts->abs_y_max)
++			continue;
++
++		w = point_data[position + 4] ?: 1;
++		p = point_data[position + 5];
++		if (i < 2)
++			p |= point_data[i + 63] << 8;
++		p = clamp(p, 1U, (unsigned int)NT36532_FORCE_MAX);
++
++		press_id[input_id - 1] = 1;
++		input_mt_slot(ts->input, input_id - 1);
++		input_mt_report_slot_state(ts->input, MT_TOOL_FINGER, true);
++		input_report_abs(ts->input, ABS_MT_POSITION_X, x);
++		input_report_abs(ts->input, ABS_MT_POSITION_Y, y);
++		input_report_abs(ts->input, ABS_MT_TOUCH_MAJOR, w);
++		input_report_abs(ts->input, ABS_MT_PRESSURE, p);
++		finger_cnt++;
++	}
++
++	for (i = 0; i < NT36532_MAX_TOUCHES; i++) {
++		if (press_id[i])
++			continue;
++		input_mt_slot(ts->input, i);
++		input_mt_report_slot_state(ts->input, MT_TOOL_FINGER, false);
++	}
++
++	input_report_key(ts->input, BTN_TOUCH, finger_cnt > 0);
++	input_mt_sync_frame(ts->input);
++	input_sync(ts->input);
++
++out:
++	mutex_unlock(&ts->lock);
++	return IRQ_HANDLED;
++}
++
++/* ------------------------------------------------------------------ */
++/* Probe / remove                                                      */
++/* ------------------------------------------------------------------ */
++
++static int nt36532_probe(struct spi_device *spi)
++{
++	struct device *dev = &spi->dev;
++	struct nt36532 *ts;
++	int ret;
++
++	ts = devm_kzalloc(dev, sizeof(*ts), GFP_KERNEL);
++	if (!ts)
++		return -ENOMEM;
++
++	ts->spi = spi;
++	spi_set_drvdata(spi, ts);
++	mutex_init(&ts->lock);
++	mutex_init(&ts->xbuf_lock);
++
++	ts->txbuf = devm_kzalloc(dev, NT36532_XBUF_LEN, GFP_KERNEL);
++	ts->rxbuf = devm_kzalloc(dev, NT36532_XBUF_LEN, GFP_KERNEL);
++	if (!ts->txbuf || !ts->rxbuf)
++		return -ENOMEM;
++
++	ts->supplies[0].supply = "vdd";
++	ts->supplies[1].supply = "vddio";
++	ret = devm_regulator_bulk_get(dev, ARRAY_SIZE(ts->supplies), ts->supplies);
++	if (ret)
++		return dev_err_probe(dev, ret, "Failed to get regulators\n");
++
++	ret = regulator_bulk_enable(ARRAY_SIZE(ts->supplies), ts->supplies);
++	if (ret)
++		return dev_err_probe(dev, ret, "Failed to enable regulators\n");
++
++	ts->reset_gpio = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_HIGH);
++	if (IS_ERR(ts->reset_gpio)) {
++		ret = dev_err_probe(dev, PTR_ERR(ts->reset_gpio), "Failed to get reset gpio\n");
++		goto err_regs;
++	}
++
++	spi->mode = SPI_MODE_0;
++	ret = spi_setup(spi);
++	if (ret)
++		goto err_regs;
++
++	ret = device_property_read_string(dev, "firmware-name", &ts->fw_name);
++	if (ret)
++		ts->fw_name = "novatek_nt36532_o82_fw_csot.bin";
++	device_property_read_u32(dev, "novatek,swrst-n8-addr", &ts->swrst_n8_addr);
++
++	/* reset и чтение fw info */
++	if (ts->reset_gpio) {
++		gpiod_set_value_cansleep(ts->reset_gpio, 0);
++		msleep(10);
++		gpiod_set_value_cansleep(ts->reset_gpio, 1);
++		msleep(15);
++	}
++	ret = nt36532_check_fw_reset_state(ts, RESET_STATE_REK);
++	if (ret)
++		dev_warn(dev, "controller not ready (%d), пробуем прошить\n", ret);
++
++	if (nt36532_get_fw_info(ts)) {
++		dev_warn(dev, "нет валидного fw info, обновляем прошивку\n");
++		ret = nt36532_update_firmware(ts);
++		if (!ret)
++			nt36532_get_fw_info(ts);
++	}
++
++	ts->input = devm_input_allocate_device(dev);
++	if (!ts->input) {
++		ret = -ENOMEM;
++		goto err_regs;
++	}
++
++	ts->input->name = "Novatek NT36532 Touchscreen";
++	ts->input->id.bustype = BUS_SPI;
++	ts->input->id.vendor = 0x0603;
++	ts->input->id.product = 0x3653;
++
++	if (!ts->abs_x_max)
++		ts->abs_x_max = NT36532_DEFAULT_X;
++	if (!ts->abs_y_max)
++		ts->abs_y_max = NT36532_DEFAULT_Y;
++
++	input_set_abs_params(ts->input, ABS_MT_POSITION_X, 0, ts->abs_x_max, 0, 0);
++	input_set_abs_params(ts->input, ABS_MT_POSITION_Y, 0, ts->abs_y_max, 0, 0);
++	input_set_abs_params(ts->input, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
++	input_set_abs_params(ts->input, ABS_MT_PRESSURE, 0, NT36532_FORCE_MAX, 0, 0);
++	input_set_capability(ts->input, EV_KEY, BTN_TOUCH);
++	touchscreen_parse_properties(ts->input, true, &ts->prop);
++
++	ret = input_mt_init_slots(ts->input, NT36532_MAX_TOUCHES,
++				  INPUT_MT_DIRECT | INPUT_MT_DROP_UNUSED);
++	if (ret)
++		goto err_regs;
++
++	ret = input_register_device(ts->input);
++	if (ret)
++		goto err_regs;
++
++	if (spi->irq > 0) {
++		ret = devm_request_threaded_irq(dev, spi->irq, NULL, nt36532_irq,
++						IRQF_ONESHOT | IRQF_TRIGGER_FALLING,
++						"nt36532", ts);
++		if (ret) {
++			dev_err_probe(dev, ret, "Failed to request IRQ %d\n", spi->irq);
++			goto err_regs;
++		}
++	} else {
++		dev_warn(dev, "no IRQ configured — ввод не будет работать\n");
++	}
++
++	dev_info(dev, "Novatek NT36532 (uke) готов (черновик)\n");
++	return 0;
++
++err_regs:
++	regulator_bulk_disable(ARRAY_SIZE(ts->supplies), ts->supplies);
++	return ret;
++}
++
++static void nt36532_remove(struct spi_device *spi)
++{
++	struct nt36532 *ts = spi_get_drvdata(spi);
++
++	regulator_bulk_disable(ARRAY_SIZE(ts->supplies), ts->supplies);
++}
++
++static const struct of_device_id nt36532_of_match[] = {
++	{ .compatible = "novatek,NVT-ts" },
++	{ .compatible = "novatek,NVT-ts-spi" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, nt36532_of_match);
++
++static struct spi_driver nt36532_driver = {
++	.probe = nt36532_probe,
++	.remove = nt36532_remove,
++	.driver = {
++		.name = "nt36532-uke",
++		.of_match_table = nt36532_of_match,
++	},
++};
++module_spi_driver(nt36532_driver);
++
++MODULE_AUTHOR("uke-linux-port");
++MODULE_DESCRIPTION("Novatek NT36532 touchscreen (Xiaomi Pad 7)");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/media/platform/qcom/iris/iris_platform_palawan.h b/drivers/media/platform/qcom/iris/iris_platform_palawan.h
+index 4eeb468f4..7de7d78f5 100644
+--- a/drivers/media/platform/qcom/iris/iris_platform_palawan.h
++++ b/drivers/media/platform/qcom/iris/iris_platform_palawan.h
+@@ -16,7 +16,6 @@ static struct platform_inst_caps platform_inst_cap_palawan = {
+ 	.mb_cycles_vpp = 200,
+ 	.mb_cycles_fw = 489583,
+ 	.mb_cycles_fw_vpp = 66234,
+-	.num_comv = 0,
+ 	.max_frame_rate = MAXIMUM_FPS,
+ 	.max_operating_rate = MAXIMUM_FPS,
+ };

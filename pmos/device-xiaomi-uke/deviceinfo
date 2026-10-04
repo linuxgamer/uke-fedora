@@ -1,0 +1,27 @@
+# Reference: <https://postmarketos.org/deviceinfo>
+# Черновик. Поля с ??? уточнить на железе.
+deviceinfo_format_version="0"
+deviceinfo_name="Xiaomi Pad 7"
+deviceinfo_manufacturer="Xiaomi"
+deviceinfo_codename="xiaomi-uke"
+deviceinfo_year="2025"
+deviceinfo_arch="aarch64"
+
+# Устройство
+deviceinfo_drm="true"
+deviceinfo_external_storage="false"
+deviceinfo_chassis="tablet"
+
+# Загрузчик: fastboot, A/B, Android boot image v4
+deviceinfo_flash_method="fastboot"
+deviceinfo_boot_partition="boot"
+deviceinfo_flash_fastboot_partition_kernel="boot"
+deviceinfo_flash_fastboot_partition_rootfs="userdata"
+deviceinfo_generate_bootimg="true"
+deviceinfo_bootimg_header_version="4"
+deviceinfo_rootfs_image_sector_size="4096"
+
+# Экран
+deviceinfo_screen_width="3200"
+deviceinfo_screen_height="2136"
+deviceinfo_screen_density="???"

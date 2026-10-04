@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/display/panel/xiaomi,o82.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Xiaomi O82 dual-DSI DSC LCD panel
+
+maintainers:
+  - uke-linux-port
+
+description: |
+  Dual-DSI (bonded) DSC LCD panel used in the Xiaomi Pad 7 (uke).
+
+properties:
+  compatible:
+    const: xiaomi,o82
+
+  reg:
+    maxItems: 1
+
+  reset-gpios:
+    maxItems: 1
+
+  vddio-supply:
+    description: I/O supply (1.9V)
+
+  vsp-supply:
+    description: Positive panel supply (5.8V)
+
+  vsn-supply:
+    description: Negative panel supply (5.8V)
+
+  port: true
+
+required:
+  - compatible
+  - reg
+  - reset-gpios
+  - port
+
+additionalProperties: false

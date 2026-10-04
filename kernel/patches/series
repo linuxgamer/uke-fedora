@@ -1,0 +1,3 @@
+# Патчи поверх базы palawan, по одному на строку, в порядке применения.
+0001-arm64-dts-palawan-fix-usb-dp-phy-compatible.patch
+0002-media-iris-fix-palawan-inst-caps.patch

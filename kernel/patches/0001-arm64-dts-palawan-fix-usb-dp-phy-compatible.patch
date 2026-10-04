@@ -1,0 +1,13 @@
+diff --git a/arch/arm64/boot/dts/qcom/palawan.dtsi b/arch/arm64/boot/dts/qcom/palawan.dtsi
+index df8ff6334..5ba6dec56 100644
+--- a/arch/arm64/boot/dts/qcom/palawan.dtsi
++++ b/arch/arm64/boot/dts/qcom/palawan.dtsi
+@@ -3075,7 +3075,7 @@ usb_1_hsphy: phy@88e3000 {
+ 
+ 		usb_dp_qmpphy: phy@88e8000 {
+ 			compatible = "qcom,palawan-qmp-usb3-dp-phy",
+-				     "qcom,palawan-qmp-usb3-dp-phy",
++				     "qcom,sc8280xp-qmp-usb43dp-phy";
+ 			reg = <0 0x088e8000 0 0x3000>;
+ 
+ 			clocks = <&gcc GCC_USB3_PRIM_PHY_AUX_CLK>,

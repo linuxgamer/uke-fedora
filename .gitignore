@@ -1,0 +1,22 @@
+# build outputs
+/build/
+/dist/
+/out/
+*.img
+*.dtb
+*.dtbo
+*.cpio
+*.cpio.lz4
+*.o
+*.ko
+
+# extracted stock images (large, device-private)
+/stock/
+/extracted/
+
+# reference clones: fetch, do not vendor
+/references/*
+!/references/README.md
+
+# scratch clones (e.g. kernel/module searches)
+/temp/

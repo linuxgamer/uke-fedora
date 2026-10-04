@@ -1,0 +1,12 @@
+diff --git a/drivers/media/platform/qcom/iris/iris_platform_palawan.h b/drivers/media/platform/qcom/iris/iris_platform_palawan.h
+index 4eeb468f4..7de7d78f5 100644
+--- a/drivers/media/platform/qcom/iris/iris_platform_palawan.h
++++ b/drivers/media/platform/qcom/iris/iris_platform_palawan.h
+@@ -16,7 +16,6 @@ static struct platform_inst_caps platform_inst_cap_palawan = {
+ 	.mb_cycles_vpp = 200,
+ 	.mb_cycles_fw = 489583,
+ 	.mb_cycles_fw_vpp = 66234,
+-	.num_comv = 0,
+ 	.max_frame_rate = MAXIMUM_FPS,
+ 	.max_operating_rate = MAXIMUM_FPS,
+ };

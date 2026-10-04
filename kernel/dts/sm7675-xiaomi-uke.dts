@@ -1,0 +1,1138 @@
+// SPDX-License-Identifier: BSD-3-Clause
+/*
+ * Copyright (c) 2026, Alexandr Zubtsov <devizure@mainlining.org>
+ *
+ * ЧЕРНОВИК board DTS для Xiaomi Pad 7 (uke, SM7675 / lamma).
+ * База: lamma-qrd.dts (palawan-mainline palawan/v7.2-rc2).
+ * uke-специфика сверена с downstream MiCode uke-v-oss (uke-sm8635.dtsi).
+ * Требует проверки на реальном устройстве. Место в дереве:
+ *   arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dts
+ *
+ * Открытые TODO по uke (см. также docs/BRINGUP-NOTES.md):
+ *   - панель O82: DUAL DSI + DSC; в palawan.dtsi только mdss_dsi0, нужен dsi1
+ *     и драйвер панели (reset gpio2, vsp/vsn gpio74/75, vddil8b=L8B 1.9V)
+ *   - тачскрин Novatek NT36532E (CSOT/TM), драйвер в mainline не подтверждён
+ *   - подсветка 2x KTZ8866 @0x11 на i2c0/i2c12 (mainline compatible ok)
+ *   - WCD939x USB2-роут (downstream: qcom,wcd_usbss) + param-override eUSB2
+ *   - таблица регуляторов: скопирована из lamma-qrd, требует сверки с uke
+ * Память и reserved-memory уже в palawan.dtsi (размер заполняет загрузчик).
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/leds/common.h>
+#include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+#include "lamma.dtsi"
+#include "pm7550.dtsi" /* PMXR2230 */
+#include "pm7550ba.dtsi"
+#include "pmr735a.dtsi"
+#include "pm8010.dtsi"
+#define PMK8550VE_SID 3
+#include "pm8550ve.dtsi"
+#include "pm8550vs.dtsi"
+#include "pmk8550.dtsi"
+
+/ {
+	model = "Xiaomi Pad 7";
+	compatible = "xiaomi,uke", "qcom,lamma";
+
+	aliases {
+		serial0 = &uart5;
+		serial1 = &uart10;
+	};
+
+	chosen {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		stdout-path = "serial0:115200n8";
+
+		/*
+		 * Ранний bring-up: ABL-фреймбуфер uke (подтверждён ztsubaki).
+		 * Включить для simplefb-консоли; требует сохранить splash_region
+		 * (43 МиБ) как no-map, иначе кэш-алиасинг с обычной RAM.
+		 */
+		framebuffer@e3940000 {
+			compatible = "simple-framebuffer";
+			reg = <0 0xe3940000 0 0x01a13000>;
+			width = <3200>;
+			height = <2136>;
+			stride = <12800>;
+			format = "a8r8g8b8";
+			status = "disabled"; /* TODO: включить для simplefb-консоли */
+		};
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		pinctrl-0 = <&volume_up_n>;
+		pinctrl-names = "default";
+
+		key-volume-up {
+			label = "Volume Up";
+			linux,code = <KEY_VOLUMEUP>;
+			gpios = <&pm7550_gpios 6 GPIO_ACTIVE_LOW>;
+			debounce-interval = <15>;
+			linux,can-disable;
+			wakeup-source;
+		};
+	};
+
+	pmic-glink {
+		compatible = "qcom,lamma-pmic-glink",
+			     "qcom,sm8550-pmic-glink",
+			     "qcom,pmic-glink";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		/* bring-up: USB только peripheral, role-switch не используем */
+		status = "disabled";
+		orientation-gpios = <&tlmm 122 GPIO_ACTIVE_HIGH>;
+
+		connector@0 {
+			compatible = "usb-c-connector";
+			reg = <0>;
+
+			power-role = "dual";
+			data-role = "dual";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+
+					pmic_glink_hs_in: endpoint {
+						remote-endpoint = <&usb_1_dwc3_hs>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+
+					pmic_glink_ss_in: endpoint {
+						remote-endpoint = <0>;
+					};
+				};
+
+				port@2 {
+					reg = <2>;
+
+					pmic_glink_sbu: endpoint {
+						remote-endpoint = <0>;
+					};
+				};
+			};
+		};
+	};
+
+	vph_pwr: vph-pwr-regulator {
+		compatible = "regulator-fixed";
+
+		regulator-name = "vph_pwr";
+		regulator-min-microvolt = <3700000>;
+		regulator-max-microvolt = <3700000>;
+
+		regulator-always-on;
+		regulator-boot-on;
+	};
+};
+
+&apps_rsc {
+	regulators-0 {
+		compatible = "qcom,pm7550-rpmh-regulators";
+		qcom,pmic-id = "b";
+
+		vreg_bob: bob {
+			regulator-name = "vreg_bob";
+			regulator-min-microvolt = <3008000>;
+			regulator-max-microvolt = <3960000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_s1b_2p04: smps1 {
+			regulator-name = "vreg_s1b_2p04";
+			regulator-min-microvolt = <1856000>;
+			regulator-max-microvolt = <2040000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_s2b_1p4: smps2 {
+			regulator-name = "vreg_s2b_1p4";
+			regulator-min-microvolt = <1256000>;
+			regulator-max-microvolt = <1408000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_s3b_1p04: smps3 {
+			regulator-name = "vreg_s3b_1p04";
+			regulator-min-microvolt = <968000>;
+			regulator-max-microvolt = <1040000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l1b_0p96: ldo1 {
+			regulator-name = "vreg_l1b_0p96";
+			regulator-min-microvolt = <880000>;
+			regulator-max-microvolt = <960000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l2b_0p95: ldo2 {
+			regulator-name = "vreg_l2b_0p95";
+			regulator-min-microvolt = <880000>;
+			regulator-max-microvolt = <952000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l3b_0p92: ldo3 {
+			regulator-name = "vreg_l3b_0p92";
+			regulator-min-microvolt = <880000>;
+			regulator-max-microvolt = <920000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l4b_1p2: ldo4 {
+			regulator-name = "vreg_l4b_1p2";
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1200000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l5b_1p2: ldo5 {
+			regulator-name = "vreg_l5b_1p2";
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1200000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l7b_1p8: ldo7 {
+			regulator-name = "vreg_l7b_1p8";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l8b_1p8: ldo8 {
+			regulator-name = "vreg_l8b_1p8";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l9b_0p81: ldo9 {
+			regulator-name = "vreg_l9b_0p81";
+			regulator-min-microvolt = <760000>;
+			regulator-max-microvolt = <816000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l10b_0p93: ldo10 {
+			regulator-name = "vreg_l10b_0p93";
+			regulator-min-microvolt = <872000>;
+			regulator-max-microvolt = <936000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l11b_1p8: ldo11 {
+			regulator-name = "vreg_l11b_1p8";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l12b: ldo12 {
+			regulator-name = "vreg_l12b";
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+			/*
+			 * Remove min/max voltages for this regulator as initial
+			 * voltage of  L12B is set to be 2.4v/2.96v during PON
+			 * depending upon the UFS mode. UFS is the only client
+			 * on this and this regulator will only be voted
+			 * for enabling/disabling conditions.
+			 */
+		};
+
+		vreg_l13b_3p54: ldo13 {
+			regulator-name = "vreg_l13b_3p54";
+			regulator-min-microvolt = <2704000>;
+			regulator-max-microvolt = <3304000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l16b_3p54: ldo16 {
+			regulator-name = "vreg_l16b_3p54";
+			regulator-min-microvolt = <2904000>;
+			regulator-max-microvolt = <3544000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l17b_3p3: ldo17 {
+			regulator-name = "vreg_l17b_3p3";
+			regulator-min-microvolt = <2704000>;
+			regulator-max-microvolt = <3304000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l18b_3p0: ldo18 {
+			regulator-name = "vreg_l18b_3p0";
+			regulator-min-microvolt = <2000000>;
+			regulator-max-microvolt = <3000000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l19b_3p0: ldo19 {
+			regulator-name = "vreg_l19b_3p0";
+			regulator-min-microvolt = <2600000>;
+			regulator-max-microvolt = <3544000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l20b_3p54: ldo20 {
+			regulator-name = "vreg_l20b_3p54";
+			regulator-min-microvolt = <1624000>;
+			regulator-max-microvolt = <3544000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l21b_3p54: ldo21 {
+			regulator-name = "vreg_l21b_3p54";
+			regulator-min-microvolt = <1624000>;
+			regulator-max-microvolt = <3544000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l22b_3p4: ldo22 {
+			regulator-name = "vreg_l22b_3p4";
+			regulator-min-microvolt = <2704000>;
+			regulator-max-microvolt = <3400000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l23b_3p54: ldo23 {
+			regulator-name = "vreg_l23b_3p54";
+			regulator-min-microvolt = <1656000>;
+			regulator-max-microvolt = <3544000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+	};
+
+	regulators-1 {
+		compatible = "qcom,pm8550vs-rpmh-regulators";
+		qcom,pmic-id = "c";
+
+		vreg_l1c_0p97: ldo1 {
+			regulator-name = "vreg_l1c_0p97";
+			regulator-min-microvolt = <904000>;
+			regulator-max-microvolt = <976000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l3c_1p25: ldo3 {
+			regulator-name = "vreg_l3c_1p25";
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1256000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+	};
+
+	regulators-2 {
+		compatible = "qcom,pm8550vs-rpmh-regulators";
+		qcom,pmic-id = "d";
+
+		vreg_l1d_0p96: ldo1 {
+			regulator-name = "vreg_l1d_0p96";
+			regulator-min-microvolt = <872000>;
+			regulator-max-microvolt = <960000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l3d_1p28: ldo3 {
+			regulator-name = "vreg_l3d_1p28";
+			regulator-min-microvolt = <1144000>;
+			regulator-max-microvolt = <1264000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+	};
+
+	regulators-3 {
+		compatible = "qcom,pmr735a-rpmh-regulators";
+		qcom,pmic-id = "e";
+
+		vreg_s1e_1p12: smps1 {
+			regulator-name = "vreg_s1e_1p12";
+			regulator-min-microvolt = <1012000>;
+			regulator-max-microvolt = <1120000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_s2e_0p57: smps2 {
+			regulator-name = "vreg_s2e_0p57";
+			regulator-min-microvolt = <300000>;
+			regulator-max-microvolt = <572000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_s3e_2p4: smps3 {
+			regulator-name = "vreg_s3e_2p4";
+			regulator-min-microvolt = <1600000>;
+			regulator-max-microvolt = <2400000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l1e_0p91: ldo1 {
+			regulator-name = "vreg_l1e_0p91";
+			regulator-min-microvolt = <488000>;
+			regulator-max-microvolt = <912000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l2e_0p97: ldo2 {
+			regulator-name = "vreg_l2e_0p97";
+			regulator-min-microvolt = <920000>;
+			regulator-max-microvolt = <968000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l3e_0p87: ldo3 {
+			regulator-name = "vreg_l3e_0p87";
+			regulator-min-microvolt = <504000>;
+			regulator-max-microvolt = <872000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l4e_2p0: ldo4 {
+			regulator-name = "vreg_l4e_2p0";
+			regulator-min-microvolt = <1624000>;
+			regulator-max-microvolt = <2000000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l5e_1p3: ldo5 {
+			regulator-name = "vreg_l5e_1p3";
+			regulator-min-microvolt = <1104000>;
+			regulator-max-microvolt = <1304000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l6e_1p3: ldo6 {
+			regulator-name = "vreg_l6e_1p3";
+			regulator-min-microvolt = <1080000>;
+			regulator-max-microvolt = <1304000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l7e_3p3: ldo7 {
+			regulator-name = "vreg_l7b_3p3";
+			regulator-min-microvolt = <1624000>;
+			regulator-max-microvolt = <3304000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+	};
+
+	regulators-4 {
+		compatible = "qcom,pmg1110-rpmh-regulators";
+		qcom,pmic-id = "j";
+
+		vreg_s1j_1p12: smps1 {
+			regulator-name = "vreg_s1j_1p12";
+			regulator-min-microvolt = <504000>;
+			regulator-max-microvolt = <868000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+	};
+
+	regulators-5 {
+		compatible = "qcom,pm8010-rpmh-regulators";
+		qcom,pmic-id = "m";
+
+		vreg_l1m_1p1: ldo1 {
+			regulator-name = "vreg_l1m_1p1";
+			regulator-min-microvolt = <1104000>;
+			regulator-max-microvolt = <1104000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l2m_1p056: ldo2 {
+			regulator-name = "vreg_l2m_1p056";
+			regulator-min-microvolt = <1056000>;
+			regulator-max-microvolt = <1056000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l3m_2p8: ldo3 {
+			regulator-name = "vreg_l3m_2p8";
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l4m_2p8: ldo4 {
+			regulator-name = "vreg_l4m_2p8";
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l6m_2p8: ldo6 {
+			regulator-name = "vreg_l6m_2p8";
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l7m_2p8: ldo7 {
+			regulator-name = "vreg_l7m_2p8";
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+	};
+
+	regulators-6 {
+		compatible = "qcom,pm8010-rpmh-regulators";
+		qcom,pmic-id = "n";
+
+		vreg_l1n_1p1: ldo1 {
+			regulator-name = "vreg_l1n_1p1";
+			regulator-min-microvolt = <1104000>;
+			regulator-max-microvolt = <1104000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l2n_1p056: ldo2 {
+			regulator-name = "vreg_l2n_1p056";
+			regulator-min-microvolt = <1056000>;
+			regulator-max-microvolt = <1056000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+						   RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l3n_1p8: ldo3 {
+			regulator-name = "vreg_l3n_1p8";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l4n_1p8: ldo4 {
+			regulator-name = "vreg_l4n_1p8";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l5n_1p8: ldo5 {
+			regulator-name = "vreg_l5n_1p8";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l6n_2p8: ldo6 {
+			regulator-name = "vreg_l6n_2p8";
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l7n_3p3: ldo7 {
+			regulator-name = "vreg_l7n_3p3";
+			regulator-min-microvolt = <3304000>;
+			regulator-max-microvolt = <3304000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+	};
+};
+
+&gpi_dma0 {
+	status = "okay";
+};
+
+&gpi_dma1 {
+	status = "okay";
+};
+
+&gpu {
+	status = "okay";
+};
+
+&gpu_zap_shader {
+	firmware-name = "qcom/palawan/gen71100_zap.mbn";
+};
+
+&ipa {
+	qcom,gsi-loader = "self";
+	memory-region = <&ipa_fw_mem>;
+	firmware-name = "qcom/palawan/ipa_fws.mbn";
+	status = "okay";
+};
+
+&iris {
+	status = "okay";
+};
+
+&lpass_tlmm {
+	spkr_1_sd_n_active: spkr-1-sd-n-active-state {
+		pins = "gpio13";
+		function = "gpio";
+		drive-strength = <16>;
+		bias-disable;
+		output-low;
+	};
+};
+
+&mdss {
+	status = "okay";
+};
+
+/*
+ * Панель uke — O82, DUAL DSI + DSC (LCD, video mode, TDDI).
+ * Варианты (по panel-id): O82 42 02 0B / O82 36 02 0A.
+ * Reset: gpio2. ESD IRQ: gpio168/169 (драйвером пока не обрабатывается).
+ * Reset sequence: <0 10 1 3 0 3 1 15>.
+ * Питание: vddio=L8B(1.9V), vsp=gpio74(5.8V), vsn=gpio75(5.8V).
+ * Формат: 30 bpp, DSC 10->8bpp, slice 800x24; dual DSI; 120/144/90 Гц.
+ * Драйвер: kernel/drivers/panel-xiaomi-o82.c (черновик).
+ */
+&mdss_dsi0 {
+	vdda-supply = <&vreg_l4b_1p2>;
+
+	status = "okay";
+
+	panel@0 {
+		compatible = "xiaomi,o82";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 2 GPIO_ACTIVE_HIGH>;
+
+		vddio-supply = <&vreg_l8b_1p8>;
+		vsp-supply = <&display_panel_vsp>;
+		vsn-supply = <&display_panel_vsn>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				panel0_in: endpoint {
+					remote-endpoint = <&mdss_dsi0_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+
+				panel1_in: endpoint {
+					remote-endpoint = <&mdss_dsi1_out>;
+				};
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	remote-endpoint = <&panel0_in>;
+	data-lanes = <0 1 2 3>;
+};
+
+&mdss_dsi1 {
+	vdda-supply = <&vreg_l4b_1p2>;
+
+	status = "okay";
+};
+
+&mdss_dsi1_out {
+	remote-endpoint = <&panel1_in>;
+	data-lanes = <0 1 2 3>;
+};
+
+&mdss_dsi1_phy {
+	vdds-supply = <&vreg_l2b_0p95>;
+
+	status = "okay";
+};
+
+&mdss_dsi0_phy {
+	vdds-supply = <&vreg_l2b_0p95>;
+
+	status = "okay";
+};
+
+&mdss_dp0 {
+	status = "okay";
+};
+
+/* Питание панели uke: vsp/vsn через фиксированные регуляторы на GPIO74/75. */
+/ {
+	display_panel_vsp: regulator-vsp {
+		compatible = "regulator-fixed";
+		regulator-name = "display_panel_vsp";
+		regulator-min-microvolt = <5800000>;
+		regulator-max-microvolt = <5800000>;
+		regulator-enable-ramp-delay = <233>;
+		gpio = <&tlmm 74 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+	};
+
+	display_panel_vsn: regulator-vsn {
+		compatible = "regulator-fixed";
+		regulator-name = "display_panel_vsn";
+		regulator-min-microvolt = <5800000>;
+		regulator-max-microvolt = <5800000>;
+		regulator-enable-ramp-delay = <233>;
+		gpio = <&tlmm 75 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+	};
+};
+
+/* uke: L8B питает панель (vddil8b) при 1.9 В (в lamma-qrd — 1.8 В). */
+&vreg_l8b_1p8 {
+	regulator-min-microvolt = <1900000>;
+	regulator-max-microvolt = <1900000>;
+};
+
+/*
+ * Подсветка uke — 2x KTZ8866 (левая/правая половины), адрес 0x11.
+ * Downstream: qupv3_se0_i2c и qupv3_se12_i2c.
+ * В mainline драйвер KTZ8866 есть, но compatible `kinetic,ktz8866`
+ * (downstream `ktz,ktz8866`) — согласовать. GPIO hwen/enp/enn/panelid уточнить.
+ */
+&i2c0 {
+	status = "okay";
+
+	backlight@11 {
+		compatible = "kinetic,ktz8866";
+		reg = <0x11>;
+	};
+};
+
+&i2c12 {
+	status = "okay";
+
+	backlight@11 {
+		compatible = "kinetic,ktz8866";
+		reg = <0x11>;
+	};
+};
+
+&pon_pwrkey {
+	status = "okay";
+};
+
+&pon_resin {
+	linux,code = <KEY_VOLUMEDOWN>;
+
+	status = "okay";
+};
+
+&pm7550_flash {
+	status = "okay";
+
+	led-0 {
+		function = LED_FUNCTION_FLASH;
+		color = <LED_COLOR_ID_YELLOW>;
+		led-sources = <1>, <4>;
+		led-max-microamp = <500000>;
+		flash-max-microamp = <2000000>;
+		flash-max-timeout-us = <1280000>;
+		function-enumerator = <0>;
+	};
+
+	led-1 {
+		function = LED_FUNCTION_FLASH;
+		color = <LED_COLOR_ID_WHITE>;
+		led-sources = <2>, <3>;
+		led-max-microamp = <500000>;
+		flash-max-microamp = <2000000>;
+		flash-max-timeout-us = <1280000>;
+		function-enumerator = <1>;
+	};
+};
+
+&pm7550_gpios {
+	volume_up_n: volume-up-n-state {
+		pins = "gpio6";
+		function = "normal";
+		power-source = <1>;
+		bias-pull-up;
+		input-enable;
+	};
+};
+
+&pm7550_pwm {
+	status = "okay";
+
+	multi-led {
+		color = <LED_COLOR_ID_RGB>;
+		function = LED_FUNCTION_STATUS;
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		led@1 {
+			reg = <1>;
+			color = <LED_COLOR_ID_RED>;
+		};
+
+		led@2 {
+			reg = <2>;
+			color = <LED_COLOR_ID_GREEN>;
+		};
+
+		led@3 {
+			reg = <3>;
+			color = <LED_COLOR_ID_BLUE>;
+		};
+	};
+};
+
+&pm7550ba_eusb2_repeater {
+	vdd3-supply = <&vreg_l17b_3p3>;
+	vdd18-supply = <&vreg_l7b_1p8>;
+
+	/*
+	 * TODO: downstream uke задаёт qcom,param-override-seq
+	 * (обычный / factory / host). Перенести при проверке USB.
+	 */
+};
+
+&pm8550vs_c {
+	status = "okay";
+};
+
+&pm8550vs_d {
+	status = "okay";
+};
+
+&pm8550vs_e {
+	status = "okay";
+};
+
+&pm8550vs_g {
+	status = "okay";
+};
+
+&qupv3_id_0 {
+	status = "okay";
+};
+
+&qupv3_id_1 {
+	status = "okay";
+};
+
+&remoteproc_adsp {
+	firmware-name = "qcom/lamma/adsp2.mbn",
+			"qcom/lamma/adsp2_dtb.mbn";
+	status = "okay";
+};
+
+&remoteproc_cdsp {
+	firmware-name = "qcom/palawan/cdsp.mbn",
+			"qcom/palawan/cdsp_dtb.mbn";
+	status = "okay";
+};
+
+&remoteproc_mpss {
+	/* uke: модема нет (downstream отключает mpss_mem/modem_pas) */
+	status = "disabled";
+};
+
+&remoteproc_wpss {
+	firmware-name = "qcom/palawan/wpss.mbn";
+
+	status = "okay";
+};
+
+&sleep_clk {
+	clock-frequency = <32764>;
+};
+
+/*
+ * Тачскрин uke — Novatek NT36532E (варианты CSOT / TM), SPI, TDDI.
+ * Downstream (qupv3_se4_spi): IRQ gpio54, lcd_id gpio26, reset не задан.
+ * Драйвер: kernel/drivers/nt36532-uke.c (черновик mainline-порта).
+ * TODO: уточнить reset, питание (vdd/vddio) и вариант CSOT/TM.
+ */
+&spi4 {
+	status = "okay";
+
+	touchscreen@0 {
+		compatible = "novatek,NVT-ts";
+		reg = <0>;
+
+		interrupt-parent = <&tlmm>;
+		interrupts = <54 IRQ_TYPE_LEVEL_LOW>;
+
+		vdd-supply = <&vreg_l22b_3p4>;
+		vddio-supply = <&vreg_l8b_1p8>;
+
+		firmware-name = "novatek_nt36532_o82_fw_csot.bin";
+
+		spi-max-frequency = <10000000>;
+
+		pinctrl-0 = <&ts_irq>;
+		pinctrl-names = "default";
+
+		/* TODO: lcd_id gpio26, reset, CSOT/TM профиль */
+	};
+};
+
+&tlmm {
+	gpio-reserved-ranges = <56 5>;
+
+	bt_default: bt-default-state {
+		bt-en-pins {
+			pins = "gpio156";
+			function = "gpio";
+			drive-strength = <16>;
+			bias-disable;
+		};
+
+		sw-ctrl-pins {
+			pins = "gpio80";
+			function = "gpio";
+			bias-pull-down;
+		};
+	};
+
+	disp0_reset_n_active: disp0-reset-n-active-state {
+		pins = "gpio2"; /* uke: O82 panel reset */
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
+
+	disp0_reset_n_suspend: disp0-reset-n-suspend-state {
+		pins = "gpio2"; /* uke: O82 panel reset */
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	mdp_vsync: mdp-vsync-state {
+		pins = "gpio77";
+		function = "mdp_vsync";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	spkr_2_sd_n_active: spkr-2-sd-n-active-state {
+		pins = "gpio76";
+		function = "gpio";
+		drive-strength = <16>;
+		bias-disable;
+		output-low;
+	};
+
+	ts_irq: ts-irq-state {
+		pins = "gpio54"; /* uke: Novatek NT36532 IRQ */
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+		output-disable;
+	};
+
+	wcd_default: wcd-reset-n-active-state {
+		pins = "gpio12";
+		function = "gpio";
+		drive-strength = <16>;
+		bias-disable;
+		output-low;
+	};
+};
+
+&uart5 {
+	status = "okay";
+};
+
+&uart10 {
+	status = "okay";
+
+	bluetooth {
+		compatible = "qcom,wcn6750-bt";
+
+		vddrfacmn-supply = <&vreg_s3b_1p04>;
+		vddaon-supply = <&vreg_s3b_1p04>;
+		vddwlcx-supply = <&vreg_s3b_1p04>;
+		vddwlmx-supply = <&vreg_s3b_1p04>;
+		vddrfa0p8-supply = <&vreg_s3b_1p04>;
+		vddrfa1p3-supply = <&vreg_s2b_1p4>;
+		vddrfa1p8-supply = <&vreg_s1b_2p04>;
+		vddrfa2p2-supply = <&vreg_s3e_2p4>;
+
+		max-speed = <3200000>;
+	};
+};
+
+&ufs_mem_hc {
+	reset-gpios = <&tlmm 178 GPIO_ACTIVE_LOW>;
+
+	vcc-supply = <&vreg_l12b>;
+	vcc-max-microamp = <1200000>;
+	vccq-supply = <&vreg_l3d_1p28>;
+	vccq-max-microamp = <1200000>;
+
+	status = "okay";
+};
+
+&ufs_mem_phy {
+	vdda-phy-supply = <&vreg_l1d_0p96>;
+	vdda-pll-supply = <&vreg_l4b_1p2>;
+
+	status = "okay";
+};
+
+/*
+ * TODO: uke маршрутизирует USB2 D+/D- через WCD939x
+ * (downstream: &usb0 { qcom,wcd_usbss = <&wcd_usbss>; }).
+ * Для bring-up — peripheral (gadget), затем добавить WCD939x-роут.
+ */
+&usb_1 {
+	dr_mode = "peripheral";
+
+	status = "okay";
+};
+
+/* Обратная ссылка графа pmic-glink<->dwc3 (pmic-glink при bring-up disabled). */
+&usb_1_dwc3_hs {
+	remote-endpoint = <&pmic_glink_hs_in>;
+};
+
+&usb_1_hsphy {
+	vdd-supply = <&vreg_l2b_0p95>;
+	vdda12-supply = <&vreg_l4b_1p2>;
+
+	phys = <&pm7550ba_eusb2_repeater>;
+
+	status = "okay";
+};
+
+&usb_dp_qmpphy {
+	vdda-phy-supply = <&vreg_l4b_1p2>;
+	vdda-pll-supply = <&vreg_l3b_0p92>;
+
+	status = "okay";
+};
+
+&usb_dp_qmpphy_out {
+	remote-endpoint = <0>;
+};
+
+&wifi {
+	status = "okay";
+};
+
+&xo_board {
+	clock-frequency = <76800000>;
+};
