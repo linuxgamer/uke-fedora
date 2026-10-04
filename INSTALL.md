@@ -24,8 +24,7 @@ boot/build-bundle.sh \
 
 ## 2. Rootfs
 ```sh
-docker run --rm --network host -v "$PWD:/work" -w /work \
-    quay.io/fedora/fedora:44 ./rootfs/build-rootfs.sh
+sudo DNF_FORCEARCH=aarch64 DNF_REPOSDIR="$PWD/build/fedora-repos" ./rootfs/build-rootfs.sh
 ```
 
 ## 3. Прошивка
