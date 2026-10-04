@@ -26,6 +26,27 @@ cat > /tmp/ir/init <<"EOS"
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 mount -t devtmpfs devtmpfs /dev 2>/dev/null || true
+# USB gadget: ACM serial console + RNDIS net (отладка)
+mount -t configfs none /sys/kernel/config 2>/dev/null || true
+G=/sys/kernel/config/usb_gadget/g1
+if mkdir -p "$G" 2>/dev/null; then
+    echo 0x18d1 > "$G/idVendor" 2>/dev/null
+    echo 0x4e40 > "$G/idProduct" 2>/dev/null
+    mkdir -p "$G/strings/0x409"
+    echo uke > "$G/strings/0x409/serialnumber" 2>/dev/null
+    echo uke > "$G/strings/0x409/manufacturer" 2>/dev/null
+    echo uke > "$G/strings/0x409/product" 2>/dev/null
+    mkdir -p "$G/configs/c.1/strings/0x409"
+    echo cfg > "$G/configs/c.1/strings/0x409/configuration" 2>/dev/null
+    mkdir -p "$G/functions/acm.usb0" "$G/functions/rndis.usb0"
+    ln -sf "$G/functions/acm.usb0" "$G/configs/c.1/" 2>/dev/null
+    ln -sf "$G/functions/rndis.usb0" "$G/configs/c.1/" 2>/dev/null
+    udc="$(ls /sys/class/udc 2>/dev/null | head -1)"
+    [ -n "$udc" ] && echo "$udc" > "$G/UDC" 2>/dev/null
+    sleep 1
+    ip link set usb0 up 2>/dev/null || true
+    ip addr add 172.16.42.1/24 dev usb0 2>/dev/null || true
+fi
 mkdir -p /newroot
 root=""
 for x in $(cat /proc/cmdline); do

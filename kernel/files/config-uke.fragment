@@ -65,3 +65,8 @@ CONFIG_TOUCHSCREEN_NT36532_UKE=m
 
 # --- EFI zboot (Fedora-нативный vmlinuz.efi) ---
 CONFIG_EFI_ZBOOT=y
+
+# --- USB gadget в initramfs (консоль/сеть для отладки) ---
+CONFIG_USB_CONFIGFS=y
+CONFIG_USB_F_RNDIS=y
+CONFIG_USB_F_ACM=y

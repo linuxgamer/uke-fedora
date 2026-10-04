@@ -1,1 +1,1 @@
-console=tty0 console=ttyMSM0,115200n8 loglevel=7 log_buf_len=4M panic=10 clk_ignore_unused pd_ignore_unused regulator_ignore_unused rootwait mem_sleep_default=s2idle root=UUID=19364720-0ee1-4715-b30a-51a47d4a814c rw
+console=tty0 console=ttyGS0 console=ttyMSM0,115200n8 loglevel=7 log_buf_len=4M panic=10 clk_ignore_unused pd_ignore_unused regulator_ignore_unused rootwait mem_sleep_default=s2idle root=UUID=19364720-0ee1-4715-b30a-51a47d4a814c rw
