@@ -50,3 +50,9 @@
 - [ ] Примет ли ABL совмещённый `boot.img` (kernel+initramfs) или нужен split boot/init_boot.
 - [ ] Нужны ли USB handoff quirks (GCC clock hold, SMMU context bank, GDSC) поверх palawan.
 - [ ] Проверить, что generic `qcom,snps-dwc3` покрывает palawan (dwc3-qcom match).
+
+## Планшет (crDroid 12.7 + root)
+- [x] Полный бэкап: `/sdcard`, `/data` (app data+settings), разделы boot/init_boot/vendor_boot/dtbo/vbmeta/persist
+      -> `~/uke-backup` (+ SHA256SUMS), скрипт `etc/tools/backup-device.sh`.
+- [ ] `pmbootstrap init` + сборка пакетов.
+- [ ] Первая прошивка (boot.img), проверить загрузку.
