@@ -20,3 +20,6 @@
 
 # scratch clones (e.g. kernel/module searches)
 /temp/
+
+# firmware blobs (build input)
+/pmos/firmware-xiaomi-uke/firmware.tar.gz
