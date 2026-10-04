@@ -1,7 +1,7 @@
 # Разбор стоковой прошивки uke
 
 Прошивка: `uke_global_images_OS3.0.303.0.WOZMIXM_16.0` (Global).
-Артефакты (не коммитятся): `build/stock/extracted/`. Воспроизведение: `etc/tools/extract-stock.sh`.
+Артефакты (не коммитятся): `build/stock/extracted/`. Воспроизведение: `tools/extract-stock.sh`.
 
 ## Образы
 

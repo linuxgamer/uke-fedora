@@ -13,7 +13,7 @@ outdir="${OUT_DIR:-/work/build/fedora}"
 root_uuid="${ROOT_UUID:-19364720-0ee1-4715-b30a-51a47d4a814c}"
 # Каталог с модулями ядра (usr/lib/modules/<kver>) и firmware.tar.gz.
 modules_src="${MODULES_SRC:-/work/build/uke-modules}"
-firmware_tar="${FIRMWARE_TARBALL:-/work/pmos/firmware-xiaomi-uke/firmware.tar.gz}"
+firmware_tar="${FIRMWARE_TARBALL:-/work/rootfs/firmware.tar.gz}"
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 fedora_root="$(dirname "$script_dir")"

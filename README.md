@@ -18,24 +18,22 @@ device-пакеты Nura.
 | [`docs/BRINGUP-NOTES.md`](docs/BRINGUP-NOTES.md) | gap-анализ palawan 7.2 vs ztsubaki, что уже есть |
 | [`docs/STOCK-DTB.md`](docs/STOCK-DTB.md) | разбор стоковой прошивки: DTB/DTBO, железо uke |
 | [`docs/STOCK-SUPER.md`](docs/STOCK-SUPER.md) | `super.img`: модули, fstab, firmware-раскладка |
-| [`docs/PANEL-TOUCH.md`](docs/PANEL-TOUCH.md) | панель O82 (сделано) и план по тачу NT36532 |
-| [`pmos/README.md`](pmos/README.md) | пакеты Nura и порядок сборки/установки |
-| [`etc/TODO.md`](etc/TODO.md) | ближайшие задачи |
+| [`docs/PANEL-TOUCH.md`](docs/PANEL-TOUCH.md) | панель O82 и тач NT36532 |
+| [`docs/FEDORA-PIVOT.md`](docs/FEDORA-PIVOT.md) | обоснование и план перехода на Fedora |
+| [`INSTALL.md`](INSTALL.md) | установка (Fedora, TWRP/fastboot) |
+| [`TODO.md`](TODO.md) | задачи |
 
 ## Layout
 
 | Путь | Содержимое |
 |---|---|
+| `kernel/` | mainline-ядро: `files/` (DTS, драйверы, конфиг), `patches/`, `prepare.sh`, `build.sh` |
+| `boot/` | Android boot-image-v4 бандл (`build-bundle.sh`), cmdline, bootconfig, dracut |
+| `rootfs/` | Fedora rootfs (`build-rootfs.sh`), overlay, установка |
+| `tools/` | host-скрипты (mkbootimg, avbtool, извлечение стока, конвертеры) |
 | `docs/` | исследование, план, prior art |
-| `kernel/` | mainline-ядро: база, патчи, DTS, драйверы, скрипты |
-| `pmos/` | пакеты Nura (APKBUILD) |
-| `device/` | `deviceinfo`, udev, UCM, списки firmware |
-| `etc/boot/` | `cmdline`, `bootconfig` |
-| `etc/tools/` | host-скрипты (извлечение стока, firmware, конвертеры) |
-| `etc/references/` | клоны доноров (не коммитятся) |
-| `etc/TODO.md` | задачи |
-
-`kernel/` и `device/` — источники; `pmos/` упаковывает их в пакеты Nura.
+| `references/` | клоны доноров (не коммитятся) |
+| `attic/` | старые наработки (pmOS-пакеты) |
 
 ## Выбранная стратегия
 

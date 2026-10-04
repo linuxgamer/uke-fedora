@@ -1,4 +1,4 @@
-# kernel/dts/
+# kernel/files/
 
 Board DTS для uke.
 

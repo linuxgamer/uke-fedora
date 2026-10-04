@@ -1,1 +1,0 @@
-regulator_ignore_unused clk_ignore_unused pd_ignore_unused console=tty0 fbcon=map:0 fbcon=font:TER16x32 consoleblank=0

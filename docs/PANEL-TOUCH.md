@@ -2,14 +2,14 @@
 
 ## Панель O82 — сделано (черновик)
 
-Драйвер: `kernel/drivers/panel-xiaomi-o82.c` (449 строк), каркас на базе
-`panel-novatek-nt35950.c`. Binding: `kernel/drivers/xiaomi,o82.yaml`.
+Драйвер: `kernel/files/panel-xiaomi-o82.c` (449 строк), каркас на базе
+`panel-novatek-nt35950.c`. Binding: `kernel/files/xiaomi,o82.yaml`.
 
 - **dual-DSI (bonded)**, 2× 1600×2136 = 3200×2136, DSI video mode.
 - **DSC**: 10 bpc → 8 bpp, slice 800×24, 2 slices на линк, block-prediction.
 - Режимы 120/144/90 Гц, reset gpio2, питание vddio/vsp/vsn.
 - Init-последовательность (109 команд) сконвертирована из downstream MiCode
-  (`uke-v-oss`) конвертером `etc/tools/dsi-cmds.py`.
+  (`uke-v-oss`) конвертером `tools/dsi-cmds.py`.
 - В `uke.dts`: `&mdss_dsi0` + `&mdss_dsi1` (обе DSI уже есть в `palawan.dtsi`),
   панель на `dsi0` с `ports/port@0→dsi0`, `port@1→dsi1`; `display_panel_vsp/vsn`.
 
@@ -34,9 +34,9 @@ DTB собирается. На железе не проверялось.
 Драйвер:
 - В mainline **нет** драйвера NT36532.
 - Downstream-исходник найден: `Xiaomi-Pad-7-Pro-Resources/android_kernel_xiaomi_sm8635-modules`
-  → `qcom/opensource/touch-drivers/{nt36xxx,xiaomi}` (клон в `etc/references/xiaomi-sm8635-modules`).
+  → `qcom/opensource/touch-drivers/{nt36xxx,xiaomi}` (клон в `references/xiaomi-sm8635-modules`).
   Драйвер большой (4645 строк) и завязан на Android (`xiaomi_touch`, `metis`, DRM).
-- Реализация: **`kernel/drivers/nt36532-uke.c`** — черновик mainline-порта:
+- Реализация: **`kernel/files/nt36532-uke.c`** — черновик mainline-порта:
   SPI mode 0, `novatek,NVT-ts`, reset/IRQ, `request_firmware`, input MT (10 пальцев).
 - TDDI: тач и панель связаны; при порте учесть синхронизацию с драйвером панели.
 

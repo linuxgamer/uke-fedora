@@ -13,6 +13,6 @@
    в `iris_platform_palawan.h` (нет в `struct platform_inst_caps`), без него
    `VIDEO_QCOM_IRIS` не компилируется.
 
-Board-DTS и правки `Makefile`/`qcom.yaml` добавляет `kernel/scripts/prepare-tree.sh`
-(копирует `kernel/dts/*.dts` в дерево). Драйверные патчи (панель O82, тач, USB handoff)
+Board-DTS и правки `Makefile`/`qcom.yaml` добавляет `kernel/prepare.sh`
+(копирует `kernel/files/*.dts` в дерево). Драйверные патчи (панель O82, тач, USB handoff)
 появятся здесь по мере порта.

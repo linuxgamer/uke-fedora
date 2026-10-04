@@ -13,10 +13,10 @@ Fedora обходит оба: есть российские зеркала (Ян
 ## Что переиспользуем
 
 Ядро и драйверы **OS-агностичны** — они остаются:
-- `kernel/dts/sm7675-xiaomi-uke.dts`
-- `kernel/drivers/panel-xiaomi-o82.c`, `kernel/drivers/nt36532-uke.c`
-- `kernel/patches/*`, `kernel/config/uke.fragment`
-- `kernel/scripts/*` (сборка ядра)
+- `kernel/files/sm7675-xiaomi-uke.dts`
+- `kernel/files/panel-xiaomi-o82.c`, `kernel/files/nt36532-uke.c`
+- `kernel/patches/*`, `kernel/files/config-uke.fragment`
+- `kernel/*` (сборка ядра)
 
 Заменяется только слой упаковки: `pmos/` → `fedora/`.
 

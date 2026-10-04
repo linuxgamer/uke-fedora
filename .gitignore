@@ -10,16 +10,18 @@
 *.o
 *.ko
 
-# extracted stock images (large, device-private)
+# extracted stock / backups
 /stock/
 /extracted/
+/rootfs/firmware.tar.gz
 
 # reference clones: fetch, do not vendor
-/etc/references/*
-!/etc/references/README.md
+/references/*
+!/references/README.md
 
-# scratch clones (e.g. kernel/module searches)
+# attic
+/attic/*
+!/attic/README.md
+
+# scratch
 /temp/
-
-# firmware blobs (build input)
-/pmos/firmware-xiaomi-uke/firmware.tar.gz

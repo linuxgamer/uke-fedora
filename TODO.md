@@ -6,11 +6,11 @@
 
 ## Сделано
 - [x] Оценка окружения (EndeavourOS, 389 ГБ, android/dt-инструменты).
-- [x] Клон базы: `build/src/linux-palawan` (`kernel/scripts/fetch-base.sh`).
-- [x] Клоны доноров: `etc/references/ztsubaki-uke-linux`, `etc/references/MCC45TR-uke-linux`.
+- [x] Клон базы: `build/src/linux-palawan` (`kernel/prepare.sh`).
+- [x] Клоны доноров: `references/ztsubaki-uke-linux`, `references/MCC45TR-uke-linux`.
 - [x] Gap-анализ: palawan уже содержит платформу; ztsubaki-драйверы `cliffs` не нужны.
-- [x] Черновики: `kernel/config/uke.fragment`, `boot/cmdline.txt`, `boot/bootconfig.txt`, `device/deviceinfo`.
-- [x] Скачан downstream uke DTS: `etc/references/downstream-uke/` (MiCode `uke-v-oss`).
+- [x] Черновики: `kernel/files/config-uke.fragment`, `boot/cmdline.txt`, `boot/bootconfig.txt`, `device/deviceinfo`.
+- [x] Скачан downstream uke DTS: `references/downstream-uke/` (MiCode `uke-v-oss`).
 
 ## Требует sudo (пакеты Arch)
 - [ ] `bc` (нужен Kbuild).
@@ -24,17 +24,17 @@
 - [ ] Согласовать `uke.dts`: чистая board-DTS vs stock DTB + overlay на первом этапе.
 
 ## Далее
-- [x] Извлечь DTB/DTBO из стока + декомпиляция (`etc/tools/extract-stock.sh`).
+- [x] Извлечь DTB/DTBO из стока + декомпиляция (`tools/extract-stock.sh`).
 - [x] Извлечь `super.img` → `vendor`/`odm`/`*_dlkm`; `modules.load`, `fstab.qcom`, firmware
       (`docs/STOCK-SUPER.md`).
-- [x] Черновик `kernel/dts/sm7675-xiaomi-uke.dts` (на базе `lamma-qrd.dts`).
+- [x] Черновик `kernel/files/sm7675-xiaomi-uke.dts` (на базе `lamma-qrd.dts`).
 - [x] DTS в Makefile + binding `xiaomi,uke` в `qcom.yaml` (`prepare-tree.sh`).
 - [x] DTB собирается без ошибок (`build-dtb.sh`, cpp+dtc).
 - [x] Панель O82: драйвер `panel-xiaomi-o82.c` (dual-DSI DSC) + `uke.dts`; компилируется.
 - [x] Тач NT36532: исходники найдены, драйвер с протоколом (report MT-B) и firmware update.
 - [ ] Тач: ESD/WDT-recovery, стилус, MP.
 - [ ] WCD939x USB-роут.
-- [x] Baseline-ядро собрано (`kernel/scripts/build-kernel.sh`): `Image` 50.5 МБ,
+- [x] Baseline-ядро собрано (`kernel/build.sh`): `Image` 50.5 МБ,
       1641 модуль, DTB; версия `7.2.0-rc2`.
 - [x] APKBUILD в `pmos/` (device / linux / firmware) + firmware-тарбол скрипт.
 - [ ] `pmbootstrap init` + сборка пакетов и `install`/`flasher` (нужен пользователь).
@@ -53,6 +53,6 @@
 
 ## Планшет (crDroid 12.7 + root)
 - [x] Полный бэкап: `/sdcard`, `/data` (app data+settings), разделы boot/init_boot/vendor_boot/dtbo/vbmeta/persist
-      -> `~/uke-backup` (+ SHA256SUMS), скрипт `etc/tools/backup-device.sh`.
+      -> `~/uke-backup` (+ SHA256SUMS), скрипт `tools/backup-device.sh`.
 - [ ] `pmbootstrap init` + сборка пакетов.
 - [ ] Первая прошивка (boot.img), проверить загрузку.

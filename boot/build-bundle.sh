@@ -11,8 +11,7 @@
 #                        --cmdline F --bootconfig F --out DIR
 set -euo pipefail
 
-fedora_root="$(cd "$(dirname "$0")/.." && pwd)"
-repo_root="$(dirname "$fedora_root")"
+repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 
 # Размеры разделов uke (из стока; уточнить на железе при необходимости).
 boot_size=100663296       # 96 МиБ
@@ -36,7 +35,7 @@ done
 for f in "$image_in" "$dtb" "$initramfs" "$cmdline_file" "$bootconfig"; do
     [ -f "$f" ] || { echo "missing input: $f" >&2; exit 1; }
 done
-for f in "$fedora_root/tools/mkbootimg.py" "$fedora_root/tools/avbtool"; do
+for f in "$repo_root/tools/mkbootimg.py" "$repo_root/tools/avbtool"; do
     [ -f "$f" ] || { echo "missing tool: $f" >&2; exit 1; }
 done
 command -v lz4 >/dev/null || { echo "lz4 not installed" >&2; exit 1; }
@@ -48,7 +47,7 @@ trap 'rm -rf "$tmp"' EXIT
 add_hash_footer() {
     local target="$1" partition="$2" partition_size="$3" salt
     salt=$(sha256sum "$target" | cut -d' ' -f1)
-    python3 "$fedora_root/tools/avbtool" add_hash_footer \
+    python3 "$repo_root/tools/avbtool" add_hash_footer \
         --image "$target" --partition_name "$partition" \
         --partition_size "$partition_size" --salt "$salt"
 }
@@ -73,20 +72,20 @@ cmdline=$(tr '\n' ' ' < "$cmdline_file" | sed 's/[[:space:]]*$//')
 
 # boot: kernel + appended DTB, пустой cmdline.
 cat "$tmp/Image.gz" "$dtb" > "$tmp/Image.gz-dtb"
-python3 "$fedora_root/tools/mkbootimg.py" \
+python3 "$repo_root/tools/mkbootimg.py" \
     --kernel "$tmp/Image.gz-dtb" --cmdline '' \
     --header_version 4 --os_version 16 --os_patch_level 2026-01 \
     -o "$out/boot.img"
 add_hash_footer "$out/boot.img" boot "$boot_size"
 
 # init_boot: пустой ramdisk.
-python3 "$fedora_root/tools/mkbootimg.py" \
+python3 "$repo_root/tools/mkbootimg.py" \
     --ramdisk "$tmp/empty.lz4" --header_version 4 \
     -o "$out/init_boot.img"
 add_hash_footer "$out/init_boot.img" init_boot "$init_boot_size"
 
 # vendor_boot: полный initramfs + DTB + cmdline + bootconfig.
-python3 "$fedora_root/tools/mkbootimg.py" \
+python3 "$repo_root/tools/mkbootimg.py" \
     --ramdisk_type platform --ramdisk_name '' \
     --vendor_ramdisk_fragment "$full_ramdisk" \
     --dtb "$dtb" --vendor_cmdline "$cmdline" \
@@ -103,7 +102,7 @@ truncate -s 4096 "$out/dtbo.img"
 add_hash_footer "$out/dtbo.img" dtbo "$dtbo_size"
 
 # vbmeta: выключить verified boot.
-python3 "$fedora_root/tools/avbtool" make_vbmeta_image \
+python3 "$repo_root/tools/avbtool" make_vbmeta_image \
     --output "$out/vbmeta.img" --flags 2 --padding_size "$vbmeta_size"
 
 for spec in "boot.img:$boot_size" "init_boot.img:$init_boot_size" \

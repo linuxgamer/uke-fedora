@@ -3,7 +3,7 @@
 # Сохраняет: /sdcard, /data (приложения+настройки, без media/кэшей),
 # ключевые разделы (boot/init_boot/vendor_boot/dtbo/vbmeta/persist).
 #
-# Использование: etc/tools/backup-device.sh [каталог]
+# Использование: tools/backup-device.sh [каталог]
 set -euo pipefail
 
 OUT="${1:-$HOME/uke-backup}"

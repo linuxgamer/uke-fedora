@@ -74,19 +74,19 @@ ztsubaki переносить не нужно** — на 7.2 это уже ес�
 
 - [x] Клонировать palawan, ztsubaki, MCC45TR.
 - [x] Gap-анализ платформы.
-- [x] Черновик `kernel/config/uke.fragment`.
-- [x] Downstream uke DTS: `etc/references/downstream-uke/`.
-- [x] Черновик `kernel/dts/sm7675-xiaomi-uke.dts` (на базе `lamma-qrd.dts`).
+- [x] Черновик `kernel/files/config-uke.fragment`.
+- [x] Downstream uke DTS: `references/downstream-uke/`.
+- [x] Черновик `kernel/files/sm7675-xiaomi-uke.dts` (на базе `lamma-qrd.dts`).
 - [x] Из downstream уточнены: панель O82 (reset gpio2, vsp/vsn gpio74/75, L8B 1.9В),
       подсветка 2x KTZ8866 @0x11 (i2c0/i2c12), тач NT36532 IRQ gpio54, отсутствие модема.
-- [x] Разбор стоковой прошивки: `docs/STOCK-DTB.md`, `etc/tools/extract-stock.sh`.
-- [x] DTS добавлен в `Makefile` + binding `xiaomi,uke` (`kernel/scripts/prepare-tree.sh`).
-- [x] **DTB компилируется без ошибок** (`kernel/scripts/build-dtb.sh`, cpp+dtc).
+- [x] Разбор стоковой прошивки: `docs/STOCK-DTB.md`, `tools/extract-stock.sh`.
+- [x] DTS добавлен в `Makefile` + binding `xiaomi,uke` (`kernel/prepare.sh`).
+- [x] **DTB компилируется без ошибок** (`kernel/build-dtb.sh`, cpp+dtc).
 - [x] Найден и исправлен баг базы: `palawan.dtsi` — пропущена `;` в `compatible`
       у `usb_dp_qmpphy` (патч `kernel/patches/0001-...`).
 - [x] Найден и исправлен баг базы: `iris_platform_palawan.h` — лишнее поле `.num_comv`
       (патч `kernel/patches/0002-...`).
-- [x] **Baseline-ядро собрано** (`kernel/scripts/build-kernel.sh`): `Image` 50.5 МБ,
+- [x] **Baseline-ядро собрано** (`kernel/build.sh`): `Image` 50.5 МБ,
       `7.2.0-rc2`, **1641** модуль, DTB. См. раздел ниже.
 - [ ] Порт панели O82 + `mdss_dsi1` (dual DSI) — панели в mainline нет.
 - [ ] Порт/адаптация драйвера тача Novatek NT36532.
@@ -98,8 +98,8 @@ ztsubaki переносить не нужно** — на 7.2 это уже ес�
 `bc`, `pahole`, `flex`, `bison`. Сборка: `LLVM=1 ARCH=arm64`.
 
 ```sh
-kernel/scripts/prepare-tree.sh    # worktree + патчи + DTS + Makefile/qcom.yaml
-kernel/scripts/build-kernel.sh    # defconfig + uke.fragment + Image + DTB + modules
+kernel/prepare.sh    # worktree + патчи + DTS + Makefile/qcom.yaml
+kernel/build.sh    # defconfig + uke.fragment + Image + DTB + modules
 ```
 
 Результат: `build/uke-build/arch/arm64/boot/Image` (50.5 МБ),
