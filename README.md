@@ -44,9 +44,12 @@ device-пакеты Nura.
   (USB/clock/SMMU/simplefb). Обоснование — `docs/PRIOR-ART.md`.
 - **Загрузка:** стоковый ABL; ядро в `boot.img`, initramfs в `init_boot.img`,
   `vendor_boot`/`dtbo` не трогаем. Так уже заведён simplefb на реальном железе.
-- **Rootfs:** `userdata`.
-- **Сборка:** `pmbootstrap` + `device-xiaomi-uke` / `linux-postmarketos-qcom-sm7675` /
-  `firmware-xiaomi-uke`.
+- **Rootfs:** `userdata` (ext4, root=UUID).
+- **Дистрибутив:** **Fedora aarch64** (пивот с pmOS/Nura — см.
+  [`docs/FEDORA-PIVOT.md`](docs/FEDORA-PIVOT.md); из-за региональных ограничений
+  и AI-политики). Пайплайн — по мотивам `gts9wifi-fedora`, код в `fedora/`.
+- **Загрузка:** стоковый ABL, Android boot-image-v4 бандл
+  (`boot`/`init_boot`/`vendor_boot`/`dtbo`/`vbmeta`), `dtbo` невалиден → appended DTB.
 
 ## Ключевые источники
 
