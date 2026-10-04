@@ -49,10 +49,20 @@ else
 fi
 
 echo "== разделы =="
+# Точные размеры разделов uke (GPT); dd перечитывает блок-устройство на неск. байт
+# больше, поэтому обрезаем до размера раздела.
+declare -A PART_SIZE=(
+	[boot_a]=100663296 [init_boot_a]=8388608 [vendor_boot_a]=100663296
+	[dtbo_a]=25165824 [vbmeta_a]=131072 [vbmeta_system_a]=131072 [persist]=33554432
+)
 for p in boot_a init_boot_a vendor_boot_a dtbo_a vbmeta_a vbmeta_system_a persist; do
 	echo "  $p"
 	run_root dd if="/dev/block/by-name/$p" bs=4096 2>/dev/null >"$OUT/$p.img" ||
-		echo "    пропущен"
+		{
+			echo "    пропущен"
+			continue
+		}
+	[ -n "${PART_SIZE[$p]:-}" ] && truncate -s "${PART_SIZE[$p]}" "$OUT/$p.img"
 done
 
 echo "== размеры =="
