@@ -19,12 +19,13 @@ kver="${UKE_KERNEL_VERSION:-6.12.0-dirty}"
 modules_src="${MODULES_SRC:-$repo_root/build/ztsubaki/modules/usr/lib/modules/$kver}"
 firmware_tar="${FIRMWARE_TARBALL:-$repo_root/rootfs/firmware.tar.gz}"
 user="${UKE_USER:-fedora}"
+reposdir="${DNF_REPOSDIR:-$script_dir/fedora-repos}"
 
 DNF_ARGS=(--installroot="$rootfs" --releasever="$fedora_release"
 	--setopt=install_weak_deps=False --setopt=tsflags=nodocs)
 [ -n "${DNF_USE_HOST_CONFIG:-}" ] && DNF_ARGS+=(--use-host-config)
 [ -n "${DNF_FORCEARCH:-}" ] && DNF_ARGS+=(--forcearch="$DNF_FORCEARCH")
-[ -n "${DNF_REPOSDIR:-}" ] && DNF_ARGS+=(--setopt=reposdir="$DNF_REPOSDIR")
+[ -d "$reposdir" ] && DNF_ARGS+=(--setopt=reposdir="$reposdir")
 
 echo ">>> Fedora $fedora_release rootfs for uke (KVER $kver)"
 mkdir -p "$rootfs" "$outdir"
