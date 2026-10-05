@@ -1,62 +1,69 @@
-# uke-linux-port
+# Linux on Xiaomi Pad 7 (`uke`)
 
-Порт **Nura (postmarketOS)** на **Xiaomi Pad 7** (кодовое имя `uke`, SoC `SM7675`
-Snapdragon 7+ Gen 3) с **mainline-ядром**. Загрузка — через стоковую Android
-boot-цепочку (ABL), без второго загрузчика и без UEFI. Сборка — `pmbootstrap` +
-device-пакеты Nura.
+Experimental Fedora port for the Xiaomi Pad 7 (`uke`, Qualcomm SM7675 / Snapdragon
+7+ Gen 3) using the stock Android boot chain (ABL). No secondary bootloader or
+UEFI is used.
 
-Статус: **ядро, initramfs и boot-бандл собираются**; rootfs Fedora — следующий шаг;
-прошивка — вручную (fastboot/TWRP).
+## Status
 
-## Документы
+**Fedora 44 boots from internal UFS to a login prompt.** The working path is
+upstream Linux v6.12 with the ztsubaki `uke` patch set and the stock
+`vendor_boot`, `dtbo`, and `vbmeta` images left in place.
 
-| Документ | Содержимое |
+Working:
+
+- Kernel boot, simplefb console, RPMh, SMMU, UFS, and ext4 rootfs.
+- Fedora userspace through `switch_root` to systemd.
+- USB ACM serial console (`/dev/ttyACM0` on the host, `/dev/ttyGS0` on the device).
+
+Not working or unverified:
+
+- Display DRM/panel, touchscreen, Wi-Fi/Bluetooth, audio, sensors, cameras, and suspend.
+- RNDIS is being brought up; USB ACM is the supported debug channel today.
+
+This is bring-up software. It can erase Android data and may require recovery with
+the stock firmware. Keep a known-good stock boot path before experimenting.
+
+## Quick Links
+
+| Document | Contents |
 |---|---|
-| [`docs/RESEARCH.md`](docs/RESEARCH.md) | железо, разделы, состояние mainline, источники |
-| [`docs/PLAN.md`](docs/PLAN.md) | поэтапный план и открытые техвопросы |
-| [`docs/PRIOR-ART.md`](docs/PRIOR-ART.md) | разбор palawan-mainline / ztsubaki / MCC45TR |
-| [`docs/BRINGUP-NOTES.md`](docs/BRINGUP-NOTES.md) | gap-анализ palawan 7.2 vs ztsubaki, что уже есть |
-| [`docs/STOCK-DTB.md`](docs/STOCK-DTB.md) | разбор стоковой прошивки: DTB/DTBO, железо uke |
-| [`docs/STOCK-SUPER.md`](docs/STOCK-SUPER.md) | `super.img`: модули, fstab, firmware-раскладка |
-| [`docs/PANEL-TOUCH.md`](docs/PANEL-TOUCH.md) | панель O82 и тач NT36532 |
-| [`docs/FEDORA-PIVOT.md`](docs/FEDORA-PIVOT.md) | обоснование и план перехода на Fedora |
-| [`docs/BUILD.md`](docs/BUILD.md) | пайплайн сборки (kernel → initramfs → bundle → rootfs) |
-| [`docs/Known-Issues.md`](docs/Known-Issues.md) | реестр проблем |
-| [`docs/Hardware-Notes.md`](docs/Hardware-Notes.md) | заметки по подсистемам |
-| [`docs/PORT-KIT.md`](docs/PORT-KIT.md) | инвентарь извлечения из стока |
-| [`INSTALL.md`](INSTALL.md) | установка (Fedora, TWRP/fastboot) |
-| [`TODO.md`](TODO.md) | задачи |
+| [INSTALL.md](INSTALL.md) | Prerequisites, supported flashing path, and recovery notes |
+| [docs/BUILD.md](docs/BUILD.md) | Reproducible v6.12 kernel, initramfs, and rootfs builds |
+| [docs/Known-Issues.md](docs/Known-Issues.md) | Feature status, current limitations, and confirmed fixes |
+| [docs/Hardware-Notes.md](docs/Hardware-Notes.md) | Device hardware summary |
+| [docs/STOCK-DTB.md](docs/STOCK-DTB.md) | Stock boot image, partition, DTB, and DTBO analysis |
+| [docs/STOCK-SUPER.md](docs/STOCK-SUPER.md) | Stock `super.img`, modules, and firmware inventory |
+| [references/archive/](references/archive/) | Archived Palawan, legacy boot, and historical research material |
 
-## Layout
+## Supported Boot Path
 
-| Путь | Содержимое |
+Only replace these partitions on the active slot:
+
+- `boot`: mainline kernel with an appended DTB.
+- `init_boot`: minimal busybox initramfs.
+- `userdata`: Fedora rootfs.
+
+Do not replace `vendor_boot`, `dtbo`, or `vbmeta`. Xiaomi ABL rejects the earlier
+five-image approach; retaining the stock images is required for the working setup.
+
+## Repository Layout
+
+| Path | Purpose |
 |---|---|
-| `kernel/` | mainline-ядро: `files/` (DTS, драйверы, config-mainline+fragment), `patches/`, `prepare.sh`, `build.sh`, `kernel.spec` |
-| `boot/` | Android boot-image-v4 бандл (`build-bundle.sh`), initramfs (`build-initramfs.sh`), dracut |
-| `rootfs/` | Fedora rootfs (`build-rootfs.sh`), `mk-internal-storage.sh`, `mk-sd-card.sh`, overlay |
-| `tools/` | mkbootimg, avbtool, make-twrp-zip, извлечение стока, конвертеры |
-| `.github/workflows/` | CI: kernel, rootfs, boot-bundle, full-set |
-| `docs/` | исследование, план, prior art |
-| `references/` | клоны доноров (не коммитятся) |
-| `attic/` | старые наработки (pmOS-пакеты) |
+| `build/ztsubaki/` | Working Linux v6.12 source tree, output, and image artifacts (not committed) |
+| `boot/` | Initramfs and Android boot-image construction scripts |
+| `rootfs/` | Fedora rootfs creation and `userdata` image scripts |
+| `references/archive/palawan-7.2/` | Archived Palawan 7.2 DTS, drivers, and build path; reference only |
+| `tools/` | Host-side image extraction, backup, and conversion utilities |
+| `docs/` | Build, status, hardware, and stock-firmware documentation |
+| `references/` | Uncommitted donor checkouts and external source material |
 
-## Выбранная стратегия
+## References
 
-- **Ядро:** форк [palawan-mainline](https://codeberg.org/palawan-mainline/linux)
-  (`palawan/v7.2-rc2`) + патч [ztsubaki](https://github.com/ztsubaki/uke-linux)
-  (USB/clock/SMMU/simplefb). Обоснование — `docs/PRIOR-ART.md`.
-- **Загрузка:** стоковый ABL; ядро в `boot.img`, initramfs в `init_boot.img`,
-  `vendor_boot`/`dtbo` не трогаем. Так уже заведён simplefb на реальном железе.
-- **Rootfs:** `userdata` (ext4, root=UUID).
-- **Дистрибутив:** **Fedora aarch64** (пивот с pmOS/Nura — см.
-  [`docs/FEDORA-PIVOT.md`](docs/FEDORA-PIVOT.md); из-за региональных ограничений
-  и AI-политики). Пайплайн — по мотивам `gts9wifi-fedora`, код в `fedora/`.
-- **Загрузка:** стоковый ABL, Android boot-image-v4 бандл
-  (`boot`/`init_boot`/`vendor_boot`/`dtbo`/`vbmeta`), `dtbo` невалиден → appended DTB.
-
-## Ключевые источники
-
-- palawan-mainline: <https://codeberg.org/palawan-mainline/linux>
-- ztsubaki/uke-linux (доказанный bring-up): <https://github.com/ztsubaki/uke-linux>
-- MCC45TR/uke-linux (план/чек-лист): <https://github.com/MCC45TR/uke-linux>
-- Вики Nura: <https://wiki.nura.eco/wiki/Xiaomi_Pad_7_(xiaomi-uke)>
+- [ztsubaki/uke-linux](https://github.com/ztsubaki/uke-linux): original v6.12
+  bring-up and stock-DT workflow.
+- [gts9wifi-fedora](https://github.com/nacht20-de/gts9wifi-fedora): Fedora boot
+  pipeline reference.
+- [palawan-mainline/linux](https://codeberg.org/palawan-mainline/linux): source
+  for the archived Palawan 7.2 work.

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Build a dracut initramfs for uke in an arm64 Fedora container.
+# Requires built modules at build/uke-modules/usr/lib/modules/<kver> (kernel/build.sh).
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+STAGE="${ROOT}/build/uke-modules"
+IMAGE="${ROOT}/build/uke-build/arch/arm64/boot/Image"
+OUT="${ROOT}/build/initramfs.img"
+
+[ -d "${STAGE}/usr/lib/modules" ] || {
+	echo "missing modules: run kernel/build.sh" >&2
+	exit 1
+}
+KVER="${KVER:-$(ls "${STAGE}/usr/lib/modules" | head -1)}"
+echo "KVER: ${KVER}"
+
+docker run --rm --network host -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" -v "${ROOT}:/work" -w /work quay.io/fedora/fedora:44 \
+	bash -lc "
+set -euxo pipefail
+rm -f /etc/yum.repos.d/*.repo
+cp /work/rootfs/fedora-repos/*.repo /etc/yum.repos.d/
+dnf -y install dracut cpio lz4 kmod iproute >/dev/null
+# kernel modules
+mkdir -p /usr/lib/modules
+rm -rf /usr/lib/modules/${KVER}
+cp -a /work/build/uke-modules/usr/lib/modules/${KVER} /usr/lib/modules/
+# kernel image (dracut expects it)
+mkdir -p /boot
+cp /work/build/uke-build/arch/arm64/boot/vmlinuz.efi /boot/vmlinuz-${KVER}
+# firmware (GPU and others) in /usr/lib/firmware
+tar xzf /work/rootfs/firmware.tar.gz -C /usr 2>/dev/null || true
+# dracut module and configuration
+cp -a /work/boot/dracut/90uke-usbnet /usr/lib/dracut/modules.d/
+cp /work/boot/dracut/dracut.conf.d/uke.conf /usr/lib/dracut/dracut.conf.d/
+dracut --kver ${KVER} --force /work/build/initramfs.img
+chown $HOST_UID:$HOST_GID /work/build/initramfs.img
+"
+ls -la "${OUT}"

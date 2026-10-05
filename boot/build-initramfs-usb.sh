@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# initramfs с USB-gadget + очисткой экрана и компактным статусом (framebuffer не скроллится).
+# Initramfs with USB gadget support, a cleared framebuffer, and compact status output.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${ROOT}/build/initramfs-usb.lz4"
@@ -81,7 +81,7 @@ case "$dev" in
   /dev/*) rootdev="$dev" ;;
 esac
 [ -n "$rootdev" ] || for b in /dev/sda* /dev/mmcblk*; do [ -b "$b" ] && blkid "$b" 2>/dev/null | grep -q ext4 && { rootdev="$b"; break; }; done
-# --- очистка экрана + компактный статус ---
+# --- clear the framebuffer and print compact status ---
 dmesg -n 1 2>/dev/null
 printf "\033[2J\033[H"
 {
@@ -90,8 +90,8 @@ echo "kernel : $(uname -r)"
 echo "mods ok: $(wc -l < /tmp/mok)   fail: $(tr "\n" " " < /tmp/mfail)"
 echo "udc    : $(ls /sys/class/udc 2>/dev/null | tr "\n" " ")"
 echo "usb0   : $(ip -o addr show usb0 2>/dev/null | awk "{print \$4}")"
-echo "ext4   : $(blkid 2>/dev/null | grep -c ext4) шт"
-echo "rootdev: ${rootdev:-нет}"
+echo "ext4   : $(blkid 2>/dev/null | grep -c ext4) found"
+echo "rootdev: ${rootdev:-none}"
 echo "======================"
 } | tee /status.txt
 if [ -n "$rootdev" ]; then

@@ -1,9 +1,9 @@
-# tools/
+# `tools/`
 
-Host-скрипты, общие для всего репозитория.
+Host-side utilities shared by the repository:
 
-- извлечение и разбор стоковых образов (boot/vendor_boot/dtbo/super/persist);
-- сбор логов с устройства (fastboot getvar, dmesg, runtime DTS);
-- проверка хешей и артефактов.
+- Extract and inspect stock `boot`, `vendor_boot`, `dtbo`, `super`, and `persist` images.
+- Collect device information and logs.
+- Validate hashes and generated artifacts.
 
-На устройстве ничего отсюда не запускается.
+Nothing in this directory runs on the tablet.

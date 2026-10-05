@@ -7,7 +7,7 @@ on:
         default: ""
         type: string
 env:
-  KVER: 7.2.0-rc2-uke
+  UKE_KERNEL_VERSION: 6.12.0-dirty
 permissions:
   contents: write
 jobs:
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build rootfs
         run: |
-          docker run --rm -e KVER -v "$PWD:/work" -w /work quay.io/fedora/fedora:44 \
+            docker run --rm -e UKE_KERNEL_VERSION -v "$PWD:/work" -w /work quay.io/fedora/fedora:44 \
               ./rootfs/build-rootfs.sh
       - name: Publish to release
         env:

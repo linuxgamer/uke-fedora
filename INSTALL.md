@@ -1,57 +1,54 @@
-# Установка Fedora на Xiaomi Pad 7 (uke)
+# Installing Fedora on Xiaomi Pad 7 (`uke`)
 
-Краткий гайд. Порт — **bring-up**: сначала консоль/USB-net, затем графика.
-Прошивка — **fastboot или TWRP** (у пользователя есть TWRP под uke).
+This guide describes the currently working experimental path: Linux v6.12 from
+`build/ztsubaki/`, a small `init_boot` initramfs, and a Fedora rootfs in
+`userdata`.
 
-> **Установка уничтожает данные Android** (`userdata` переформатируется).
-> Бэкап: `tools/backup-device.sh`. Android восстановим из стоковой прошивки.
+> [!WARNING]
+> This is bring-up software. Installing the rootfs destroys Android user data.
+> Keep a stock firmware package and a known-good recovery path before proceeding.
 
-## Предпосылки
-- Разблокированный bootloader, TWRP в recovery.
-- Linux-PC с `adb`/`fastboot`.
-- Артефакты: `boot/` бандл, rootfs, модули, firmware.
+## Prerequisites
 
-## 1. Ядро и boot-бандл
+- Unlocked bootloader.
+- A Linux host with `fastboot`; flashing is performed manually by the user.
+- Built `boot.img`, `init_boot.img`, and `dtbo.img` from the v6.12 path.
+- A Fedora rootfs image built as described in [docs/BUILD.md](docs/BUILD.md).
+
+## Flashing
+
+Only the active-slot `boot` and `init_boot` images are part of the supported boot
+path. Keep the stock `vendor_boot`, `dtbo`, and `vbmeta` images.
+
 ```sh
-kernel/build.sh
-boot/build-bundle.sh \
-    --vmlinuz build/uke-build/arch/arm64/boot/vmlinuz.efi \
-    --dtb   build/uke-build/arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dtb \
-    --initramfs <initramfs.gz> \
-    --cmdline boot/cmdline.txt --bootconfig boot/bootconfig.txt \
-    --out build/fedora-boot
+# Run these commands yourself after reviewing the paths and active slot.
+fastboot flash boot_a build/ztsubaki/dist/boot.img
+fastboot flash init_boot_a build/ztsubaki/dist/init_boot.img
 ```
 
-## 2. Rootfs
+The rootfs is a 3 GiB raw ext4 image. ABL fastboot has an approximately 4 GiB
+transfer limit and skips zero blocks, so erase or zero `userdata` before flashing
+the raw image:
+
 ```sh
-sudo DNF_FORCEARCH=aarch64 DNF_REPOSDIR="$PWD/rootfs/fedora-repos" ./rootfs/build-rootfs.sh
+# From the initramfs shell, or use an equivalent manual erase operation.
+dd if=/dev/zero of=/dev/sda32 bs=1M count=4096 conv=fsync
+
+# Run this command yourself after the device is in fastboot mode.
+fastboot flash userdata build/fedora/uke-rootfs.img
 ```
 
-## 3. Прошивка (ztsubaki-схема)
-Меняем **только** `boot` + `init_boot`; стоковые `vendor_boot`/`dtbo`/`vbmeta`
-**не трогаем** (Xiaomi ABL их не принимает — см. Known-Issues #9).
-```sh
-boot/build-initramfs-minimal.sh
-boot/build-bundle-ztsubaki.sh \
-    --vmlinuz build/uke-build/arch/arm64/boot/vmlinuz.efi \
-    --dtb build/uke-build/arch/arm64/boot/dts/qcom/sm7675-xiaomi-uke.dtb \
-    --init-boot build/initramfs-minimal.lz4 \
-    --cmdline boot/cmdline.txt --out build/fedora-boot-z
-# fastboot (активный слот a):
-fastboot flash boot_a      build/fedora-boot-z/boot.img
-fastboot flash init_boot_a build/fedora-boot-z/init_boot.img
-```
-- `userdata`: ext4 с меткой `uke_root` (initramfs находит по ней/по ext4).
+Do not flash `uke-rootfs.sparse.img` through ABL fastboot.
 
-### Если TWRP не может форматнуть userdata (dm-7 busy)
-Обход — образ через fastboot:
-```sh
-./rootfs/mk-internal-storage-fastboot.sh 8     # ext4 8G -> sparse (~950M)
-fastboot flash userdata build/fedora/uke-rootfs.sparse.img
-```
+## First Boot and Debugging
 
-## 4. Первая загрузка
-- Консоль `ttyMSM0`, USB-net `172.16.42.1` (SSH).
+- The initramfs finds the rootfs by UUID and switches to Fedora systemd.
+- USB ACM is the supported serial console: `/dev/ttyACM0` on the host and
+  `/dev/ttyGS0` on the tablet.
+- The initramfs writes an early-boot summary to `/status.txt`.
+- RNDIS is under active bring-up and is not yet a supported Fedora networking path.
 
-## Откат
-Стоковая прошивка (Global 3.0.303.0.WOZMIXM) или TWRP Format Data.
+## Recovery
+
+Restore the stock firmware or reformat `userdata` from recovery. Never modify
+XBL, ABL, TZ, modem, DSP, GPT, `persist`, or radio firmware for this port.

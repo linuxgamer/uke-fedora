@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Извлечь и разобрать стоковую прошивку uke (только чтение).
-# Использование: tools/extract-stock.sh <каталог_прошивки>
-# Пример: tools/extract-stock.sh ~/Загрузки/uke_global_images_OS3.0.303.0.WOZMIXM_16.0
+# Extract and inspect uke stock firmware (read-only).
+# Usage: tools/extract-stock.sh <firmware-directory>
+# Example: tools/extract-stock.sh ~/Downloads/uke_global_images_OS3.0.303.0.WOZMIXM_16.0
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -12,7 +12,7 @@ DTC="${ROOT}/build/tools/dtc/dtc"
 
 for f in boot.img init_boot.img vendor_boot.img dtbo.img vbmeta.img; do
 	[[ -f "${IMG}/${f}" ]] || {
-		echo "нет ${IMG}/${f}" >&2
+		echo "missing ${IMG}/${f}" >&2
 		exit 1
 	}
 done
@@ -35,15 +35,15 @@ mkdtboimg dump "${IMG}/dtbo.img" -b "${OUT}/dtbo/dtbo"
 echo "== vbmeta =="
 avbtool info_image --image "${IMG}/vbmeta.img" | head -20
 
-# DTC: собрать из первоисточника, если нет
+# Build DTC from source if it is unavailable.
 if [[ ! -x "${DTC}" ]]; then
-	echo "== сборка dtc =="
+	echo "== building dtc =="
 	mkdir -p "$(dirname "${DTC}")"
 	git clone --depth 1 https://github.com/dgibson/dtc "$(dirname "${DTC}")"
 	make -C "$(dirname "${DTC}")" -j"$(nproc)"
 fi
 
-# vendor_boot DTB: склеенные DTB -> разбить и декомпилировать
+# vendor_boot DTB: split concatenated DTBs and decompile them.
 echo "== split + decompile vendor_boot DTB =="
 python3 - "$OUT/vendor_boot/dtb" "$OUT/vendor_boot/dtb-parts" <<'PY'
 import struct, os, sys
@@ -71,5 +71,5 @@ done
 echo "decompiled ${OUT}/dtbo/dtbo.0 -> dtbo.0.dts"
 
 echo
-echo "Готово: ${OUT}"
-echo "Панель/тач/USB: см. ${OUT}/dtbo/dtbo.0.dts"
+echo "Complete: ${OUT}"
+echo "Panel/touch/USB: see ${OUT}/dtbo/dtbo.0.dts"

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Конвертер DSI-команд Qualcomm (downstream) в C для mainline-панели.
+"""Convert Qualcomm downstream DSI commands to C for a mainline panel driver.
 
-Формат пакета: <type> <last> <vc> <ack> <wait> <len_hi> <len_lo> <payload...>
-  type 0x05/0x15/0x39 -> DCS-запись; wait (мс) -> mipi_dsi_msleep.
+Packet format: <type> <last> <vc> <ack> <wait> <len_hi> <len_lo> <payload...>
+  type 0x05/0x15/0x39 -> DCS write; wait (ms) -> mipi_dsi_msleep.
 
-Использование:
+Usage:
   tools/dsi-cmds.py <file.dtsi> [property] [--after MARKER]
 
   tools/dsi-cmds.py dsi-panel-o82-42-...dtsi qcom,mdss-dsi-on-command --after timing@120
@@ -18,11 +18,11 @@ def extract(text, prop, after=None):
     if after:
         i = text.find(after)
         if i < 0:
-            raise SystemExit(f"маркер не найден: {after}")
+            raise SystemExit(f"marker not found: {after}")
         start = i
     m = re.search(re.escape(prop) + r"\s*=\s*\[", text[start:])
     if not m:
-        raise SystemExit(f"свойство не найдено: {prop}")
+        raise SystemExit(f"property not found: {prop}")
     body = text[start + m.end():]
     end = body.find("];")
     return body[:end]
@@ -45,7 +45,7 @@ def emit(packets, ctx="dsi_ctx"):
     out = []
     for p in packets:
         if len(p) < 7:
-            out.append(f"\t/* пропуск короткого пакета: {' '.join(f'{b:02x}' for b in p)} */")
+            out.append(f"\t/* skipping short packet: {' '.join(f'{b:02x}' for b in p)} */")
             continue
         typ, wait, ln = p[0], p[4], (p[5] << 8) | p[6]
         payload = p[7:7 + ln]

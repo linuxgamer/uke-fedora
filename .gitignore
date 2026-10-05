@@ -18,6 +18,8 @@
 # reference clones: fetch, do not vendor
 /references/*
 !/references/README.md
+!/references/archive/
+!/references/archive/**
 
 # attic
 /attic/*

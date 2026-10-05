@@ -1,12 +1,20 @@
-# Hardware Notes (uke)
+# Hardware Notes
 
-Заметки по подсистемам. Источники: `docs/STOCK-DTB.md`, `docs/STOCK-SUPER.md`.
+Sources: [STOCK-DTB.md](STOCK-DTB.md) and [STOCK-SUPER.md](STOCK-SUPER.md).
 
-- **SoC**: SM7675 (lamma/cliffs7), семейство pineapple. Adreno 732, GMU 735.
-- **Панель**: O82, dual DSI + DSC, 3200×2136, reset gpio2, vsp/vsn gpio74/75.
-- **Тач**: Novatek NT36532E (TDDI), SPI `se4`, IRQ gpio54.
-- **Подсветка**: 2× KTZ8866 @0x11 (i2c0/i2c12).
-- **USB**: dwc3 + WCD939x, eUSB2 repeater `pm7550ba`.
-- **UFS**: `1d84000.ufshc`, 4096-байтные сектора.
-- **Wi-Fi/BT**: WCN6750; firmware в `NON-HLOS.bin`.
-- **Модема нет** (downstream отключает `mpss_mem`).
+| Component | Details |
+|---|---|
+| SoC | Qualcomm SM7675 (`lamma` / `cliffs7`), Adreno 732, GMU 735 |
+| Display | O82 3200x2136 dual DSI with DSC; reset GPIO 2; VSP/VSN GPIO 74/75 |
+| Touchscreen | Novatek NT36532E TDDI on SPI `se4`; IRQ GPIO 54 |
+| Backlight | Two KTZ8866 controllers at I2C address `0x11` |
+| Storage | UFS host `1d84000.ufshc`; 4096-byte sectors |
+| USB | DWC3, WCD939x USB route, PM7550BA eUSB2 repeater |
+| Wireless | WCN6750; firmware originates in `NON-HLOS.bin` |
+| Audio | WCD937x/WCD939x, WSA883x/884x, FS19xx amplifiers |
+| Modem | Not populated; downstream disables `mpss_mem` |
+
+The O82 panel and NT36532 touchscreen are board-specific work still missing from
+the supported v6.12 boot path. See
+[the archived panel and touchscreen notes](../references/archive/palawan-7.2/PANEL-TOUCH.md)
+for the Palawan implementation record.
