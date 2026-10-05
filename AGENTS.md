@@ -21,13 +21,13 @@ where device requirements allow it.
 
 | Path | Purpose |
 |---|---|
-| `references/archive/` | Parked Palawan 7.2 work, legacy boot/rootfs tooling, and historical notes |
-| `boot/` | Working `build-initramfs-usb.sh`, image builders, cmdline, bootconfig, dracut |
+| `references/archive/` | Tracked Palawan 7.2 work, legacy boot/rootfs tooling, and historical notes |
+| `boot/` | Initramfs, stock-DTBO transformation, boot bundle, and release packaging scripts |
 | `rootfs/` | Fedora rootfs build and `userdata` image scripts |
 | `tools/` | mkbootimg, avbtool, stock extraction, and conversion utilities |
 | `docs/` | Build, status, hardware, and stock-firmware documentation |
 | `.github/workflows/` | No active CI; retired workflows are in `references/archive/legacy-ci/` |
-| `references/`, `attic/` | Uncommitted donor clones and archives |
+| `references/` | Ignored donor checkouts; `references/archive/` is the tracked exception |
 
 ## Working Build
 
@@ -35,7 +35,10 @@ where device requirements allow it.
 make -C build/ztsubaki/linux O="$PWD/build/ztsubaki/out" ARCH=arm64 LLVM=1 Image.gz
 make -C build/ztsubaki/linux O="$PWD/build/ztsubaki/out" ARCH=arm64 LLVM=1 modules
 boot/build-initramfs-usb.sh
+boot/build-dtbo.sh --stock-dtbo /path/to/stock/dtbo.img --out build/ztsubaki/dist/dtbo.img
+boot/build-bundle-ztsubaki.sh --kernel build/ztsubaki/out/arch/arm64/boot/Image.gz --init-boot build/initramfs-usb.lz4 --dtbo build/ztsubaki/dist/dtbo.img --cmdline boot/cmdline.txt --out build/ztsubaki/dist
 rootfs/mk-internal-storage-fastboot.sh 3
+boot/package-release.sh --bundle build/ztsubaki/dist --rootfs build/fedora/uke-rootfs.img --out build/release
 ```
 
 See `docs/BUILD.md` for image construction and the `userdata` zeroing requirement.
@@ -44,8 +47,9 @@ See `docs/BUILD.md` for image construction and the `userdata` zeroing requiremen
 ## Rules
 
 - **Never run `fastboot`.** The user performs every flashing operation.
-- Do not commit `build/`, `references/`, `attic/`, `rootfs/firmware.tar.gz`,
-  backups, or generated `*.img`, `*.dtb`, and `*.ko` files. Do not commit firmware blobs.
+- Do not commit `build/`, ignored donor checkouts under `references/`,
+  `rootfs/firmware.tar.gz`, backups, or generated `*.img`, `*.dtb`, and `*.ko`
+  files. `references/archive/` is tracked. Do not commit firmware blobs.
 - ztsubaki v6.12 is the working kernel. Palawan 7.2 is archived reference material only.
 - Follow the gts9wifi layout and process; implement device-specific behavior locally.
 - Update `docs/Known-Issues.md` whenever a hardware or boot finding changes status.
@@ -58,4 +62,5 @@ See `docs/BUILD.md` for image construction and the `userdata` zeroing requiremen
   `vbmeta` 128 KiB.
 - Device: `uke`, model `2410CRP4CG`; UFS host `1d84000.ufshc`; `userdata` is `/dev/block/sda32`.
 - Host requirements: `docker`, `qemu-user-static-binfmt`, `clang`, `llvm`, `lld`,
-  `bc`, `dtc`, `pahole`, `flex`, `bison`, `lz4`, `cpio`, and `python3`.
+  `bc`, `dtc`, `fdtput`, `fdtget`, `mkdtboimg`, `pahole`, `flex`, `bison`, `lz4`,
+  `zstd`, `cpio`, and `python3`.

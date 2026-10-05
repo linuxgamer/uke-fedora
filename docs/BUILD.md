@@ -6,7 +6,8 @@ The supported path is Linux v6.12 from `build/ztsubaki/`. The Palawan 7.2 tree i
 ## Host Requirements
 
 Install `docker`, `qemu-user-static-binfmt`, `clang`, `llvm`, `lld`, `bc`, `dtc`,
-`pahole`, `flex`, `bison`, `lz4`, `cpio`, and `python3`.
+`fdtput`, `fdtget`, `mkdtboimg`, `pahole`, `flex`, `bison`, `lz4`, `zstd`, `cpio`,
+and `python3`.
 
 ## 1. Kernel
 
@@ -29,11 +30,13 @@ Build the busybox initramfs with USB ACM and early boot diagnostics:
 boot/build-initramfs-usb.sh
 ```
 
-Build `init_boot.img` from the current initramfs, then package the boot images
-with a validated stock-DT-derived `dtbo.img`:
+Set `STOCK_DTBO` to the `dtbo.img` from the exact stock firmware matching the
+installed stock `vendor_boot`. Transform it, then package all boot images:
 
 ```sh
+STOCK_DTBO=/path/to/stock-firmware/images/dtbo.img
 boot/build-initramfs-usb.sh
+boot/build-dtbo.sh --stock-dtbo "$STOCK_DTBO" --out build/ztsubaki/dist/dtbo.img
 boot/build-bundle-ztsubaki.sh \
     --kernel build/ztsubaki/out/arch/arm64/boot/Image.gz \
     --init-boot build/initramfs-usb.lz4 \
@@ -42,9 +45,9 @@ boot/build-bundle-ztsubaki.sh \
     --out build/ztsubaki/dist
 ```
 
-The DTBO transformation depends on the matching stock `dtbo.img`, which is not
-tracked. Use the validated release `dtbo.img` unless rebuilding it from the same
-stock firmware and transformation recipe.
+The stock DTBO is not tracked. Do not combine a DTBO from one stock firmware with
+`vendor_boot` from another; use the validated release `dtbo.img` when rebuilding
+from the exact matching firmware is not possible.
 
 The supported layout is:
 
@@ -73,6 +76,22 @@ rootfs/mk-internal-storage-fastboot.sh 3
 
 This produces `build/fedora/uke-rootfs.img`. It uses UUID
 `19364720-0ee1-4715-b30a-51a47d4a814c` and label `uke_root`.
+
+## 4. Release Bundle
+
+Create the uploadable release files without manually copying images or generating
+checksums:
+
+```sh
+boot/package-release.sh \
+    --bundle build/ztsubaki/dist \
+    --rootfs build/fedora/uke-rootfs.img \
+    --out build/release
+```
+
+This produces `boot.img`, `init_boot.img`, `dtbo.img`, compressed
+`uke-rootfs.img.zst`, `SHA256SUMS`, and `uke-rootfs.img.sha256`. The compressed
+rootfs must be decompressed before flashing; do not upload the sparse rootfs.
 
 ### ABL Fastboot Constraint
 
