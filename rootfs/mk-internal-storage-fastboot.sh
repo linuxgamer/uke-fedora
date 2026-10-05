@@ -11,13 +11,16 @@ root_uuid="${ROOT_UUID:-19364720-0ee1-4715-b30a-51a47d4a814c}"
 img="$ROOT/build/fedora/uke-rootfs.img"
 sparse="$ROOT/build/fedora/uke-rootfs.sparse.img"
 
-[ -f "$rootfs_tar" ] || { echo "нет $rootfs_tar" >&2; exit 1; }
+[ -f "$rootfs_tar" ] || {
+	echo "нет $rootfs_tar" >&2
+	exit 1
+}
 mkdir -p "$(dirname "$img")"
 
 echo ">>> ext4-образ ${size_gib}G, метка uke_root, UUID $root_uuid"
 rm -f "$img" "$sparse"
 truncate -s "${size_gib}G" "$img"
-mke2fs -F -t ext4 -L uke_root -U "$root_uuid" -m 1 "$img" >/dev/null
+mke2fs -F -t ext4 -L uke_root -U "$root_uuid" -m 1 -E lazy_itable_init=0,lazy_journal_init=0 "$img" >/dev/null
 
 mnt="$(mktemp -d)"
 sudo mount -o loop "$img" "$mnt"
@@ -31,7 +34,6 @@ e2fsck -fy "$img" >/dev/null 2>&1 || true
 
 echo ">>> sparse-образ"
 img2simg "$img" "$sparse"
-rm -f "$img"
-ls -la "$sparse"
+ls -la "$sparse" "$img"
 echo
-echo "Прошей:  fastboot flash userdata $sparse"
+echo "Прошей RAW (не sparse!):  fastboot flash userdata $img"
