@@ -4,7 +4,7 @@
 
 | Area | Status |
 |---|---|
-| Boot chain | Stock Xiaomi ABL with custom `boot` and `init_boot` |
+| Boot chain | Stock Xiaomi ABL with custom `boot`, `init_boot`, and stock-DT-derived `dtbo` |
 | Kernel | Upstream Linux v6.12 plus ztsubaki `uke` patch set |
 | Storage | UFS, ext4 rootfs, and Fedora boot to a login prompt |
 | Console | simplefb and USB ACM serial console |
@@ -30,7 +30,8 @@
 ### Boot and Storage
 
 - Xiaomi ABL rejects the earlier five-image bundle. The supported design modifies
-  only `boot` and `init_boot`; stock `vendor_boot`, `dtbo`, and `vbmeta` remain in place.
+  `boot`, `init_boot`, and stock-DT-derived `dtbo`; stock `vendor_boot` and
+  `vbmeta` remain in place.
 - UFS requires the v6.12 UFS/GDSC/SMMU/RPMh changes and DTBO fragments 134--137.
 - UFS GDSC nodes must remain enabled with `regulator-always-on`; otherwise a power
   transition times out and drops the link.

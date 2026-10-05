@@ -17,13 +17,22 @@ This guide describes the currently working experimental path: Linux v6.12 from
 
 ## Flashing
 
-Only the active-slot `boot` and `init_boot` images are part of the supported boot
-path. Keep the stock `vendor_boot`, `dtbo`, and `vbmeta` images.
+The active-slot `boot`, `init_boot`, and `dtbo` images are part of the supported
+boot path. Keep the stock `vendor_boot` and `vbmeta` images. Verify the active
+slot before replacing its images; the examples below are for slot `a`.
 
 ```sh
 # Run these commands yourself after reviewing the paths and active slot.
 fastboot flash boot_a build/ztsubaki/dist/boot.img
 fastboot flash init_boot_a build/ztsubaki/dist/init_boot.img
+fastboot flash dtbo_a build/ztsubaki/dist/dtbo.img
+```
+
+Release bundles provide the raw rootfs compressed as `uke-rootfs.img.zst`:
+
+```sh
+zstd -d uke-rootfs.img.zst
+sha256sum -c uke-rootfs.img.sha256
 ```
 
 The rootfs is a 3 GiB raw ext4 image. ABL fastboot has an approximately 4 GiB
@@ -35,7 +44,8 @@ the raw image:
 dd if=/dev/zero of=/dev/sda32 bs=1M count=4096 conv=fsync
 
 # Run this command yourself after the device is in fastboot mode.
-fastboot flash userdata build/fedora/uke-rootfs.img
+# Release users: uke-rootfs.img; local builders: build/fedora/uke-rootfs.img.
+fastboot flash userdata uke-rootfs.img
 ```
 
 Do not flash `uke-rootfs.sparse.img` through ABL fastboot.

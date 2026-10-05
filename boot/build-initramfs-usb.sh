@@ -34,7 +34,7 @@ MDIR="/tmp/ir/lib/modules/$KVER"; mkdir -p "$MDIR"
 while read -r m; do
   [ -z "$m" ] && continue
   src="/work/build/ztsubaki/out/$m"
-  if [ -f "$src" ]; then mkdir -p "$MDIR/$(dirname "$m")"; cp "$src" "$MDIR/$m"; else echo "MISS $m" >&2; fi
+  if [ -f "$src" ]; then mkdir -p "$MDIR/$(dirname "$m")"; cp "$src" "$MDIR/$m"; else echo "missing required module: $m" >&2; exit 1; fi
 done <<< "$MODLIST"
 cp /work/references/ztsubaki-uke-linux/images/init_boot/modules.load "$MDIR/modules.load"
 printf "%s\n" "drivers/usb/gadget/function/u_ether.ko" "drivers/usb/gadget/function/usb_f_rndis.ko" "drivers/usb/gadget/function/usb_f_ecm.ko" "drivers/ufs/host/ufs-qcom.ko" "drivers/phy/qualcomm/phy-qcom-qmp-ufs.ko" >> "$MDIR/modules.load"

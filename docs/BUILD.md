@@ -29,17 +29,31 @@ Build the busybox initramfs with USB ACM and early boot diagnostics:
 boot/build-initramfs-usb.sh
 ```
 
-Build `boot.img`, `init_boot.img`, and the stock-DT-derived `dtbo.img` using the
-commands documented in the local ztsubaki image Makefile. The resulting artifacts
-belong in `build/ztsubaki/dist/`.
+Build `init_boot.img` from the current initramfs, then package the boot images
+with a validated stock-DT-derived `dtbo.img`:
+
+```sh
+boot/build-initramfs-usb.sh
+boot/build-bundle-ztsubaki.sh \
+    --kernel build/ztsubaki/out/arch/arm64/boot/Image.gz \
+    --init-boot build/initramfs-usb.lz4 \
+    --dtbo build/ztsubaki/dist/dtbo.img \
+    --cmdline boot/cmdline.txt \
+    --out build/ztsubaki/dist
+```
+
+The DTBO transformation depends on the matching stock `dtbo.img`, which is not
+tracked. Use the validated release `dtbo.img` unless rebuilding it from the same
+stock firmware and transformation recipe.
 
 The supported layout is:
 
-- `boot.img`: `Image.gz` with an appended DTB and an AVB hash footer.
+- `boot.img`: `Image.gz`, its command line, and an AVB hash footer.
 - `init_boot.img`: LZ4 busybox initramfs with an AVB hash footer; partition size
   is 8 MiB.
 - `dtbo.img`: stock DTBO transformed for the v6.12 driver bindings.
-- `vendor_boot` and `vbmeta`: leave the stock images untouched.
+- `vendor_boot` and `vbmeta`: leave the stock images untouched. Flash the custom
+  `dtbo.img` together with `boot.img` and `init_boot.img`.
 
 The root command line uses UUID `19364720-0ee1-4715-b30a-51a47d4a814c`.
 
@@ -48,8 +62,7 @@ The root command line uses UUID `19364720-0ee1-4715-b30a-51a47d4a814c`.
 Build the Fedora 44 `@core` rootfs:
 
 ```sh
-sudo DNF_FORCEARCH=aarch64 DNF_REPOSDIR="$PWD/rootfs/fedora-repos" \
-    ./rootfs/build-rootfs.sh
+sudo DNF_FORCEARCH=aarch64 ./rootfs/build-rootfs.sh
 ```
 
 Create a 3 GiB raw ext4 image suitable for ABL fastboot:

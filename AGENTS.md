@@ -10,7 +10,8 @@ where device requirements allow it.
 - **Working primary track: ztsubaki 6.12** (`build/ztsubaki/`). Upstream v6.12
   plus `references/ztsubaki-uke-linux/patches/uke/` for GCC/TCSR/RPMh/GDSC/SMMU/
   USB/UFS. **Fedora boots to a login prompt.** The supported scheme modifies
-  `boot` and `init_boot`; stock `vendor_boot`, `dtbo`, and `vbmeta` stay in place.
+  `boot`, `init_boot`, and stock-DT-derived `dtbo`; stock `vendor_boot` and
+  `vbmeta` stay in place.
 - **Palawan 7.2** (`references/archive/palawan-7.2/kernel/`, `build/linux-uke/`, KVER `7.2.0-rc2-uke`) is a
   parked mainline fork with its own DTS and drivers. It does not boot. Retain it
   as a reference for moving the O82 panel, NT36532 touchscreen, and board DTS to
@@ -25,7 +26,7 @@ where device requirements allow it.
 | `rootfs/` | Fedora rootfs build and `userdata` image scripts |
 | `tools/` | mkbootimg, avbtool, stock extraction, and conversion utilities |
 | `docs/` | Build, status, hardware, and stock-firmware documentation |
-| `.github/workflows/` | Kernel, rootfs, boot bundle, and full-set CI |
+| `.github/workflows/` | No active CI; retired workflows are in `references/archive/legacy-ci/` |
 | `references/`, `attic/` | Uncommitted donor clones and archives |
 
 ## Working Build

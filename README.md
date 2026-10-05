@@ -7,8 +7,9 @@ UEFI is used.
 ## Status
 
 **Fedora 44 boots from internal UFS to a login prompt.** The working path is
-upstream Linux v6.12 with the ztsubaki `uke` patch set and the stock
-`vendor_boot`, `dtbo`, and `vbmeta` images left in place.
+upstream Linux v6.12 with the ztsubaki `uke` patch set, custom `boot`,
+`init_boot`, and stock-DT-derived `dtbo` images; stock `vendor_boot` and `vbmeta`
+remain in place.
 
 Working:
 
@@ -40,12 +41,14 @@ the stock firmware. Keep a known-good stock boot path before experimenting.
 
 Only replace these partitions on the active slot:
 
-- `boot`: mainline kernel with an appended DTB.
+- `boot`: mainline kernel and command line.
 - `init_boot`: minimal busybox initramfs.
+- `dtbo`: stock DTBO transformed for the v6.12 UFS, GDSC, and driver bindings.
 - `userdata`: Fedora rootfs.
 
-Do not replace `vendor_boot`, `dtbo`, or `vbmeta`. Xiaomi ABL rejects the earlier
-five-image approach; retaining the stock images is required for the working setup.
+Do not replace `vendor_boot` or `vbmeta`. Xiaomi ABL rejects the earlier
+five-image approach; the working setup replaces only `boot`, `init_boot`, and
+`dtbo` alongside `userdata`.
 
 ## Repository Layout
 
