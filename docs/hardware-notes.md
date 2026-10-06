@@ -1,6 +1,6 @@
 # Hardware Notes
 
-Sources: [STOCK-DTB.md](STOCK-DTB.md) and [STOCK-SUPER.md](STOCK-SUPER.md).
+Sources: [stock-dtb.md](stock-dtb.md) and [stock-super.md](stock-super.md).
 
 | Component | Details |
 |---|---|

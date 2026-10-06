@@ -21,9 +21,9 @@
 !/references/archive/
 !/references/archive/**
 
-# attic
-/attic/*
-!/attic/README.md
-
 # scratch
 /temp/
+
+# Python bytecode
+__pycache__/
+*.py[cod]

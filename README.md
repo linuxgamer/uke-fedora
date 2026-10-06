@@ -22,12 +22,12 @@ Not working or unverified:
 
 | Document | Contents |
 |---|---|
-| [INSTALL.md](INSTALL.md) | Install guide |
+| [docs/INSTALL.md](docs/INSTALL.md) | Install guide |
 | [docs/BUILD.md](docs/BUILD.md) | reproducible v6.12 kernel, initramfs, and rootfs builds |
-| [docs/Known-Issues.md](docs/Known-Issues.md) | feature status and current limitations |
-| [docs/Hardware-Notes.md](docs/Hardware-Notes.md) | device hardware summary |
-| [docs/STOCK-DTB.md](docs/STOCK-DTB.md) | stock boot image, partition, DTB, and DTBO analysis |
-| [docs/STOCK-SUPER.md](docs/STOCK-SUPER.md) | stock `super.img`, modules, and firmware inventory analysis |
+| [docs/known-issues.md](docs/known-issues.md) | feature status and current limitations |
+| [docs/hardware-notes.md](docs/hardware-notes.md) | device hardware summary |
+| [docs/stock-dtb.md](docs/stock-dtb.md) | stock boot image, partition, DTB, and DTBO analysis |
+| [docs/stock-super.md](docs/stock-super.md) | stock `super.img`, modules, and firmware inventory analysis |
 | [references/archive/](references/archive/) | archived 7.2, legacy boot, and historical research material |
 
 ## Supported boot path
@@ -46,11 +46,12 @@ Do not replace `vendor_boot` or `vbmeta`. Xiaomi ABL doesnt like that and bootlo
 
 | Path | Purpose |
 |---|---|
-| `build/ztsubaki/` | working Linux 6.12 source tree, output, and image artifacts (NOT COMMITED YET) |
+| `kernel/` | pinned Linux v6.12 base, complete Uke patch series, config, and source-release scripts |
+| `build/ztsubaki/` | local kernel source, output, modules, and image artifacts (not committed) |
 | `boot/` | Initramfs and Android boot images creation scripts |
 | `rootfs/` | Fedora 44 rootfs creation and `userdata` image scripts |
 | `references/archive/palawan-7.2/` | archived 7.2 kernel, DTS, drivers: reference only |
-| `tools/` | everything host needs to start developing |
+| `tools/` | host tools(extract/analyze images, log/info collection, hash validation |
 | `docs/` | build, status, hardware, etc information |
 | `references/` | references: code and moar information |
 

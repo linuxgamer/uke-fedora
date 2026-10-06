@@ -1,0 +1,16 @@
+# Paths are relative to /modules in the initramfs.  /init loads these in
+# dependency order with finit_module(2).
+drivers/interconnect/qcom/qnoc-cliffs-usb.ko
+drivers/clk/qcom/gdsc-regulator-uke.ko
+drivers/clk/qcom/gcc-cliffs.ko
+drivers/dma/qcom/gpi.ko
+drivers/i2c/busses/i2c-qcom-geni.ko
+drivers/usb/repeater/repeater-qti-pmic-eusb2-uke.ko
+drivers/usb/phy/phy-msm-snps-eusb2-uke.ko
+drivers/usb/dwc3/dwc3.ko
+drivers/usb/dwc3/dwc3-qcom.ko
+drivers/usb/gadget/libcomposite.ko
+drivers/usb/gadget/function/u_serial.ko
+drivers/usb/gadget/function/usb_f_acm.ko
+drivers/usb/gadget/function/usb_f_serial.ko
+drivers/usb/gadget/legacy/g_serial.ko

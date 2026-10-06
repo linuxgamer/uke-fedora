@@ -1,0 +1,3 @@
+# Preserve the imported kernel patch byte-for-byte; Git must not apply generic
+# whitespace checks to its textual diff lines.
+kernel/patches/uke/*.patch -whitespace

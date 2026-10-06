@@ -1,8 +1,8 @@
 # `references/`
 
-Read-only donor checkouts and archived project material. Do not modify donor checkouts.
+Place to look at information and code. read-only!
 
-The clones are ignored by Git and must be fetched locally:
+stuff here is .gitignore-d and needs to be cloned manually:
 
 ```sh
 git clone https://github.com/nacht20-de/gts9wifi-fedora.git
@@ -11,5 +11,5 @@ git clone https://github.com/MCC45TR/uke-linux.git
 git clone --branch palawan/v7.2-rc2 https://codeberg.org/palawan-mainline/linux.git
 ```
 
-See [`archive/PRIOR-ART.md`](archive/PRIOR-ART.md) for the role of each source.
-The repository's retired code and documentation are indexed in [`archive/`](archive/).
+Check [`archive/PRIOR-ART.md`](archive/PRIOR-ART.md) to see what cloned repos do.
+Everything retired and useless is in [`archive/`](archive/).

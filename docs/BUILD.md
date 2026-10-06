@@ -1,7 +1,9 @@
 # Build Guide
 
-The supported path is Linux v6.12 from `build/ztsubaki/`. The Palawan 7.2 tree in
-`references/archive/palawan-7.2/` is reference material and is not expected to boot.
+The supported path is Linux v6.12 from the tracked `kernel/` source manifest,
+patch series, and configuration. Build outputs live in `build/ztsubaki/`. The
+Palawan 7.2 tree in `references/archive/palawan-7.2/` is reference material and
+is not expected to boot.
 
 ## Host Requirements
 
@@ -11,15 +13,16 @@ and `python3`.
 
 ## 1. Kernel
 
-Build the working kernel and modules:
+Create a fresh patched source tree, then build the working kernel and staged
+modules:
 
 ```sh
-make -C build/ztsubaki/linux O="$PWD/build/ztsubaki/out" ARCH=arm64 LLVM=1 Image.gz
-make -C build/ztsubaki/linux O="$PWD/build/ztsubaki/out" ARCH=arm64 LLVM=1 modules
+kernel/prepare.sh
+kernel/build.sh
 ```
 
-The kernel is upstream v6.12 plus
-`references/ztsubaki-uke-linux/patches/uke/`. The patch covers the GCC/TCSR,
+The exact upstream commit, patch checksum, config checksum, and expected kernel
+release are recorded in `kernel/SOURCE-MANIFEST`. The patch covers the GCC/TCSR,
 RPMh, GDSC, SMMU, USB, and UFS bring-up required by this device.
 
 ## 2. Initramfs and Boot Images
@@ -92,6 +95,16 @@ boot/package-release.sh \
 This produces `boot.img`, `init_boot.img`, `dtbo.img`, compressed
 `uke-rootfs.img.zst`, `SHA256SUMS`, and `uke-rootfs.img.sha256`. The compressed
 rootfs must be decompressed before flashing; do not upload the sparse rootfs.
+
+Publish the corresponding kernel source alongside these binary artifacts:
+
+```sh
+kernel/package-source.sh --out build/release
+```
+
+This creates `linux-6.12-uke-source.tar.zst` and its SHA-256 file. The archive
+contains the full upstream v6.12 source with the Uke patch applied and the exact
+release config as `UKE-CONFIG`.
 
 ### ABL Fastboot Constraint
 
