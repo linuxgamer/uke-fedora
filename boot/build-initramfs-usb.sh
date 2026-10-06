@@ -77,10 +77,9 @@ for i in $(seq 1 50); do [ -b /dev/sda ] && break; sleep 0.2; done
 dev=""; for x in $(cat /proc/cmdline); do case "$x" in root=*) dev="${x#root=}";; esac; done
 rootdev=""
 case "$dev" in
-  UUID=*|LABEL=*) key="${dev#*=}"; for b in /dev/sda* /dev/mmcblk*; do [ -b "$b" ] && blkid "$b" 2>/dev/null | grep -q "$key" && { rootdev="$b"; break; }; done ;;
+  UUID=*|LABEL=*) key="${dev#*=}"; for b in /dev/sda* /dev/mmcblk*; do [ -b "$b" ] && blkid "$b" 2>/dev/null | grep -Fq "$key" && { rootdev="$b"; break; }; done ;;
   /dev/*) rootdev="$dev" ;;
 esac
-[ -n "$rootdev" ] || for b in /dev/sda* /dev/mmcblk*; do [ -b "$b" ] && blkid "$b" 2>/dev/null | grep -q ext4 && { rootdev="$b"; break; }; done
 # --- clear the framebuffer and print compact status ---
 dmesg -n 1 2>/dev/null
 printf "\033[2J\033[H"
@@ -94,6 +93,7 @@ echo "ext4   : $(blkid 2>/dev/null | grep -c ext4) found"
 echo "rootdev: ${rootdev:-none}"
 echo "======================"
 } | tee /status.txt
+[ -n "$rootdev" ] || echo "uke: root= did not resolve; refusing to mount an arbitrary ext4 filesystem" | tee -a /status.txt
 if [ -n "$rootdev" ]; then
     echo "uke: mount $rootdev -> /newroot"
     if mount -t ext4 -o rw "$rootdev" /newroot; then

@@ -22,7 +22,7 @@
 | Sensors and charging | Not ported |
 | Suspend, cameras, GPU userspace | Not validated |
 | Systemd | Some services fail at boot; inspect with `systemctl --failed` and `journalctl -b -p warning` |
-| Rootfs size | Limited to 3 GiB by ABL fastboot behavior; a Linux-side expansion path is needed |
+| Rootfs size | Limited to 3 GiB by ABL fastboot behavior; a Linux-side expansion path is still needed |
 | USB regulator warning | `vccq2-supply` is absent and assumed enabled |
 
 ## Confirmed Fixes
@@ -40,9 +40,11 @@
 
 ### Rootfs and Initramfs
 
-- `rootfs/mk-internal-storage-fastboot.sh` creates a 3 GiB initialized raw ext4
-  image. The partition must be zeroed before flashing because ABL skips zero blocks.
+- `rootfs/mk-internal-storage-fastboot.sh` only creates a 3 GiB initialized raw
+  ext4 image; Xiaomi ABL fastboot cannot safely flash a larger image. The
+  partition must be zeroed before flashing because ABL skips zero blocks.
 - The initramfs scans `/dev/sda*` for the root UUID because busybox `blkid -U` is
-  unavailable.
+  unavailable. It refuses to mount an arbitrary ext4 filesystem when `root=`
+  does not resolve.
 - `/status.txt` and `dmesg -n 1` preserve useful early-boot status.
 - USB ACM exposes an interactive shell on `/dev/ttyGS0`.

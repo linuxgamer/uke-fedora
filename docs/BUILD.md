@@ -74,7 +74,7 @@ sudo DNF_FORCEARCH=aarch64 ./rootfs/build-rootfs.sh
 Create a 3 GiB raw ext4 image suitable for ABL fastboot:
 
 ```sh
-rootfs/mk-internal-storage-fastboot.sh 3
+rootfs/mk-internal-storage-fastboot.sh
 ```
 
 This produces `build/fedora/uke-rootfs.img`. It uses UUID

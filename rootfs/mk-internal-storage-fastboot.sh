@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 # Build an ext4 `userdata` rootfs image for manual fastboot flashing.
 # This avoids the TWRP/device-mapper issue where dm-7 holds `userdata` open.
-#   ./rootfs/mk-internal-storage-fastboot.sh [size-GiB]   (default: 8)
+#   ./rootfs/mk-internal-storage-fastboot.sh [size-GiB]   (only 3 is supported)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 rootfs_tar="${ROOTFS_TAR:-$ROOT/build/fedora/uke-fedora-rootfs.tar.gz}"
-size_gib="${1:-8}"
+size_gib="${1:-3}"
 root_uuid="${ROOT_UUID:-19364720-0ee1-4715-b30a-51a47d4a814c}"
 img="$ROOT/build/fedora/uke-rootfs.img"
 sparse="$ROOT/build/fedora/uke-rootfs.sparse.img"
 
 [ -f "$rootfs_tar" ] || {
 	echo "missing $rootfs_tar" >&2
+	exit 1
+}
+[ "$size_gib" = 3 ] || {
+	echo "only a 3 GiB rootfs image is supported by Xiaomi ABL fastboot" >&2
 	exit 1
 }
 mkdir -p "$(dirname "$img")"
