@@ -13,8 +13,8 @@ flashing instructions for the current port.
 | `RESEARCH.md` | Initial Nura-oriented hardware and source survey |
 | `FEDORA-PIVOT.md` | Original decision record; superseded by the implemented Fedora path |
 | `TODO.md` | Palawan-centric task list completed or superseded by current status tracking |
-| `PORT-KIT.md` | Small stock-firmware inventory now covered by `docs/STOCK-*.md` |
+| `PORT-KIT.md` | Small stock-firmware inventory now covered by `docs/stock-*.md` |
 | `Device-Controls.md` | Empty placeholder for future controls |
 
 Current status and supported instructions are in `README.md`, `docs/BUILD.md`,
-and `docs/Known-Issues.md` at the repository root.
+and `docs/known-issues.md` at the repository root.

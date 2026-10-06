@@ -25,7 +25,8 @@ Not working or unverified:
 | [docs/INSTALL.md](docs/INSTALL.md) | Install guide |
 | [docs/BUILD.md](docs/BUILD.md) | reproducible v6.12 kernel, initramfs, and rootfs builds |
 | [docs/known-issues.md](docs/known-issues.md) | feature status and current limitations |
-| [docs/hardware-notes.md](docs/hardware-notes.md) | device hardware summary |
+| [docs/hardware-notes.md](docs/hardware-notes.md) | postmarketOS-style hardware support matrix |
+| [docs/todo.md](docs/todo.md) | prioritized porting work and completion criteria |
 | [docs/stock-dtb.md](docs/stock-dtb.md) | stock boot image, partition, DTB, and DTBO analysis |
 | [docs/stock-super.md](docs/stock-super.md) | stock `super.img`, modules, and firmware inventory analysis |
 | [references/archive/](references/archive/) | archived 7.2, legacy boot, and historical research material |

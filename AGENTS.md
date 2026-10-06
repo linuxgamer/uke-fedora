@@ -30,6 +30,20 @@ where device requirements allow it.
 | `.github/workflows/` | No active CI; retired workflows are in `references/archive/legacy-ci/` |
 | `references/` | Ignored donor checkouts; `references/archive/` is the tracked exception |
 
+## Change Map
+
+Start implementation from the listed active files; use `references/archive/` only
+when the task explicitly needs a missing board driver or DTS as a porting source.
+
+| Task | Start here | Completion evidence |
+|---|---|---|
+| Kernel config, drivers, DTS bindings | `kernel/patches/uke/`, `kernel/configs/uke.config`, `kernel/SOURCE-MANIFEST` | Patch applies to the pinned v6.12 commit and `kernel/build.sh` succeeds. |
+| Initramfs or USB gadget | `boot/build-initramfs-usb.sh`, `kernel/modules.load`, `boot/cmdline.txt` | Rebuild initramfs; preserve UUID-root behavior and USB ACM console. |
+| DTBO or Android image layout | `boot/build-dtbo.sh`, `boot/build-bundle-ztsubaki.sh`, `boot/package-release.sh`, `docs/stock-dtb.md` | Build from a matching stock DTBO; do not change stock `vendor_boot` or `vbmeta`. |
+| Fedora rootfs or `userdata` | `rootfs/build-rootfs.sh`, `rootfs/mk-internal-storage-fastboot.sh`, `docs/BUILD.md` | Keep the flash image at exactly 3 GiB and retain the fixed root UUID. |
+| Hardware porting status | `docs/hardware-notes.md`, `docs/todo.md`, `docs/known-issues.md` | Update the support matrix and known issues with the test result. |
+| Stock firmware or device inventory | `docs/stock-dtb.md`, `docs/stock-super.md`, `tools/extract-stock.sh` | Keep blobs out of Git; record only tooling, manifests, hashes, or documentation. |
+
 ## Working Build
 
 ```sh
@@ -38,7 +52,7 @@ kernel/build.sh
 boot/build-initramfs-usb.sh
 boot/build-dtbo.sh --stock-dtbo /path/to/stock/dtbo.img --out build/ztsubaki/dist/dtbo.img
 boot/build-bundle-ztsubaki.sh --kernel build/ztsubaki/out/arch/arm64/boot/Image.gz --init-boot build/initramfs-usb.lz4 --dtbo build/ztsubaki/dist/dtbo.img --cmdline boot/cmdline.txt --out build/ztsubaki/dist
-rootfs/mk-internal-storage-fastboot.sh 3
+rootfs/mk-internal-storage-fastboot.sh
 boot/package-release.sh --bundle build/ztsubaki/dist --rootfs build/fedora/uke-rootfs.img --out build/release
 kernel/package-source.sh --out build/release
 ```
@@ -55,7 +69,7 @@ See `docs/BUILD.md` for image construction and the `userdata` zeroing requiremen
 - ztsubaki v6.12 is the working kernel. Palawan 7.2 is archived reference material only.
 - Publish `build/release/linux-6.12-uke-source.tar.zst` with every binary release.
 - Follow the gts9wifi layout and process; implement device-specific behavior locally.
-- Update `docs/Known-Issues.md` whenever a hardware or boot finding changes status.
+- Update `docs/known-issues.md` whenever a hardware or boot finding changes status.
 
 ## Key Values
 
