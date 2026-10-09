@@ -1,12 +1,12 @@
 # Installing Fedora 44 on Xiaomi Pad 7 (`uke`)
 
 > [!WARNING]
-> Backup any data you have before installing and keep working ROM to rollback to!
+> Backup any data you have before installing and keep a working ROM to rollback to!
 
 ## Prerequisites
 
 - Unlocked bootloader.
-- computer with `fastboot`
+- Computer with `fastboot`
 - Downloaded release assets: `boot.img`, `init_boot.img`, `dtbo.img`,
   `uke-rootfs.img.zst`, `uke-rootfs.img.sha256`, and `SHA256SUMS`.
 
@@ -14,6 +14,7 @@
 
 Verify the active
 slot before replacing its images: the examples below are for slot `a`.
+Do NOT flash both slots, its better to have an ez rollback in case you destroy your linux.
 
 ```sh
 # CHANGE PATHS ACCORDINGLY.
