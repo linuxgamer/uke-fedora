@@ -25,13 +25,16 @@ Android data. Do not flash anything before reading the installation guide.
 | `senemos-uke-kernel` | Builds the Linux kernel and its device drivers. |
 | `uke-fedora-builder` | Builds Fedora userspace and combines it with the kernel into installable candidates. Also chooses optional desktops. |
 | `uke-linux-hardware-support` | Packages Linux-side device services and integration. It does not choose a desktop. |
-| `recovery-uke-ofox` | Maintains the separate recovery environment and its packaging. |
-| `uke-linux-images` | Stores image-channel definitions. It is not a second rootfs builder. |
-| `uke-project-aloha` | Tracks the separate UEFI/Aloha experiment. It is not required by the current stock-bootloader candidate. |
 | `private` | Local inputs, old-port archive, backups and test results. Not published. |
 
-These are separate Git repositories joined by submodules. Most work happens in
-a component repository; the root records which component commits belong together.
+These three components are separate Git repositories joined by submodules.
+Most work happens in a component repository; the root records which component
+commits belong together. Recovery, Aloha and the old Images repository are no
+longer active workspace modules; their sources and history are archived locally.
+
+Existing TWRP is still used by the owner installer. Removing the recovery source
+module does not remove the installation or rollback requirement. Image release
+policy now lives in `uke-fedora-builder/configs/release-policy.json`.
 
 ## Get the sources
 

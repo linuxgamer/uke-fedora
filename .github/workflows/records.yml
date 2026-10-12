@@ -12,27 +12,25 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           submodules: true
-      - name: Verify component checkouts and the public landing layout
+      - name: Verify the three active components
         run: |
           set -euo pipefail
-          for component in recovery-uke-ofox senemos-uke-kernel uke-project-aloha uke-fedora-builder uke-linux-hardware-support uke-linux-images; do
+          for component in senemos-uke-kernel uke-fedora-builder uke-linux-hardware-support; do
             test -f "$component/README.md"
             git -C "$component" rev-parse --verify HEAD >/dev/null
           done
-          test ! -e docs
-          test ! -e AGENTS.md
-          test ! -e PLAN.md
-          test ! -e packages
-          test "$(git config -f .gitmodules --get submodule.uke-linux-hardware-support.path)" = uke-linux-hardware-support
-          test ! -e senemeos.sh
-          test -x senemos-uke-kernel/senemos.sh
-          bash -n senemos-uke-kernel/senemos.sh
-          test -x ukelinux.sh
-          bash -n ukelinux.sh
-      - name: Validate Core image entry contracts
+          test "$(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | wc -l)" -eq 3
+          test ! -e recovery-uke-ofox
+          test ! -e uke-project-aloha
+          test ! -e uke-linux-images
+      - name: Validate published entry points and userdata contracts
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends jq ripgrep shellcheck
-          ./ukelinux.sh --self-test
-          ./ukelinux.sh --build core --distro=fedora --offline --dry-run
-          shellcheck ukelinux.sh uke-fedora-builder/src/image/*.sh uke-fedora-builder/src/audit/*.sh uke-fedora-builder/tests/*.sh
+          sudo apt-get install -y --no-install-recommends jq shellcheck
+          bash senemos-uke-kernel/build.sh --help >/dev/null
+          bash uke-fedora-builder/src/rootfs/entry.sh --help >/dev/null
+          python3 uke-fedora-builder/src/userdata-boot/entry.py --help >/dev/null
+          python3 uke-fedora-builder/scripts/tests/workspace-layout.py
+          python3 uke-fedora-builder/scripts/tests/userdata-root-guard.py
+          python3 uke-fedora-builder/scripts/tests/userdata-inventory.py
+          shellcheck uke-fedora-builder/src/userdata-boot/*.sh
