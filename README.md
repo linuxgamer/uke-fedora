@@ -9,7 +9,7 @@ the tablet have not been accepted yet. A working desktop is not promised.
 
 ## Start here
 
-- [Hardware and current limits](HARDWARE.md)
+- [Hardware support tables and candidate limits](hardware.md)
 - [What the candidate contains](uke-fedora-builder/docs/USERDATA-BOOT.md)
 - [Owner installation and rollback](uke-fedora-builder/docs/USERDATA-INSTALL.md)
 - [Software dependency policy](RUNTIME-POLICY.md)
