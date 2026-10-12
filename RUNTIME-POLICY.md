@@ -1,22 +1,40 @@
-# Runtime and desktop policy
+# Software dependencies
 
-Owner decision, 2026-10-11: the blanket Python prohibition is withdrawn.
+## Fedora uses normal Fedora packages
 
-Use unmodified Fedora packages, libraries and applications with their normal
-dependencies, including Python. Pin full package closures; audit signatures,
-provenance, architecture, privacy and reproducibility. Language alone is not
-a release rejection criterion. Do not fork GNU/GLib or app stacks to remove it.
+Python is allowed. Use Fedora's normal libraries and dependencies rather than
+rebuilding GNU/GLib packages only to remove Python.
 
-Hardware support is DE-neutral. The builder owns base/DE selection; themes and
-DE-specific UI are optional. GNOME, Plasma and Xfce selector sources are not yet
-dependency-resolved/qualified images.
+The hardware-support layer is desktop-independent. GNOME, Plasma and Xfce are
+optional selections made by the builder. Themes and the Plasma settings addon
+are optional too.
 
-Boot/recovery are bounded deployment environments. Current minimal recovery has
-no qualified Python interpreter; its profile-specific audit is not a global ban.
-Any new interpreter there needs dependency/size/runtime qualification. Kernel
-and UEFI retain their supported native implementation models.
+The old no-Python runtime forks are archived, not the default implementation.
+Some older core/UEFI build paths still refer to them and remain blocked; the new
+console-rootfs route does not make those older paths current.
 
-Historical reports, locks and schema-1 manifests keep their original meaning.
-Schema-2 boot manifests carry payload-validation/Fedora-runtime policy evidence.
-Old core vendor-swap transactions are blocked pending replacement/qualification.
-No hardware result is inferred from these changes.
+## Recovery is a separate environment
+
+Recovery needs a small, tested runtime of its own. Allowing Python in Fedora
+does not mean copying the whole Fedora root into a recovery ramdisk.
+
+The owner installer bundles matching ARM64 GNU tools and their libraries.
+It uses the installed Fedora Python only to verify the completed rootfs.
+
+## Packages and manifests must tell the truth
+
+Check signatures, release identity, ownership, capabilities and payloads.
+Do not bypass signatures to make a build succeed.
+
+New manifests describe actual payload/runtime checks. Older manifests may
+retain historical no-Python results; do not rewrite them as new acceptance.
+
+## Development access is not production security
+
+The current candidate deliberately offers an unauthenticated USB ACM root shell
+when `senemos.debug=cdc-acm` is present. Root password login is locked and SSH is
+masked. SELinux is permissive in this candidate, with first-boot relabel still
+unqualified. These are development choices, not a secure release configuration.
+
+Private inputs, signing keys, device identifiers, backups and build outputs
+must stay out of public commits.

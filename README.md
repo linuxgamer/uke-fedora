@@ -1,65 +1,73 @@
 # Uke Linux
 
-Linux development for **Xiaomi Pad 7 / POCO Pad X1** (`uke`, SM7675).
-Target: Fedora Rawhide AArch64 with the stock Android bootloader.
+This project is an experimental Linux port for the Xiaomi Pad 7, codename
+**uke**. It is based on MCC45TR's work and now lives in owner forks.
 
-The maintainer has recorded a visible framebuffer console, UFS root, USB serial
-and USB SSH on POCO Pad X1. Native graphics, touch, Wi-Fi, Bluetooth, audio and
-battery telemetry remain unavailable in that recorded profile. Repeated cold
-boot and model/firmware compatibility need validation. See [hardware status](HARDWARE.md)
-for the exact scope; a successful build is not a hardware result.
+**It is not a ready-to-use tablet distribution.** A Fedora console candidate
+has been built and checked on the build machine. Its installation and boot on
+the tablet have not been accepted yet. A working desktop is not promised.
 
 ## Start here
 
-| Component | Entry point |
-|---|---|
-| Kernel, Uke DT and RPMs | [Senemos kernel](senemos-uke-kernel/README.md) |
-| Rootfs and stock-ABL boot images | [Fedora builder](uke-fedora-builder/README.md) |
-| Runtime, firmware and device packages | [Hardware support](uke-linux-hardware-support/README.md) |
-| Recovery and storage tools | [OrangeFox](recovery-uke-ofox/README.md) |
-| Release assets and requirements | [Linux images](uke-linux-images/README.md) |
-| Experimental UEFI (not required for stock ABL) | [Project Aloha](uke-project-aloha/README.md) |
+- [Hardware and current limits](HARDWARE.md)
+- [What the candidate contains](uke-fedora-builder/docs/USERDATA-BOOT.md)
+- [Owner installation and rollback](uke-fedora-builder/docs/USERDATA-INSTALL.md)
+- [Software dependency policy](RUNTIME-POLICY.md)
 
-Detailed engineering records are private. Local private material stays under
-ignored `private/`; public records must exclude credentials, unit identifiers,
-calibration and private logs.
+Installation uses **userdata** and boot **A**. Formatting userdata destroys
+Android data shared by both slots. Keeping B's firmware does not keep its
+Android data. Do not flash anything before reading the installation guide.
 
-## Checkout and build
+## What each folder does
+
+| Folder | Plain-language role |
+| --- | --- |
+| `senemos-uke-kernel` | Builds the Linux kernel and its device drivers. |
+| `uke-fedora-builder` | Builds Fedora userspace and combines it with the kernel into installable candidates. Also chooses optional desktops. |
+| `uke-linux-hardware-support` | Packages Linux-side device services and integration. It does not choose a desktop. |
+| `recovery-uke-ofox` | Maintains the separate recovery environment and its packaging. |
+| `uke-linux-images` | Stores image-channel definitions. It is not a second rootfs builder. |
+| `uke-project-aloha` | Tracks the separate UEFI/Aloha experiment. It is not required by the current stock-bootloader candidate. |
+| `private` | Local inputs, old-port archive, backups and test results. Not published. |
+
+These are separate Git repositories joined by submodules. Most work happens in
+a component repository; the root records which component commits belong together.
+
+## Get the sources
 
 ```sh
-git clone --recurse-submodules https://github.com/MCC45TR/uke-linux.git
+git clone --branch port/fedora-userdata --recurse-submodules https://github.com/linuxgamer/uke-linux.git
 cd uke-linux
-git submodule update --init --recursive
-./senemos-uke-kernel/build.sh --help
-./ukelinux.sh --build boot-pair --distro=fedora --help
 ```
 
-Submodules use the revisions pinned by this workspace, not automatically the
-latest component HEAD. Read the producing component's build guide before a build.
-Build recipes do not flash or activate slots.
+Already cloned the root without its components?
 
-## Storage and safety
+```sh
+git submodule update --init --recursive
+```
 
-**Planned collaboration profile: Linux rootfs in `userdata`, without creating a
-separate GPT `linux` partition.** This profile is not implemented yet. The existing
-boot-pair recipe still requires `PARTLABEL=linux`; do not use it as a userdata installer.
-Installing Linux in userdata destroys Android user data shared by both slots.
+Do not use `git submodule update --remote` to recreate a tested candidate:
+it can select different component versions.
 
-Keep firmware-matched stock backups and a verified recovery route. Stock
-`vendor_boot` and `vbmeta` stay untouched. Flashing and slot changes are manual
-owner operations. Never infer an installable release from source or VM tests.
+## Build, install, or read the code?
 
-## Downloads and contributions
+- **Build the kernel:** [kernel guide](senemos-uke-kernel/docs/BUILDING.md).
+- **Build Fedora:** [builder guide](uke-fedora-builder/docs/BUILDING.md).
+- **Install the current candidate:** [owner guide](uke-fedora-builder/docs/USERDATA-INSTALL.md).
+  There is no unattended installer or public binary release for it.
+- **Understand the pieces:** use the table above and each component's README.
 
-- [Development RPM channel](https://copr.fedorainfracloud.org/coprs/mcc45tr/uke-linux-test/)
-- [Fedora image releases](https://github.com/MCC45TR/uke-linux-images/releases)
-- [Recovery releases](https://github.com/MCC45TR/orangefox_device_xiaomi_uke/releases)
+Building successfully is different from booting successfully. Older test
+results do not prove that a new image works.
 
-Check the producing repository's compatibility and rollback requirements.
-Read component `AGENTS.md` before changes; retain original code attribution and
-licenses. Use unmodified Fedora applications and their normal dependencies,
-including Python. Desktop selectors live in the builder, not hardware-support.
-See [runtime and desktop policy](RUNTIME-POLICY.md). Report source, package, VM and physical results separately.
+## Upstream and planned work
 
-Unofficial community project; not endorsed by Fedora, Xiaomi, POCO or Qualcomm.
-[License](LICENSE) · [Security](SECURITY.md).
+Linux 7.2.9, the initial hardware patches and stock-ABL boot work come from
+[MCC45TR/uke-linux](https://github.com/MCC45TR/uke-linux) and its components.
+Our additions mainly cover Fedora builds, userdata installation, checks,
+package ownership and repository layout.
+
+The earlier independent 6.12 port is archived locally. Its changes have **not**
+all been imported here. Planned work is: clearer documentation, a review of the
+component boundaries, then selective transfer of useful 6.12 changes. Each
+driver change will need its own comparison and tests.
