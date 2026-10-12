@@ -1,34 +1,14 @@
+# Workspace-generated outputs.
 /build/
 /artifacts/
-/reports/private/
-/reports/*.log
-/projects/
-/Referances/
-/Senemos7/
-/Recovery/
-/Aloha/
-.directory
-.env
-.env.*
-*.key
-*.pem
-*.part
-*.bundle
-*.img
-*.tgz
-*.rpm
-__pycache__/
-*.pyc
-.venv/
 
-# Engineering records live in the private uke-linux-docs checkout. Local
-# compatibility links and working notes never enter this landing repository.
+# Owner-private working documentation and agent state.
 /uke-linux-docs/
-/docs
-/manifests
-/reports
-/scripts
-/tests
+/docs/
+/manifests/
+/reports/
+/scripts/
+/tests/
 /PLAN.md
 /DEVICE-STATUS.md
 /SOURCE-MAP.md
@@ -44,11 +24,29 @@ __pycache__/
 /.cursor/
 /.aider*
 
-# Local compilation, release downloads and editor state.
+# Local inputs, backups, credentials and runtime state (at every depth).
+private/
+.local/
+.env*
+*.key
+*.pem
+*.part
+*.bundle
+
+# Generated images, RPMs and logs; source recipes/fixtures stay visible.
+*.img
 *.img.zst
 *.qcow2
 *.iso
+*.rpm
+*.tgz
 *.log
+
+# Interpreter caches and local editor state.
+__pycache__/
+*.py[cod]
+.venv/
+.directory
 *.swp
 .vscode/
 .idea/
