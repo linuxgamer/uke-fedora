@@ -65,6 +65,15 @@ results do not prove that a new image works.
 
 ## Upstream and planned work
 
+Upstream's [2026-10-12 hardware summary](https://github.com/MCC45TR/uke-linux/blob/bd1c311/README.md)
+reports Wi-Fi/USB networking, firmware-framebuffer display and original Fedora
+KDE with software rendering on its separately tested POCO Pad X1 profile.
+Touch, accelerated graphics and audio remain unavailable there; DSP stability
+and repeated-start acceptance remain open. Those observations concern an
+upstream `linux`-partition/boot-B route, not acceptance of our userdata/boot-A
+candidate. Our dependencies, storage plan and archived component boundaries
+are unchanged.
+
 Linux 7.2.9, the initial hardware patches and stock-ABL boot work come from
 [MCC45TR/uke-linux](https://github.com/MCC45TR/uke-linux) and its components.
 Our additions mainly cover Fedora builds, userdata installation, checks,
