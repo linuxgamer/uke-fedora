@@ -5,7 +5,7 @@ umask 022
 
 usage() {
     echo 'Usage: stage-release.sh VERSION NUMBER stock|uefi CANDIDATE_DIRECTORY [OUTPUT_ROOT]' >&2
-    echo 'Example: stage-release.sh rawhide 1 stock uke-fedora-rootfs/build/boot-pair/pair-...' >&2
+    echo 'Example: stage-release.sh 44 1 stock uke-fedora-rootfs/build/boot-pair/pair-...' >&2
 }
 
 if [[ $# != 4 && $# != 5 ]]; then usage; exit 2; fi

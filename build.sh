@@ -14,7 +14,7 @@ Usage: ./build.sh TARGET [options]
   check-device  Read-only checks for a built pair; --offline checks files only
 
 Use ./build.sh TARGET --help for that target's options.
-Current image recipes target Fedora Rawhide; Fedora 44 migration is pending.
+Current kernel and image recipes target Fedora 44.
 Build commands may install missing host prerequisites. Read the build guides
 before a full build. --dry-run and --offline do not install host packages.
 HELP

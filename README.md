@@ -1,79 +1,32 @@
-# Uke Linux
+# uke-fedora
 
-Linux for Xiaomi Pad 7 and POCO Pad X1 (`uke`, Snapdragon 7+ Gen 3 / SM7675).
-This page records the Fedora Rawhide development state on 15 October 2026.
-Fedora 44 is the planned next base and has not been built or tested here.
-
-## Earlier Fedora Rawhide Alpha 1 release
-
-**Experimental alpha — not suitable for daily use.** Boot reliability, display
+Fedora for Xiaomi Pad 7 and POCO Pad X1 (`uke`, Snapdragon 7+ Gen 3 / SM7675).
+This port is **not suitable for daily use.** Boot reliability, display
 artifacts, power management and several hardware functions remain unresolved.
 
-[Release files and checksums](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-alpha-1):
-
-| File | Purpose |
-|---|---|
-| `fedora-rawhide-uke-system-alpha-1.img` | Fedora Rawhide root filesystem |
-| `fedora-linux-uke-senemos-729-boot-lp.img` | Boot image targeting `PARTLABEL=linux` |
-| `fedora-linux-uke-senemos-729-kernel-up.img` | Experimental boot image targeting `PARTLABEL=userdata`; not tested on the tablet |
-
-The software baseline is Linux 7.2.9 revision 1.39. Both public boot
-variants and the exported root filesystem are rebuilt and have not been booted
-on the tablet. The hardware results below refer to the separate development
-installation. Installation instructions will follow.
-
-OEM firmware and device calibration files are not distributed. The public image
-does not include their provisioning workflow, so hardware that requires those
-files cannot be assumed to work. The status table describes the separately
-provisioned development system. Using `userdata` for Fedora replaces Android
-user data; this variant is not an Android data-preserving dual-boot route.
+The kernel, rootfs and boot image recipes target Fedora 44. Local builds and
+package checks do not establish tablet compatibility.
 
 ## Status — 15 October 2026
 
-Linux 7.2.9 revision 1.39 boots from slot B to a local console and the original
-Fedora KDE desktop. Wi-Fi, SSH and
-signed DNF updates work. Experimental Freedreno graphics now work in KDE,
-Xwayland/OpenGL and a Turnip Vulkan test at 255 MHz. Finger input and ten
-simultaneous touch contacts worked in the 14 October tablet test. Bluetooth,
-audio and USB host mode do not work yet.
+The results below describe upstream's POCO Pad X1 development installation
+running Fedora Rawhide and Linux 7.2.9 revision 1.39.
 
-Manual backlight control and power/volume buttons also worked in the 14 October
-test. The paired backlight now uses the OEM mapping, retains a visible minimum
-while on, and reaches zero when blanked. Smooth full-range adjustment still
+Linux 7.2.9 successfully boots from slot B. Wi-Fi and SSH work. Experimental Freedreno and Turnip graphics now work in KDE.
+Touchscreen and multitouch work. Bluetooth, audio and USB host mode do not work yet.
+Manual backlight control and power/volume buttons also work. The paired backlight now uses the OEM mapping, retains a visible minimum
+while on, and reaches zero when blanked. Smooth adjustment still
 needs testing. Battery readings are available.
 Experimental sensor tests return acceleration, gyroscope and rear-light
 readings, but automatic screen rotation and automatic brightness control are
-not ready.
-
-Revision **1.39** starts Adreno rendering and touch input automatically from the
-installed Fedora root. Touch registered on the first attempt at about seven
-seconds in the measured boot. Earlier RAM trials remain separate evidence.
-Repeated cold boots, full GPU workloads, thermal limits and suspend still need
-testing. Android slot A and the working Linux rollback are retained.
-This was the tested slot layout. The planned layout is Linux in slot A and
-Android rollback in slot B, subject to device verification.
-
-Display scanout still uses simpledrm and the bootloader framebuffer. The native
+not ready. Display scanout still uses simpledrm and the bootloader framebuffer. The native
 DPU/DSI trial now registers a DRM connector and framebuffer, but the panel stays
-black with DSI errors. It is kept outside the normal build. Native refresh-rate
-switching and adaptive sync do not work yet. Linux 7.2.10 remains a separate
-candidate; the working tablet baseline is 7.2.9.
-
-On 15 October, [COPR build 11125451](https://copr.fedorainfracloud.org/coprs/mcc45tr/uke-linux-test/build/11125451/)
-produced signed 7.2.9-1.39 Rawhide AArch64 RPMs and a signed SRPM. Downloaded
-packages passed signature, architecture and payload checks. This COPR build
-has not yet been installed and tested on the tablet.
-
-This repository contains the project overview and workspace. Sources are in the
-[component repositories](#project-repositories); detailed test records are private.
+black with DSI errors. Native refresh-rate
+switching and adaptive sync do not work yet.
 
 ## Hardware support
 
-These results are from the separately provisioned **POCO Pad X1 (8 GB / 512 GB)**
-development installation: Fedora Rawhide AArch64, Linux 7.2.9 revision 1.39,
-stock Android bootloader, tested through **15 October 2026**. The Linux model
-label is configured as Xiaomi Pad 7. Other variants, the public Alpha 1 images,
-and Fedora 44 have not been tested on the tablet. 🟢 Working means a successful
+🟢 Working means a successful
 tablet test; 🟡 Partial means limited or experimental use; 🔴 Broken means no
 working function in this build; ⚪ Untested means no functional test.
 
@@ -103,9 +56,8 @@ working function in this build; ⚪ Untested means no functional test.
 | Suspend and wake | ⚪ Untested | System sleep is disabled; screen blanking alone is not suspend. |
 | Thermal protection | ⚪ Untested | Sensor readings exist, but throttling and protective shutdown have not been verified. |
 
-These statuses describe the dated development installation, not a validated
-release image. Reading a sensor or seeing a charging indicator does not establish
-working automatic control or net charging.
+The hardware results above are reported by upstream; this fork has not repeated
+the tablet tests.
 
 ## Project repositories
 
@@ -116,37 +68,41 @@ working automatic control or net charging.
 | [Fedora root filesystem](uke-fedora-rootfs/README.md) | Image recipes and validation tools |
 | [Hardware support](uke-hardware/README.md) | Device integration and platform packages |
 
-## Build and test scope
+## Differences from upstream
 
-Earlier Core and KDE image candidates passed host and VM checks, but their exact
-root filesystems have not been booted on this tablet. Tablet results above come
-from a separate development installation. DNF does not flash Android partitions
-or select a boot slot.
+- Simplified build entry points and pinned component revisions.
+- Fedora 44 kernel, hardware packages and image recipes. The kernel builder
+  retains an explicit Rawhide option.
+- Optional KDE and GNOME package selections; Plasma Mobile and Phosh are
+  experimental. Their RPMs have been built for Fedora 44 AArch64; desktop
+  sessions have not been tested on the tablet in this fork.
+- Release names use `fedora-<version>-uke-r<N>`.
 
-KDE applications come from Fedora; no Uke clones or rebuilds are used. Python
-is allowed in project tools and Fedora packages, including target payloads.
-No image has been rebuilt or tested under the revised package and payload rules.
+Image recipes now target the entire Android `userdata` partition by default;
+`--root-partlabel linux` keeps the dedicated Linux partition option. Installing
+to `userdata` destroys Android user data. The stock boot pair targets slot A;
+Android slot B requires userdata restoration before rollback. Builders never
+flash or change slots. See the [rootfs build guide](uke-fedora-rootfs/docs/BUILDING.md).
 
-## Release names
+Source checks and package builds are recorded separately from image, VM and
+tablet tests. No image from this fork has been validated on the device.
 
-Future release tags use `fedora-<version>-uke-r<N>`, for example
-`fedora-44-uke-r1`. Use `rawhide` in place of a numbered Fedora version
-for a Rawhide build. The Uke release number starts at 1 for each Fedora version
-and increases for each published release. Release notes state whether the result
-is an alpha and which device tests, if any, passed. Kernel RPM versions such as
-`1.39` remain package versions, not names for a complete image release.
+On 16 October 2026, Linux 7.2.9-1.39 built for Fedora 44 AArch64 in an x86_64
+container: four binary RPMs and one SRPM. Image, DTB, all 1,144 modules and
+package payload checks passed, as did installation, upgrade and removal in an
+emulated AArch64 container. These unsigned development packages have not been
+booted on the tablet. Local results are in
+`uke-mainline-linux/artifacts/fedora-44/7.2.9/`.
 
-Published images start with the same tag and end in `-stock-boot.img` and
-`-stock-system.img` for a stock bootloader pair, or `-uefi-root.img.zst` and
-`-uefi-esp.img.zst` for a UEFI pair. Publish checksums for those exact filenames.
-Run `./stage-release.sh VERSION NUMBER stock|uefi CANDIDATE_DIRECTORY` to put
-one checked image pair in `artifacts/releases/<tag>/`. For example, a current
-Rawhide stock pair uses `VERSION=rawhide` and the directory produced by the
-`boot-pair` recipe. The script verifies the candidate checksums and Fedora
-version, copies both images, and writes checksums for their release filenames.
-It only stages local candidates; release notes and device qualification remain
-separate. Build recipes keep their internal filenames. The earlier Alpha 1
-downloads above retain their original names.
+The Fedora 44 Core filesystem build also passed package, initramfs, SELinux,
+EXT4/FAT and UKI readback checks on 16 October. Its local outputs are in
+`uke-fedora-rootfs/build/images/core-fedora-44-a7f9bb256b8a19b4/candidate/`.
+
+The Fedora 44 stock-ABL boot pair also passed five generic ARM64 QEMU scenarios,
+including enforcing SELinux, local USB-keyboard TTY input, root selection
+and automatic EXT4 growth on userdata. Outputs are in
+`uke-fedora-rootfs/build/boot-pair/pair-d92003ac3b71e7b3/`.
+These VM checks do not validate tablet boot or peripherals.
 
 ## Development
 
@@ -157,27 +113,22 @@ git clone --recurse-submodules https://github.com/linuxgamer/uke-fedora.git
 cd uke-fedora
 ```
 
-Use `build.sh` from this workspace to select a build target:
+Use `build.sh` to select a build target:
 
 ```sh
 ./build.sh --help
 ./build.sh kernel --build 7.2.9 --offline --dry-run
+./build.sh kernel --build 7.2.9 --release rawhide --offline --dry-run
 ./build.sh core --offline --dry-run
 ./build.sh boot-pair --help
 ```
 
-`kernel` builds kernel RPMs; `core` builds the console root and UEFI/ESP images;
+`kernel` builds kernel RPMs; `core` builds the console root and UEFI images;
 `boot-pair` builds the stock bootloader pair. `boot` is the older initramfs-only
-debug recipe. `check-device --offline --pair DIRECTORY` checks a built pair's
-local files. The entry requires Bash. All image recipes still target Rawhide.
-A normal build can install
-host prerequisites; dry-run and offline modes do not. See the
-[kernel build guide](uke-mainline-linux/docs/BUILDING.md) and
+debug image. `check-device --offline --pair DIRECTORY` checks a built pair's
+local files. A normal build can install some host prerequisites; dry-run and offline modes do not. See [kernel build guide](uke-mainline-linux/docs/BUILDING.md) and
 [root filesystem image guide](uke-fedora-rootfs/docs/IMAGES.md) for required
-inputs and validation limits. From a standalone kernel checkout, use
-`./build.sh --build 7.2.9 --offline --dry-run`; from this workspace, use
-`./build.sh kernel` followed by the kernel options. Running either entry without
-arguments displays its help.
-
-This is an independent community project. It is not an official Fedora, Xiaomi,
-POCO or Qualcomm product. Original files use MIT; components retain their own licenses.
+inputs. In a standalone kernel checkout, run
+`./build.sh --build 7.2.9 --offline --dry-run` from `uke-mainline-linux`.
+From this workspace, use `./build.sh kernel` followed by the kernel options.
+Running either entry without arguments displays its help.
