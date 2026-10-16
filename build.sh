@@ -11,7 +11,7 @@ Usage: ./build.sh TARGET [options]
   core          Console root filesystem and UEFI/ESP images
   boot-pair     Stock bootloader boot and system image pair
   boot          Initramfs-only debug boot image
-  check-device  Read-only checks for a built pair; --offline checks files only
+  check-device  Local file checks for a built pair; never contacts a device
 
 Use ./build.sh TARGET --help for that target's options.
 Current kernel and image recipes target Fedora 44.

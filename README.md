@@ -125,8 +125,9 @@ Use `build.sh` to select a build target:
 
 `kernel` builds kernel RPMs; `core` builds the console root and UEFI images;
 `boot-pair` builds the stock bootloader pair. `boot` is the older initramfs-only
-debug image. `check-device --offline --pair DIRECTORY` checks a built pair's
-local files. A normal build can install some host prerequisites; dry-run and offline modes do not. See [kernel build guide](uke-mainline-linux/docs/BUILDING.md) and
+debug image. `check-device --pair DIRECTORY` checks only local files and never
+contacts the tablet. A normal build can install some host prerequisites;
+dry-run and offline modes do not. See [kernel build guide](uke-mainline-linux/docs/BUILDING.md) and
 [root filesystem image guide](uke-fedora-rootfs/docs/IMAGES.md) for required
 inputs. In a standalone kernel checkout, run
 `./build.sh --build 7.2.9 --offline --dry-run` from `uke-mainline-linux`.
