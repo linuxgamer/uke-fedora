@@ -1,11 +1,8 @@
 # uke-fedora
 
-Fedora for Xiaomi Pad 7 and POCO Pad X1 (`uke`, Snapdragon 7+ Gen 3 / SM7675).
+Fedora 44 for Xiaomi Pad 7 and POCO Pad X1 (`uke`, Snapdragon 7+ Gen 3 / SM7675).
 This port is **not suitable for daily use.** Boot reliability, display
-artifacts, power management and several hardware functions remain unresolved.
-
-The kernel, rootfs and boot image recipes target Fedora 44. Local builds and
-package checks do not establish tablet compatibility.
+artifacts, power management and some hardware may not work.
 
 ## Status — 15 October 2026
 
@@ -70,39 +67,54 @@ the tablet tests.
 
 ## Differences from upstream
 
-- Simplified build entry points and pinned component revisions.
-- Fedora 44 kernel, hardware packages and image recipes. The kernel builder
-  retains an explicit Rawhide option.
-- Optional KDE and GNOME package selections; Plasma Mobile and Phosh are
-  experimental. Their RPMs have been built for Fedora 44 AArch64; desktop
-  sessions have not been tested on the tablet in this fork.
-- Release names use `fedora-<version>-uke-r<N>`.
+- Simplified build.
+- Fedora 44 kernel, hardware packages and image recipes.
+- Optional KDE and GNOME package selections. Plasma Mobile and Phosh are experimental.
+- Installs into /userdata by default
 
-Image recipes now target the entire Android `userdata` partition by default;
-`--root-partlabel linux` keeps the dedicated Linux partition option. Installing
-to `userdata` destroys Android user data. The stock boot pair targets slot A;
-Android slot B requires userdata restoration before rollback. Builders never
-flash or change slots. See the [rootfs build guide](uke-fedora-rootfs/docs/BUILDING.md).
+## Installing a stock bootloader image
 
-Source checks and package builds are recorded separately from image, VM and
-tablet tests. No image from this fork has been validated on the device.
+Each Fedora 44 release has `tty/`, `kde/` and `gnome/`
+directories. Choose only **one** directory.
 
-On 16 October 2026, Linux 7.2.9-1.39 built for Fedora 44 AArch64 in an x86_64
-container: four binary RPMs and one SRPM. Image, DTB, all 1,144 modules and
-package payload checks passed, as did installation, upgrade and removal in an
-emulated AArch64 container. These unsigned development packages have not been
-booted on the tablet. Local results are in
-`uke-mainline-linux/artifacts/fedora-44/7.2.9/`.
+Installation erases the entire Android `userdata` partition. Keep a data
+backup, the original `boot_a` image and matching OEM firmware. Slot B boot
+images remain available, but returning to Android requires restoring
+`userdata`; switching slots alone is insufficient.
 
-The Fedora 44 Core filesystem build also passed package, initramfs, SELinux,
-EXT4/FAT and UKI readback checks on 16 October. Its local outputs are in
-`uke-fedora-rootfs/build/images/core-fedora-44-a7f9bb256b8a19b4/candidate/`.
+From the chosen variant directory, verify its files:
 
-The Fedora 44 stock-ABL boot pair also passed five generic ARM64 QEMU scenarios,
-including enforcing SELinux, local USB-keyboard TTY input, root selection
-and automatic EXT4 growth on userdata. Outputs are in
-`uke-fedora-rootfs/build/boot-pair/pair-d92003ac3b71e7b3/`.
-These VM checks do not validate tablet boot or peripherals.
+```sh
+sha256sum -c SHA256SUMS
+```
+
+On the unlocked `uke` device, enter **bootloader fastboot** (NOT
+fastbootD). Check its identity, state and partition sizes before any
+write:
+
+```sh
+fastboot getvar product
+fastboot getvar unlocked
+fastboot getvar is-userspace
+fastboot getvar current-slot
+fastboot getvar partition-size:boot_a
+fastboot getvar partition-size:userdata
+```
+
+Proceed only if the device is `uke`, unlocked, in bootloader fastboot, and
+`boot_a` is at least 96 MiB while `userdata` is at least 3 GiB for TTY or
+8 GiB for KDE/GNOME. From that same
+variant directory, set `prefix` to the prefix of its two image files (the
+example below is for release r4, TTY). Check that each command reports success
+before running the next:
+
+```sh
+prefix=fedora-44-uke-r4-tty
+fastboot flash userdata "${prefix}-stock-system.img"
+fastboot flash boot_a "${prefix}-stock-boot.img"
+fastboot set_active a
+fastboot reboot
+```
 
 ## Development
 
@@ -126,8 +138,8 @@ Use `build.sh` to select a build target:
 `kernel` builds kernel RPMs; `core` builds the console root and UEFI images;
 `boot-pair` builds the stock bootloader pair. `boot` is the older initramfs-only
 debug image. `check-device --pair DIRECTORY` checks only local files and never
-contacts the tablet. A normal build can install some host prerequisites;
-dry-run and offline modes do not. See [kernel build guide](uke-mainline-linux/docs/BUILDING.md) and
+contacts the tablet. A normal build can install some host prerequisites,
+dry-run and offline modes dont do that. See [kernel build guide](uke-mainline-linux/docs/BUILDING.md) and
 [root filesystem image guide](uke-fedora-rootfs/docs/IMAGES.md) for required
 inputs. In a standalone kernel checkout, run
 `./build.sh --build 7.2.9 --offline --dry-run` from `uke-mainline-linux`.
