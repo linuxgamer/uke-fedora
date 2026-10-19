@@ -1,19 +1,9 @@
-[submodule "recovery-uke-ofox"]
-	path = recovery-uke-ofox
-	url = https://github.com/MCC45TR/orangefox_device_xiaomi_uke.git
-	branch = R12.0
 [submodule "senemos-uke-kernel"]
 	path = senemos-uke-kernel
-	url = https://github.com/MCC45TR/senemos-uke-kernel-mainline.git
+	url = https://github.com/linuxgamer/senemos-uke-kernel-mainline.git
 [submodule "uke-fedora-builder"]
 	path = uke-fedora-builder
-	url = https://github.com/MCC45TR/uke-fedora-builder.git
-[submodule "uke-project-aloha"]
-	path = uke-project-aloha
-	url = https://github.com/MCC45TR/uke-project-aloha.git
+	url = https://github.com/linuxgamer/uke-fedora-builder.git
 [submodule "uke-linux-hardware-support"]
 	path = uke-linux-hardware-support
-	url = https://github.com/MCC45TR/uke-linux-hardware-support.git
-[submodule "uke-linux-images"]
-	path = uke-linux-images
-	url = https://github.com/MCC45TR/uke-linux-images.git
+	url = https://github.com/linuxgamer/uke-linux-hardware-support.git

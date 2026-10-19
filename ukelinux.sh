@@ -38,4 +38,14 @@ entry=$root/uke-fedora-builder/src/image/core.sh
 # shellcheck source=uke-fedora-builder/src/image/core.sh
 # shellcheck disable=SC1091
 source "$entry"
+if [[ ${UKE_SKIP_LOCAL_BLOBS_CHECK:-0} != 1 ]]; then
+    case " $* " in
+        *' --help '*|*' -h '*|*' --dry-run '*|*' --self-test '*) ;;
+        *)
+            verify=$root/uke-linux-hardware-support/xiaomi-uke-firmware/src/verify-local-blobs.sh
+            [[ -x $verify ]] || { printf '%s\n' "Local blob verifier missing: $verify" >&2; exit 2; }
+            "$verify" || { printf '%s\n' 'Local OEM blobs are incomplete; see uke-linux-hardware-support/xiaomi-uke-firmware/docs/LOCAL-BLOBS.md' >&2; exit 2; }
+            ;;
+    esac
+fi
 image_main "$@"
