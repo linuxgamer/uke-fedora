@@ -1,9 +1,9 @@
 <table>
 <tr>
 <td width="65%" valign="top">
-<h1>Uke Linux</h1>
-<p><strong>Fedora Rawhide for Xiaomi Pad 7 and POCO Pad X1</strong></p>
-<p>A community Linux port for the Snapdragon 7+ Gen 3 (SM7675), with the original Fedora KDE Plasma desktop.</p>
+<h1>Uke Fedora</h1>
+<p><strong>Fedora Linux port for Xiaomi Pad 7 (<code>uke</code>)</strong></p>
+<p>Based on MCC45TR's Uke work. Fedora 44, stock boot on slot A and a <code>/userdata</code> root are being integrated for Xiaomi Pad 7.</p>
 <p><strong>Experimental alpha</strong> · AArch64 · <code>uke</code></p>
 </td>
 <td width="35%" valign="top" align="center">
@@ -13,7 +13,7 @@
 </tr>
 <tr>
 <td colspan="2" align="center">
-<img src="assets/screenshots/Lastest_Rawhide_Screen_Shot_Ref.png" width="100%" alt="Fedora Rawhide KDE and Fastfetch on the Uke development installation, 17 October 2026">
+<img src="assets/screenshots/Lastest_Rawhide_Screen_Shot_Ref.png" width="100%" alt="Upstream Fedora Rawhide KDE development screenshot from POCO Pad X1, 17 October 2026">
 </td>
 </tr>
 </table>
@@ -21,21 +21,28 @@
 [Downloads](#downloads) · [Hardware support](#hardware-support) · [Development changes](CHANGELOG.md) · [Documentation](#documentation) · [Repositories](#project-repositories) · [Report a problem](CONTRIBUTING.md)
 
 > [!WARNING]
-> **Not suitable for daily use.** Boot reliability, shutdown, power management
-> and several hardware functions remain incomplete. Suspend now selects s2idle;
-> physical wake, resume reliability and sleep power remain under validation.
+> **Not suitable for daily use.** This Xiaomi Pad 7 fork has no qualified image
+> from the current source tree. Boot reliability, shutdown and power management
+> need separate Xiaomi Pad 7 testing.
 
 ## Project status
 
-**19 October 2026:** the last observed development session runs Fedora Rawhide KDE on a
-**POCO Pad X1, 8 GB / 512 GB**, using kernel **`7.2.11-5`** and the stock Android
-bootloader. The latest physical display/touch confirmation is from `7.2.11-2`,
-at **3200×2136 and 144 Hz**; confirmation after the new reboot is pending. Xiaomi Pad 7
-and other memory/storage variants remain untested.
+**Xiaomi Pad 7 target:** an earlier Fedora 44 image reached Linux and a local
+TTY on a Xiaomi Pad 7 using `boot_a` and `userdata`. Its first boot image was
+rejected by this tablet's bootloader without an AVB footer; adding the footer
+and stock boot properties allowed the boot to continue. The current
+upstream-based source tree has not yet produced or booted a new Xiaomi Pad 7
+image.
 
-The hardware results below apply to this separately provisioned development
-system. **The public Alpha 1 images use an older kernel and have not been booted
-on the tablet as complete exported artifacts.** OEM firmware and device
+**Upstream reference, 19 October 2026:** MCC45TR's separate POCO Pad X1
+development installation runs Fedora Rawhide KDE with Linux `7.2.11-5`.
+The display and touch results below belong to that POCO Pad X1 installation.
+The Xiaomi Pad 7 AVB observation does not establish the same bootloader
+requirement for POCO Pad X1.
+
+The hardware results below are upstream POCO Pad X1 observations, not Xiaomi
+Pad 7 validation. **The upstream public Alpha 1 images use an older kernel and
+have not been booted as complete exported artifacts.** OEM firmware and device
 calibration files are not distributed.
 
 The [development record](CHANGELOG.md) covers the matched kernel,
@@ -43,32 +50,38 @@ VRR preference, native management tools, dock mouse, LDAC and battery readback.
 Charge-stop and bypass controls are not physically qualified; HDMI tests remain
 paused until the requested protection/power-path gate is satisfied.
 
-The latest ordinary restart on kernel 5 has not returned to authenticated SSH;
-physical state and shutdown/startup logs are pending. Kernel 6 and the native
-original-KDE Adreno statistics extension are separate build candidates, with
-no target installation or GUI result yet. Memory and mount findings are recorded
-in the development changes.
+The upstream POCO Pad X1's latest ordinary restart on kernel 5 has not returned
+to authenticated SSH; physical state and shutdown/startup logs are pending.
+Kernel 6 and the native original-KDE Adreno statistics extension are separate
+build candidates without a target installation or GUI result. Memory and mount
+findings are recorded in the development changes.
 
 ## Downloads
 
-- **[Fedora Rawhide Alpha 1 — images and checksums](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-alpha-1)** — Linux 7.2.9, revision 1.39; predates the current native display and sensor work.
-- [Development RPMs on COPR](https://copr.fedorainfracloud.org/coprs/mcc45tr/uke-linux-test/) — kernel and platform packages, with validation recorded per build.
-- [Linux image releases](https://github.com/MCC45TR/uke-linux-images/releases) · [Experimental OrangeFox releases](https://github.com/MCC45TR/orangefox_device_xiaomi_uke/releases).
+- **[Upstream Fedora Rawhide Alpha 1 — images and checksums](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-alpha-1)** — POCO Pad X1 reference release; not a qualified Xiaomi Pad 7 image.
+- [Upstream development RPMs on COPR](https://copr.fedorainfracloud.org/coprs/mcc45tr/uke-linux-test/) — kernel and platform packages, with validation recorded per build.
+- [Upstream Linux image releases](https://github.com/MCC45TR/uke-linux-images/releases) · [upstream experimental OrangeFox releases](https://github.com/MCC45TR/orangefox_device_xiaomi_uke/releases).
 
-Public installation instructions are pending. Read the release requirements and
-verify checksums before using an artifact. **The `userdata` variant replaces
-Android user data; it is not a data-preserving dual-boot route.**
+Xiaomi Pad 7 release images and public installation instructions are pending.
+The [Fedora 44 variant recipes](uke-fedora-builder/README.md#xiaomi-pad-7-fedora-44-rootfs-variants)
+accepts locally built Linux 7.2.11 and Fedora 44 `uke-core-meta` RPMs and
+permits Fedora Python packages.
+They prepare separate TTY, KDE, GNOME, Phosh and Plasma Mobile
+`boot_a`/`userdata` pairs from a reviewed OEM boot template;
+the new pair has not been built or tested on Xiaomi Pad 7.
+**A `userdata` installation replaces Android user data.** Keep the Android slot
+B boot images and a complete data recovery path.
 
 ## Hardware support
 
-**Validation scope:** POCO Pad X1, 8 GB / 512 GB; Fedora Rawhide AArch64; stock
-Android bootloader. The persistent development boot is
-`7.2.11-5`, reviewed on 19 October 2026. Earlier subsystem tests
-are identified where relevant. These are development-system observations, not acceptance of
-the downloadable Alpha 1 images.
+**Upstream validation scope:** POCO Pad X1, 8 GB / 512 GB; Fedora Rawhide
+AArch64; stock Android bootloader. The persistent development boot is
+`7.2.11-5`, reviewed on 19 October 2026. Earlier subsystem tests are
+identified where relevant. These development-system observations do not
+qualify the downloadable Alpha 1 images.
 
 <details>
-<summary><strong>View all hardware support tables</strong></summary>
+<summary><strong>View upstream POCO Pad X1 hardware results</strong></summary>
 
 Each row records the function's current status, observations, and remaining work.
 
@@ -232,12 +245,9 @@ reported Fedora tests.
 
 | Component | Repository |
 |---|---|
-| Kernel and device trees | [senemos-uke-kernel-mainline](https://github.com/MCC45TR/senemos-uke-kernel-mainline) |
-| Hardware integration and packages | [uke-linux-hardware-support](https://github.com/MCC45TR/uke-linux-hardware-support) |
-| Fedora image builder | [uke-fedora-builder](https://github.com/MCC45TR/uke-fedora-builder) |
-| Image distribution | [uke-linux-images](https://github.com/MCC45TR/uke-linux-images) |
-| OrangeFox Recovery | [orangefox_device_xiaomi_uke](https://github.com/MCC45TR/orangefox_device_xiaomi_uke) |
-| Experimental UEFI | [uke-project-aloha](https://github.com/MCC45TR/uke-project-aloha) |
+| Kernel and device trees (`senemos-uke-kernel/`) | [senemos-uke-kernel-mainline](https://github.com/linuxgamer/senemos-uke-kernel-mainline) |
+| Hardware integration and packages (`uke-linux-hardware-support/`) | [uke-linux-hardware-support](https://github.com/linuxgamer/uke-linux-hardware-support) |
+| Fedora image builder (`uke-fedora-builder/`) | [uke-fedora-builder](https://github.com/linuxgamer/uke-fedora-builder) |
 
 ## License
 

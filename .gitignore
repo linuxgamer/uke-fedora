@@ -1,5 +1,7 @@
 /build/
 /artifacts/
+/private/
+/referances/
 /reports/private/
 /reports/*.log
 /projects/
@@ -21,10 +23,8 @@ __pycache__/
 *.pyc
 .venv/
 
-# Engineering records live in the private uke-linux-docs checkout. Local
-# compatibility links and working notes never enter this landing repository.
+# Local notes and inputs stay in private. Public guides can live in docs.
 /uke-linux-docs/
-/docs
 /manifests
 /reports
 /scripts

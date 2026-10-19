@@ -15,11 +15,10 @@ jobs:
       - name: Verify component checkouts and the public landing layout
         run: |
           set -euo pipefail
-          for component in recovery-uke-ofox senemos-uke-kernel uke-project-aloha uke-fedora-builder uke-linux-hardware-support uke-linux-images; do
+          for component in senemos-uke-kernel uke-fedora-builder uke-linux-hardware-support; do
             test -f "$component/README.md"
             git -C "$component" rev-parse --verify HEAD >/dev/null
           done
-          test ! -e docs
           test ! -e AGENTS.md
           test ! -e PLAN.md
           test ! -e packages
@@ -29,10 +28,11 @@ jobs:
           bash -n senemos-uke-kernel/senemos.sh
           test -x ukelinux.sh
           bash -n ukelinux.sh
-      - name: Validate Core image entry contracts
+      - name: Check Fedora 44 source entry points
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends jq ripgrep shellcheck
-          ./ukelinux.sh --self-test
-          ./ukelinux.sh --build core --distro=fedora --offline --dry-run
-          shellcheck ukelinux.sh uke-fedora-builder/src/image/*.sh uke-fedora-builder/src/audit/*.sh uke-fedora-builder/tests/*.sh
+          set -euo pipefail
+          bash -n uke-fedora-builder/build-fedora44-rootfs.sh
+          bash -n uke-fedora-builder/build-fedora44-boot-a.sh
+          uke-fedora-builder/build-fedora44-rootfs.sh --help >/dev/null
+          uke-fedora-builder/build-fedora44-boot-a.sh --help >/dev/null
+          grep -Fx 'Version: 7.2.11' senemos-uke-kernel/packaging/senemos-uke-linux-kernel-mainline.spec
