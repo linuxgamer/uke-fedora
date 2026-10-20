@@ -69,13 +69,13 @@ five separate TTY, KDE, GNOME, Phosh and Plasma Mobile `boot_a`/`userdata`
 pairs. Fedora Python packages are permitted. No pair from this source has yet
 been built or tested on Xiaomi Pad 7.
 
-**The current outputs are private build candidates.** The rootfs contains OEM
-touch files without recorded redistribution permission and a touch baseline
-measured on one tablet. The baseline is not a credential, but its behavior on
-other units has not been qualified. All variants now create an account on the
-tablet at first boot; they contain no preset password or root debug shell.
-First setup currently needs a keyboard on tty1. Public release still needs an
-OEM-data distribution decision and device checks.
+The same recipe builds local images and release candidates with the same OEM
+touch files; there is no separate blob-free public variant. The baseline was
+measured on one tablet and its behavior on other units remains unqualified.
+All variants create an account on the tablet at first boot; they contain no
+preset password or root debug shell. First setup currently needs a keyboard
+on tty1. Before uploading an image, the redistribution grant for its exact OEM
+files must be recorded and Xiaomi Pad 7 device checks completed.
 **A `userdata` installation replaces Android user data.** Keep the Android slot
 B boot images and a complete data recovery path.
 
