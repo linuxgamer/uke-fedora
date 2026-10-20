@@ -70,10 +70,12 @@ pairs. Fedora Python packages are permitted. No pair from this source has yet
 been built or tested on Xiaomi Pad 7.
 
 **The current outputs are private build candidates.** The rootfs contains OEM
-touch files and a touch baseline from one tablet. Graphical variants also
-contain a preset account password hash; TTY opens a local root shell. Do not
-upload these images as release assets. A public image flow still needs local
-OEM-data provisioning, first-boot account creation and device validation.
+touch files without recorded redistribution permission and a touch baseline
+measured on one tablet. The baseline is not a credential, but its behavior on
+other units has not been qualified. All variants now create an account on the
+tablet at first boot; they contain no preset password or root debug shell.
+First setup currently needs a keyboard on tty1. Public release still needs an
+OEM-data distribution decision and device checks.
 **A `userdata` installation replaces Android user data.** Keep the Android slot
 B boot images and a complete data recovery path.
 
