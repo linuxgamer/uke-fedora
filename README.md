@@ -69,6 +69,11 @@ five separate TTY, KDE, GNOME, Phosh and Plasma Mobile `boot_a`/`userdata`
 pairs. Fedora Python packages are permitted. No pair from this source has yet
 been built or tested on Xiaomi Pad 7.
 
+`./uke-fedora-builder/build-fedora44-images.sh` builds all five pairs. The
+hash-pinned touch, SSC and Bluetooth inputs are bundled in the firmware
+component, and a compressed stock boot template is bundled in the builder.
+Users do not need to extract the earlier private blob archive or stock ROM.
+
 The same recipe builds local images and release candidates with the same OEM
 touch files; there is no separate blob-free public variant. The baseline was
 measured on one tablet and its behavior on other units remains unqualified.
