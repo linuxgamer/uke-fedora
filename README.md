@@ -63,12 +63,17 @@ findings are recorded in the development changes.
 - [Upstream Linux image releases](https://github.com/MCC45TR/uke-linux-images/releases) · [upstream experimental OrangeFox releases](https://github.com/MCC45TR/orangefox_device_xiaomi_uke/releases).
 
 Xiaomi Pad 7 release images and public installation instructions are pending.
-The [Fedora 44 variant recipes](uke-fedora-builder/README.md#xiaomi-pad-7-fedora-44-rootfs-variants)
-accepts locally built Linux 7.2.11 and Fedora 44 `uke-core-meta` RPMs and
-permits Fedora Python packages.
-They prepare separate TTY, KDE, GNOME, Phosh and Plasma Mobile
-`boot_a`/`userdata` pairs from a reviewed OEM boot template;
-the new pair has not been built or tested on Xiaomi Pad 7.
+The [Fedora 44 build guide](uke-fedora-builder/README.md#xiaomi-pad-7-fedora-44-rootfs-variants)
+gives the commands for locally built Linux 7.2.11 and Fedora 44 RPMs, then
+five separate TTY, KDE, GNOME, Phosh and Plasma Mobile `boot_a`/`userdata`
+pairs. Fedora Python packages are permitted. No pair from this source has yet
+been built or tested on Xiaomi Pad 7.
+
+**The current outputs are private build candidates.** The rootfs contains OEM
+touch files and a touch baseline from one tablet. Graphical variants also
+contain a preset account password hash; TTY opens a local root shell. Do not
+upload these images as release assets. A public image flow still needs local
+OEM-data provisioning, first-boot account creation and device validation.
 **A `userdata` installation replaces Android user data.** Keep the Android slot
 B boot images and a complete data recovery path.
 
