@@ -44,6 +44,13 @@ These results come from the upstream Fedora Rawhide development setup on a **POC
 
 The build uses the stock bootloader, a `boot_a` image and a Linux root on `userdata`. Keep a working boot image and a recovery. OEM firmware and calibration files are now included.
 
+To build separate Fedora 44 images on an x86_64 PC, use
+`./uke-fedora-builder/build-fedora44-images.sh --cross-kernel --output build/fedora44-images`.
+`--cross-kernel` speeds up the ARM64 kernel compilation by running Clang natively
+on the PC; other packages and rootfs still use AArch64 containers. On an ARM64
+host, omit the flag. See the [Fedora 44 build guide](uke-fedora-builder/docs/FEDORA44-BUILD-CACHE.md)
+for cache, resume and rebuild options.
+
 ## Source
 
 This repository brings together the following components as submodules:
