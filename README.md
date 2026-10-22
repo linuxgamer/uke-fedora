@@ -7,7 +7,9 @@ This port is **work in progress**. Work is focused on Fedora 44, stock Android b
 > [!WARNING]
 > This is not ready for daily use. There is no tested Xiaomi Pad 7 release image from the current source. Installing to `userdata` overwrites Android user data. Back up your data and make sure you can restore the original boot images before experimenting.
 
-Most of the hardware work linked below comes from **MCC45TR's separate POCO Pad X1 deve
+The hardware observations below come from MCC45TR's POCO Pad X1 development
+system. For newer results and their test scope, see the
+[upstream hardware report](https://github.com/MCC45TR/uke-linux#hardware-support).
 
 ### Hardware support (upstream POCO Pad X1 only)
 
@@ -30,7 +32,7 @@ These results come from the upstream Fedora Rawhide development setup on a **POC
 | External display | ⚪ Not verified | Video output over USB-C/HDMI has not been tested. |
 | Charging | 🟡 Partial | Charging and battery percentage are detected; fast charging, charge limits and bypass are not fully verified. |
 | Sleep and wake | 🟡 Partial | Basic suspend testing exists, but reliable wake and power savings are unconfirmed. |
-| Reboot and shutdown | 🟡 Partial | Reboot has works, shutdown can hang or restart the tablet. |
+| Reboot and shutdown | 🟡 Partial | Reboot works in some tests; shutdown can hang or restart the tablet. |
 | Built-in speakers and microphones | 🔴 Not working | No functional playback or recording yet. |
 | Cameras | ⚪ Not tested | Neither camera has a verified working capture. |
 | Stylus | 🔴 Not working | Pen input, pressure and tilt are unavailable. |
