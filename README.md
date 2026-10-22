@@ -42,7 +42,7 @@ These results come from the upstream Fedora Rawhide development setup on a **POC
 
 ## Downloads and building
 
-**There is no Xiaomi Pad 7 release image nor supported installation guide yet.**
+**There is no tested Xiaomi Pad 7 release image yet.** For manual experiments, follow the [installation guide](docs/INSTALL.md).
 
 The build uses the stock bootloader, a `boot_a` image and a Linux root on `userdata`. Its bundled boot template and model firmware are pinned to Xiaomi OS3.0.304.0.WOZMIXM. Keep a working boot image and a recovery. Per-device calibration remains on the tablet.
 
