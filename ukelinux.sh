@@ -42,9 +42,9 @@ if [[ ${UKE_SKIP_LOCAL_BLOBS_CHECK:-0} != 1 ]]; then
     case " $* " in
         *' --help '*|*' -h '*|*' --dry-run '*|*' --self-test '*) ;;
         *)
-            verify=$root/uke-linux-hardware-support/xiaomi-uke-firmware/src/verify-local-blobs.sh
+            verify=$root/uke-linux-hardware-support/xiaomi-uke-firmware/src/verify-fedora44-oem-304.sh
             [[ -x $verify ]] || { printf '%s\n' "Local blob verifier missing: $verify" >&2; exit 2; }
-            "$verify" || { printf '%s\n' 'Local OEM blobs are incomplete; see uke-linux-hardware-support/xiaomi-uke-firmware/docs/LOCAL-BLOBS.md' >&2; exit 2; }
+            "$verify" || { printf '%s\n' 'Bundled OS3.0.304.0 OEM inputs are incomplete.' >&2; exit 2; }
             ;;
     esac
 fi

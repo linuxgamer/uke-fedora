@@ -44,7 +44,7 @@ These results come from the upstream Fedora Rawhide development setup on a **POC
 
 **There is no Xiaomi Pad 7 release image nor supported installation guide yet.**
 
-The build uses the stock bootloader, a `boot_a` image and a Linux root on `userdata`. Keep a working boot image and a recovery. OEM firmware and calibration files are now included.
+The build uses the stock bootloader, a `boot_a` image and a Linux root on `userdata`. Its bundled boot template and model firmware are pinned to Xiaomi OS3.0.304.0.WOZMIXM. Keep a working boot image and a recovery. Per-device calibration remains on the tablet.
 
 To build separate Fedora 44 images on an x86_64 PC, use
 `./uke-fedora-builder/build-fedora44-images.sh --cross-kernel --output build/fedora44-images`.
