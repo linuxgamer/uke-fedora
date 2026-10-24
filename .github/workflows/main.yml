@@ -1,11 +1,16 @@
 name: Interactive Terminal (ARM)
+
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main          # change to your branch, or use ['**'] for all branches
+  workflow_dispatch:  # manual trigger from Actions tab
 
 jobs:
   debug-arm:
-    # Use the ARM64 Ubuntu runner label
     runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30   # prevents the job hanging forever if you don't connect
+
     steps:
       - uses: actions/checkout@v4
 
