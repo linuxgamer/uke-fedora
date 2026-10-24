@@ -1,4 +1,4 @@
-name: Interactive Terminal (ARM)
+name: Interactive Terminal
 
 on:
   push:
@@ -7,24 +7,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  debug-arm:
-    runs-on: ubuntu-24.04-arm
+  debug:
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
 
-      # This step proves the runner is actually alive
-      - name: Check Architecture
-        run: |
-          echo "Runner is alive!"
-          uname -m
-          echo "CPU info:"
-          lscpu | grep "Architecture"
-
-      # Using upterm instead of tmate
-      - name: Setup SSH Terminal
-        uses: owenthereal/action-upterm@v1
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
         with:
-          ## Limit to the actor (you) to prevent random people connecting
           limit-access-to-actor: true
