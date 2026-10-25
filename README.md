@@ -197,7 +197,7 @@ reported Fedora tests.
 
 ## Downloads and building
 
-Go to [releases](https://github.com/linuxgamer/uke-fedora/releases) and download any desktop you want. Then look at [installation guide](INSTALL.md).
+Go to [releases](https://github.com/linuxgamer/uke-fedora/releases)(provided but untested, userdata is in parts use ``cat userdata.img.part.* > userdata.img `` and download any desktop you want. Then look at [installation guide](INSTALL.md).
 
 To build separate Fedora 44 images on an x86_64 PC, use
 `./uke-fedora-builder/build-fedora44-images.sh --cross-kernel --output build/<DESIRED FOLDER>`.
