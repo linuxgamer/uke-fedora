@@ -2,7 +2,7 @@
 
 Fedora Linux port made mainly for the **Xiaomi Pad 7**, based on [MCC45TR's port](https://github.com/MCC45TR/uke-linux). It may not work on POCO Pad X1.
 
-This port is **work in progress**. Differences are: Fedora 44, `/userdata` install, more DEs, build optimisations, extra QoL stuff.
+This port is **work in progress**. Differences are: Fedora 44, `/userdata` install, build optimisations, extra QoL stuff.
 
 > [!WARNING]
 > This is not ready for daily use. Installing to `userdata` overwrites Android user data. Back up any data you have!
@@ -190,21 +190,25 @@ lack a validated physical mapping.
 | CoreSight tracing | ⏸️ **Disabled** | Autoload blocked after earlier resets. | Cause and recovery investigation. |
 
 The current boot handoff is **EL1**. EL2/KVM work remains on a separate
-experimental branch, and Project Aloha/UEFI is not the boot path used for the
+experimental branch, and **Project Aloha/UEFI is not the boot path** used for the
 reported Fedora tests.
 
 </details>
 
 ## Downloads and building
 
-Go to [releases](https://github.com/linuxgamer/uke-fedora/releases)(provided but untested, userdata is in parts use ``cat userdata.img.part.* > userdata.img ``) Then look at [installation guide](INSTALL.md).
+Go to [releases](https://github.com/linuxgamer/uke-fedora/releases) 
+> (provided but untested, userdata is in parts use ``cat userdata.img.part.* > userdata.img ``) 
+Then look at [installation guide](INSTALL.md).
 
 To build separate Fedora 44 images on an x86_64 PC, use
 `./uke-fedora-builder/build-fedora44-images.sh --cross-kernel --output build/<DESIRED FOLDER>`.
+
 By default all desktop variants are built, add `--profiles <ANY DE YOU WANT>,<DE 2>` to select DEs.
 `--cross-kernel` speeds up the kernel compilation by running Clang natively
-on the x86 PC, other packages and rootfs still use AArch64 containers. On an ARM64
-host, omit the flag. See the [Fedora 44 build guide](uke-fedora-builder/docs/FEDORA44-BUILD-CACHE.md) for cache, resume and rebuild options.
+on the x86 PC, other packages and rootfs still use AArch64 containers.
+
+On an ARM64 host, omit the flag. See the [Fedora 44 build guide](uke-fedora-builder/docs/FEDORA44-BUILD-CACHE.md) for cache, resume and rebuild options.
 
 ## Source
 
