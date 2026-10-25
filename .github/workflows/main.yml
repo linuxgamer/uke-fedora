@@ -1,13 +1,20 @@
 name: Debug ARM Runner via Cloudflare Tunnel
-on: [workflow_dispatch] # Allows manual triggering
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: debug-arm-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   debug:
-    runs-on: ubuntu-24.04-arm # GitHub-hosted ARM64 runner
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+
       - name: Start SSH via Cloudflare Tunnel
         uses: valeriangalliat/action-sshd-cloudflared@v4
-        env:
-          # Optional: provide your public key directly if GitHub API rate-limits
-          # AUTHORIZED_KEYS: ssh-ed25519 AAAAC3... your-email@example.com
