@@ -12,9 +12,21 @@ concurrency:
 jobs:
   debug:
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 60
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install platform tools
+        run: |
+          sudo snap install android-platform-tools
+          sudo snap connect android-platform-tools:adb-support
+          sudo snap connect android-platform-tools:block-devices
+          sudo snap connect android-platform-tools:raw-usb
+          sudo snap connect android-platform-tools:removable-media
+          sudo snap connect android-platform-tools:network
+          sudo snap connect android-platform-tools:network-bind
 
       - name: Start SSH via Cloudflare Tunnel
         uses: valeriangalliat/action-sshd-cloudflared@v4
