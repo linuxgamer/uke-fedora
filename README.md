@@ -198,7 +198,8 @@ reported Fedora tests.
 ## Downloads and building
 
 Go to [releases](https://github.com/linuxgamer/uke-fedora/releases) 
-> (provided but untested, userdata is in parts use ``cat userdata.img.part.* > userdata.img ``) 
+> (provided but untested, userdata is in parts use ``cat userdata.img.part.* > userdata.img ``)
+
 Then look at [installation guide](INSTALL.md).
 
 To build separate Fedora 44 images on an x86_64 PC, use
