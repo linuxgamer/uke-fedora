@@ -21,7 +21,7 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 | Graphics (GPU) | 🟡 Partial | OpenGL works, Vulkan is experimental. |
 | CPU and storage | 🟢 Working | All CPU cores are available, internal storage works. |
 | Wi-Fi | 🟢 Working | Connects to networks and supports normal data transfers. |
-| Bluetooth | 🟢 Working | Tested with a mouse and wireless headphones, including audio playback. |
+| Bluetooth | 🟡 Partial | Mouse and headphone playback worked on one TM tablet; another installer reports Bluetooth failure in [issue #5](https://github.com/linuxgamer/uke-fedora/issues/5). |
 | Auto-rotation | 🟢 Working | Screen and touch orientation follow tablet rotation. |
 | Other sensors | 🟡 Partial | Motion, compass, proximity and cover detection have varying levels of support. |
 | USB-C accessories | 🟡 Partial | An OTG mouse works through a USB-A-to-USB-C adapter; manual USB ACM on/off works. Other accessories need testing. |

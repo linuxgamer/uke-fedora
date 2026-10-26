@@ -46,12 +46,28 @@ It is also recommended to install TWRP in case your system breaks:
 fastboot flash recovery_ab "twrp_recovery_ab.img"
 ```
 
-`cd` into unarchived folder with Fedora images and run these commands:
+`cd` into the extracted folder with Fedora images. On tablets where bootloader
+fastboot accepts `userdata`, use:
 
 ```sh
-fastboot set_active a
-fastboot flash boot_a "fedora_boot.img"
 fastboot flash userdata "userdata.img"
+fastboot flash boot_a "fedora_boot.img"
+fastboot set_active a
+fastboot reboot
+```
+
+If flashing `userdata` fails in bootloader fastboot, **do not reboot into
+Fedora**. One installer reported that it worked in userspace fastboot
+(`fastbootd`) instead. From bootloader fastboot, use:
+
+```sh
+fastboot reboot fastboot
+fastboot getvar is-userspace    # must say yes
+fastboot flash userdata "userdata.img"
+fastboot reboot bootloader
+fastboot getvar is-userspace    # must say no
+fastboot flash boot_a "fedora_boot.img"
+fastboot set_active a
 fastboot reboot
 ```
 
