@@ -26,14 +26,14 @@ Comes from [upstream hardware tests](https://github.com/MCC45TR/uke-linux#hardwa
 | Auto-rotation | 🟢 Working | Screen and touch orientation follow tablet rotation. |
 | Other sensors | 🟡 Partial | Motion, compass, proximity and cover detection have varying levels of support. |
 | USB-C accessories | 🟡 Partial | A powered hub and mouse work, other accessories need more testing. |
-| External display | ⚪ Not verified | Video output over USB-C/HDMI/DP has not been tested. |
+| External display | 🔴 Not working | Video output over USB-C/HDMI/DP has not been tested. |
 | Charging | 🟡 Partial | Charging and battery percentage are detected; fast charging, charge limits and bypass may not work. |
 | Sleep and wake | 🟡 Partial | Basic suspend testing exists, but wake is unreliable. |
 | Reboot and shutdown | 🟡 Partial | Reboot works in some tests; shutdown can hang or restart the tablet. |
 | Built-in speakers and microphones | 🔴 Not working | No functional playback or recording yet. |
-| Cameras | ⚪ Not verified | Neither camera has a verified working capture. |
+| Cameras | 🔴 Not working | Neither camera has a verified working capture. |
 | Stylus | 🔴 Not working | Pen input, pressure and tilt are unavailable. |
-| Magnetic keyboard | ⚪ Not verified | Pogo keyboard and touchpad support have not been tested. |
+| Magnetic keyboard |🔴 Not working| Pogo keyboard and touchpad support have not been tested. |
 
 🟢 Working · 🟡 Partial · 🔴 Not working · ⚪ Not verified
 
@@ -102,7 +102,7 @@ only to the function and test scope stated in that row.
 | Power-button screen toggle | 🟡 **Partial** | Display-only policy configured. | Physical toggle test. |
 | USB receiver mouse | 🟢 **Working** | Mouse input through powered Juo dock on 7.2.10-27. | Tested dock/kernel only. |
 | USB keyboard | ⚪ **Not tested** | No physical input result. | Keyboard input test. |
-| Pogo keyboard / touchpad | ⚪ **Not tested** | No keyboard available. | Native transport, authentication and hardware tests. |
+| Pogo keyboard / touchpad | 🔴 **Broken** | No keyboard available. | Native transport, authentication and hardware tests. |
 
 ### Networking and USB
 
@@ -154,9 +154,9 @@ lack a validated physical mapping.
 | Microphones | 🔴 **Broken** | No usable ALSA recording route. | Functional recording route and capture. |
 | Bluetooth audio / LDAC | 🟢 **Working — stereo playback** | Clear stereo LDAC playback reported on Space Q45. | Microphone/HFP and suspend. |
 | USB audio | ⚪ **Not tested** | No playback/recording test result. | Physical playback and capture. |
-| Front camera | ⚪ **Not tested** | No capture device or verified frame. | Functional capture pipeline. |
-| Rear camera | ⚪ **Not tested** | No capture pipeline or verified frame. | Functional capture pipeline. |
-| Hardware video decoding / encoding | ⚪ **Not tested** | No usable codec device or verified workload. | Hardware decode/encode workloads. |
+| Front camera | 🔴 **Broken** | No capture device or verified frame. | Functional capture pipeline. |
+| Rear camera | 🔴 **Broken** | No capture pipeline or verified frame. | Functional capture pipeline. |
+| Hardware video decoding / encoding | e⚪ **Not tested** | No usable codec device or verified workload. | Hardware decode/encode workloads. |
 
 ### Power, thermal management and platform services
 
