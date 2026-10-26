@@ -1,7 +1,9 @@
-name: Debug ARM Runner via Cloudflare Tunnel on:
+name: Debug ARM Runner via Cloudflare Tunnel
+on:
   push:
     branches: [main]
   workflow_dispatch:
+
 concurrency:
   group: debug-arm-${{ github.ref }}
   cancel-in-progress: true
@@ -26,7 +28,7 @@ jobs:
           sudo snap connect android-platform-tools:network-bind
           sudo snap alias android-platform-tools.avbtool avbtool
 
-      # 1. PATCH THE HASH CHECK (From your screenshot)
+      # 1. PATCH THE HASH CHECK 
       - name: Patch source lock check
         run: |
           sed -i 's/exit 1/exit 0/g' ./uke-linux-hardware-support/uke-console-input/scripts/stage-source.sh
