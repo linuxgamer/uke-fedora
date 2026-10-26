@@ -209,7 +209,7 @@ By default all desktop variants are built, add `--profiles <ANY DE YOU WANT>,<DE
 `--cross-kernel` speeds up the kernel compilation by running Clang natively
 on the x86 PC, other packages and rootfs still use AArch64 containers.
 
-On an ARM64 host, omit the flag. See the [Fedora 44 build guide](uke-fedora-builder/docs/FEDORA44-BUILD-CACHE.md) for cache, resume and rebuild options.
+On an ARM64 host, omit the `` --cross-kernel ``flag. See the [Fedora 44 build guide](uke-fedora-builder/docs/FEDORA44-BUILD-CACHE.md) for cache, resume and rebuild options.
 
 ## Source
 
