@@ -30,7 +30,7 @@ fastboot getvar partition-size:userdata
 fastboot getvar is-logical:userdata
 ```
 
-Continue only if the connected product is `uke`, the bootloader is `unlocked,
+Continue only if the connected product is `uke`, the bootloader is `unlocked`,
 this is bootloader fastboot (`is-userspace: no`), `boot_a` exists and `userdata`
 is a physical partition. The boot partition must hold at least 100,663,296
 bytes(~96MiB). The `userdata` partition must be at least `root_image_logical_bytes` from the manifest.
