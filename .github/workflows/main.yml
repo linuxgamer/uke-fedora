@@ -27,6 +27,7 @@ jobs:
           sudo snap connect android-platform-tools:removable-media
           sudo snap connect android-platform-tools:network
           sudo snap connect android-platform-tools:network-bind
+          sudo snap alias android-platform-tools.avbtool avbtool
 
       - name: Start SSH via Cloudflare Tunnel
         uses: valeriangalliat/action-sshd-cloudflared@v4
