@@ -25,13 +25,13 @@
 
 ## Project status
 
-**Last updated: 29 October 2026.**
+**Last updated: 1 November 2026.**
 
-Fedora Rawhide and KDE Plasma run on the tested **POCO Pad X1, 8 GB / 512 GB**. The screen, touch, Wi-Fi, Bluetooth mouse and stereo audio, automatic rotation, automatic brightness, and internal speakers work. HDMI output and monitor audio also work through the tested Juo JH925 dock.
+Fedora Rawhide and KDE Plasma run on the tested **POCO Pad X1, 8 GB / 512 GB**. The screen, touch, Wi-Fi, Bluetooth mouse and stereo audio, automatic rotation, automatic brightness, internal speakers, and microphones work. Adaptive sync / VRR is fully working across the 30–144 Hz range. HDMI output and monitor audio also work through the tested Juo JH925 dock.
 
-Charging protection, suspend, microphones, cameras, and sustained hardware video still need work. VRR remains disabled because it causes touch issues. External DSC/FEC produces a black image; automatic recovery to uncompressed output works in the latest test. See the [changelog](CHANGELOG.md) for development updates.
+Charging protection, suspend, cameras, and sustained hardware video still need work. External DSC/FEC produces a black image; automatic recovery to uncompressed output works in the latest test. See the [changelog](CHANGELOG.md) for development updates.
 
-The latest recorded development boot is **7.3.0-48**, on **29 October 2026**, using the stock Android bootloader. These results are separate from the downloadable image below.
+The previously recorded development boot was **7.3.0-48**, on **29 October 2026**, using the stock Android bootloader. These results are separate from the downloadable image below.
 
 ## Distribution roadmap
 
@@ -66,7 +66,7 @@ First setup, filesystem expansion, updates, and recovery still need full testing
 
 ## Hardware support
 
-These results cover Fedora Rawhide AArch64 development builds tested between **14 and 29 October 2026** on the **POCO Pad X1, 8 GB / 512 GB**. Some tests used earlier kernels and have not been repeated on 7.3.0-48. They do not establish support in the downloadable image. Xiaomi Pad 7 and other memory/storage variants remain untested.
+These results cover Fedora Rawhide AArch64 development builds tested between **14 and 29 October 2026** on the **POCO Pad X1, 8 GB / 512 GB**. Microphone operation and full 30–144 Hz VRR support were confirmed by the maintainer on **1 November 2026**. Other entries retain their earlier test scope; some tests used earlier kernels and have not been repeated on 7.3.0-48. They do not establish support in the downloadable image. Xiaomi Pad 7 and other memory/storage variants remain untested.
 
 🟢 Working in the listed tests · 🟡 Partial · 🔴 Not working · ⚪ Not verified · ⏸️ Disabled
 
@@ -100,7 +100,7 @@ These results cover Fedora Rawhide AArch64 development builds tested between **1
 | Screen off/on | 🟡 Partial | Display returns, but occasional display timeouts remain. |
 | Color depth | 🟡 Partial | Active 10-bit framebuffer and DSC link; output depth cannot be selected. |
 | Touchscreen | 🟢 Working | Finger and multi-touch input work on the configured installation. Gestures and suspend/resume need more testing. |
-| Adaptive sync / VRR | ⏸️ Disabled | Causes touch and display faults. |
+| Adaptive sync / VRR | 🟢 Working | Fully working across the 30–144 Hz range. |
 | KDE Plasma / Wayland | 🟡 Partial | Desktop and applications work. Scrolling stutter, stalls during cover transitions under load, and a clipboard-related shutdown hang remain. |
 | Adreno 732 / OpenGL | 🟡 Partial | Desktop rendering works. Broader API and sustained-load testing remain incomplete. |
 | Vulkan / OpenCL | 🟡 Partial | Some transfer and compute tests pass; Vulkan image tests still fail. |
@@ -157,7 +157,7 @@ These results cover Fedora Rawhide AArch64 development builds tested between **1
 | Feature | Status | Notes |
 | --- | --- | --- |
 | Internal speakers | 🟢 Working | All four speakers play sound and channels follow screen orientation. KMix provides four level controls; channel isolation and suspend/resume need testing. |
-| Microphones | 🔴 Not working | Microphone support is still under development. |
+| Microphones | 🟢 Working | Internal microphone recording works. |
 | Bluetooth and HDMI audio | 🟢 Working | Stereo playback tested with Space Q45 headphones and a monitor through Juo HUB. |
 | USB audio | ⚪ Not verified | Playback and recording have not been tested. |
 | Front and rear cameras | ⚪ Not verified | No working capture pipeline or verified frames. |
