@@ -1,0 +1,98 @@
+name: Desktop from shared core (reusable)
+on:
+  workflow_call:
+    inputs:
+      desktop:
+        required: true
+        type: string
+      build_date:
+        required: true
+        type: string
+      kernel_rpm:
+        required: true
+        type: string
+      size_mib:
+        required: true
+        type: string
+      revision:
+        required: true
+        type: string
+      publish:
+        required: true
+        type: boolean
+permissions:
+  contents: read
+jobs:
+  compose:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - name: Prepare disposable ARM64 host
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /usr/local/share/boost
+          docker image prune --all --force
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends jq zstd
+          df -h /
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: shared-core-internal
+          path: core
+      - name: Install desktop onto the verified immutable core and validate image
+        id: image
+        env:
+          IMAGE_CORE_INPUT: ${{ github.workspace }}/core/core.tar.zst
+          IMAGE_DESKTOP: ${{ inputs.desktop }}
+          IMAGE_BUILD_DATE: ${{ inputs.build_date }}
+          IMAGE_KERNEL_RPM: ${{ inputs.kernel_rpm }}
+          IMAGE_SIZE_MIB: ${{ inputs.size_mib }}
+          IMAGE_REVISION: ${{ inputs.revision }}
+        run: bash uke-fedora-builder/scripts/hosted-image.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-delivery-${{ inputs.desktop }}
+          path: ${{ steps.image.outputs.release_dir }}/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-receipts-${{ inputs.desktop }}
+          path: ${{ steps.image.outputs.release_dir }}/receipts/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Retain failed desktop diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-diagnostics-${{ inputs.desktop }}
+          path: ${{ runner.temp }}/uke-build/*/*.log
+          retention-days: 7
+  publish:
+    needs: compose
+    if: inputs.publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq zstd
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-${{ inputs.desktop }}
+          path: delivery
+      - name: Verify equality with the shared published boot and append desktop
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: bash uke-fedora-builder/scripts/publish-image-release.sh delivery | tee -a "$GITHUB_STEP_SUMMARY"

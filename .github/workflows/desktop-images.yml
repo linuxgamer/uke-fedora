@@ -1,0 +1,116 @@
+name: Sequential shared-core desktop images (manual)
+run-name: Shared core → KDE → GNOME → Cutefish → NextKDE · r${{ inputs.revision }}
+on:
+  workflow_dispatch:
+    inputs:
+      kernel_rpm:
+        description: Exact signed COPR kernel version-release, or latest (resolved once)
+        type: string
+        default: latest
+      revision:
+        description: New daily revision; existing different image bytes are never overwritten
+        type: string
+        default: '1'
+      size_mib:
+        description: EXT4 capacity in MiB, identical for every desktop
+        type: choice
+        options: ['8192', '16384']
+        default: '8192'
+      publish:
+        description: Append each validated desktop to a common experimental image-only Release
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: ext4-singleboot-image
+  cancel-in-progress: false
+jobs:
+  core:
+    if: github.ref == 'refs/heads/Fedora'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    outputs:
+      build_date: ${{ steps.core.outputs.build_date }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - name: Prepare disposable ARM64 host
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /usr/local/share/boost
+          docker image prune --all --force
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends jq zstd
+          df -h /
+      - name: Assemble signed common core without a filesystem image
+        id: core
+        env:
+          IMAGE_KERNEL_RPM: ${{ inputs.kernel_rpm }}
+          IMAGE_SIZE_MIB: ${{ inputs.size_mib }}
+        run: bash uke-fedora-builder/scripts/hosted-core.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: shared-core-internal
+          path: ${{ steps.core.outputs.core_archive }}
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - name: Retain failed core diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: shared-core-diagnostics
+          path: ${{ runner.temp }}/uke-build/*/*.log
+          retention-days: 7
+  kde:
+    needs: core
+    uses: ./.github/workflows/desktop-image-stage.yml
+    permissions:
+      contents: write
+    with:
+      desktop: kde
+      build_date: ${{ needs.core.outputs.build_date }}
+      kernel_rpm: ${{ inputs.kernel_rpm }}
+      size_mib: ${{ inputs.size_mib }}
+      revision: ${{ inputs.revision }}
+      publish: ${{ inputs.publish }}
+  gnome:
+    needs: [core, kde]
+    uses: ./.github/workflows/desktop-image-stage.yml
+    permissions:
+      contents: write
+    with:
+      desktop: gnome
+      build_date: ${{ needs.core.outputs.build_date }}
+      kernel_rpm: ${{ inputs.kernel_rpm }}
+      size_mib: ${{ inputs.size_mib }}
+      revision: ${{ inputs.revision }}
+      publish: ${{ inputs.publish }}
+  cutefish:
+    needs: [core, gnome]
+    uses: ./.github/workflows/desktop-image-stage.yml
+    permissions:
+      contents: write
+    with:
+      desktop: cutefish
+      build_date: ${{ needs.core.outputs.build_date }}
+      kernel_rpm: ${{ inputs.kernel_rpm }}
+      size_mib: ${{ inputs.size_mib }}
+      revision: ${{ inputs.revision }}
+      publish: ${{ inputs.publish }}
+  nextkde:
+    needs: [core, cutefish]
+    uses: ./.github/workflows/desktop-image-stage.yml
+    permissions:
+      contents: write
+    with:
+      desktop: nextkde
+      build_date: ${{ needs.core.outputs.build_date }}
+      kernel_rpm: ${{ inputs.kernel_rpm }}
+      size_mib: ${{ inputs.size_mib }}
+      revision: ${{ inputs.revision }}
+      publish: ${{ inputs.publish }}

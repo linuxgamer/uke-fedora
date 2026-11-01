@@ -6,7 +6,7 @@ on:
       desktop:
         description: Original Fedora graphical session
         type: choice
-        options: [kde, gnome]
+        options: [kde, gnome, cutefish, nextkde]
         default: kde
       login_shell:
         description: Login shell for new accounts
