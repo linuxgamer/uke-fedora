@@ -21,7 +21,7 @@ jobs:
       - name: Verify component checkouts and the public landing layout
         run: &workspace_layout |
           set -euo pipefail
-          for component in recovery-uke-ofox senemos-uke-kernel uke-project-aloha uke-fedora-builder uke-linux-hardware-support uke-linux-images; do
+          for component in recovery-uke-ofox senemos-uke-kernel uke-project-aloha uke-fedora-builder uke-linux-hardware-support uke-linux-images uke-desktop-environment-support; do
             test -f "$component/README.md"
             git -C "$component" rev-parse --verify HEAD >/dev/null
             branch=$(git config -f .gitmodules --get "submodule.$component.branch")
@@ -65,7 +65,7 @@ jobs:
       - name: Save updated component commits
         run: |
           set -euo pipefail
-          git add -- recovery-uke-ofox senemos-uke-kernel uke-project-aloha uke-fedora-builder uke-linux-hardware-support uke-linux-images
+          git add -- recovery-uke-ofox senemos-uke-kernel uke-project-aloha uke-fedora-builder uke-linux-hardware-support uke-linux-images uke-desktop-environment-support
           if git diff --cached --quiet; then exit 0; fi
           git -c user.name='github-actions[bot]' \
               -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \

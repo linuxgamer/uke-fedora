@@ -1,4 +1,0 @@
-# Fedora PAM policy for the upstream Cutefish lock-screen helper.
-auth     requisite  pam_nologin.so
-auth     include    system-auth
-account  include    system-auth
