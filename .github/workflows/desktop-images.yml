@@ -11,6 +11,10 @@ on:
         description: New daily revision; existing different image bytes are never overwritten
         type: string
         default: '1'
+      core_run_id:
+        description: Optional completed series run with a successful core job to reuse without rebuilding
+        type: string
+        default: ''
       size_mib:
         description: EXT4 capacity in MiB, identical for every desktop
         type: choice
@@ -22,6 +26,7 @@ on:
         default: false
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: ext4-singleboot-image
   cancel-in-progress: false
@@ -32,32 +37,57 @@ jobs:
     timeout-minutes: 180
     outputs:
       build_date: ${{ steps.core.outputs.build_date }}
+      producer_builder: ${{ steps.core.outputs.producer_builder }}
+      producer_workspace: ${{ steps.core.outputs.producer_workspace }}
+      producer_run_id: ${{ steps.core.outputs.producer_run_id }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           submodules: recursive
           persist-credentials: false
       - name: Prepare disposable ARM64 host
+        env:
+          CORE_RUN_ID: ${{ inputs.core_run_id }}
         run: |
           set -euo pipefail
           test "$(uname -m)" = aarch64
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /usr/local/share/boost
-          docker image prune --all --force
+          if [[ -z "$CORE_RUN_ID" ]]; then
+            sudo rm -rf /usr/share/dotnet /usr/local/lib/android /usr/local/share/boost
+            docker image prune --all --force
+          fi
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends jq zstd
+          sudo apt-get install -y --no-install-recommends jq zstd unzip
           df -h /
-      - name: Assemble signed common core without a filesystem image
+      - name: Assemble or verify the explicit frozen common core
         id: core
         env:
           IMAGE_KERNEL_RPM: ${{ inputs.kernel_rpm }}
           IMAGE_SIZE_MIB: ${{ inputs.size_mib }}
-        run: bash uke-fedora-builder/scripts/hosted-core.sh
+          CORE_RUN_ID: ${{ inputs.core_run_id }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$CORE_RUN_ID" ]]; then
+            bash uke-fedora-builder/scripts/reuse-verified-core.sh
+          else
+            bash uke-fedora-builder/scripts/hosted-core.sh
+          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: shared-core-internal
           path: ${{ steps.core.outputs.core_archive }}
           compression-level: 0
           retention-days: 7
+          if-no-files-found: error
+      - name: Retain common-core provenance and actual RPM inventory
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: shared-core-receipts
+          path: |
+            ${{ steps.core.outputs.core_receipts }}/core-origin.json
+            ${{ steps.core.outputs.core_receipts }}/core-installed-rpms.tsv
+            ${{ steps.core.outputs.core_receipts }}/request.json
+          retention-days: 90
           if-no-files-found: error
       - name: Retain failed core diagnostics
         if: failure()
@@ -73,6 +103,9 @@ jobs:
       contents: write
     with:
       desktop: kde
+      core_producer: ${{ needs.core.outputs.producer_builder }}
+      core_workspace: ${{ needs.core.outputs.producer_workspace }}
+      core_run_id: ${{ needs.core.outputs.producer_run_id }}
       build_date: ${{ needs.core.outputs.build_date }}
       kernel_rpm: ${{ inputs.kernel_rpm }}
       size_mib: ${{ inputs.size_mib }}
@@ -85,6 +118,9 @@ jobs:
       contents: write
     with:
       desktop: gnome
+      core_producer: ${{ needs.core.outputs.producer_builder }}
+      core_workspace: ${{ needs.core.outputs.producer_workspace }}
+      core_run_id: ${{ needs.core.outputs.producer_run_id }}
       build_date: ${{ needs.core.outputs.build_date }}
       kernel_rpm: ${{ inputs.kernel_rpm }}
       size_mib: ${{ inputs.size_mib }}
@@ -97,6 +133,9 @@ jobs:
       contents: write
     with:
       desktop: cutefish
+      core_producer: ${{ needs.core.outputs.producer_builder }}
+      core_workspace: ${{ needs.core.outputs.producer_workspace }}
+      core_run_id: ${{ needs.core.outputs.producer_run_id }}
       build_date: ${{ needs.core.outputs.build_date }}
       kernel_rpm: ${{ inputs.kernel_rpm }}
       size_mib: ${{ inputs.size_mib }}
@@ -109,6 +148,9 @@ jobs:
       contents: write
     with:
       desktop: nextkde
+      core_producer: ${{ needs.core.outputs.producer_builder }}
+      core_workspace: ${{ needs.core.outputs.producer_workspace }}
+      core_run_id: ${{ needs.core.outputs.producer_run_id }}
       build_date: ${{ needs.core.outputs.build_date }}
       kernel_rpm: ${{ inputs.kernel_rpm }}
       size_mib: ${{ inputs.size_mib }}

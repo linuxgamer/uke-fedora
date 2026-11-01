@@ -5,6 +5,15 @@ on:
       desktop:
         required: true
         type: string
+      core_producer:
+        required: true
+        type: string
+      core_workspace:
+        required: true
+        type: string
+      core_run_id:
+        required: true
+        type: string
       build_date:
         required: true
         type: string
@@ -48,6 +57,9 @@ jobs:
         id: image
         env:
           IMAGE_CORE_INPUT: ${{ github.workspace }}/core/core.tar.zst
+          IMAGE_CORE_PRODUCER: ${{ inputs.core_producer }}
+          IMAGE_CORE_WORKSPACE: ${{ inputs.core_workspace }}
+          IMAGE_CORE_RUN_ID: ${{ inputs.core_run_id }}
           IMAGE_DESKTOP: ${{ inputs.desktop }}
           IMAGE_BUILD_DATE: ${{ inputs.build_date }}
           IMAGE_KERNEL_RPM: ${{ inputs.kernel_rpm }}
