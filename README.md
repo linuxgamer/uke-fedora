@@ -48,8 +48,10 @@ without replacing the currently reviewed Fedora submodule pins. See the
 
 Current image work targets GNOME and KDE Plasma only. Cutefish and NextKDE
 support is suspended; their r1 downloads below are retained as historical artifacts.
-The next image revision restores runtime translations, basic terminal tools and
-the lean GNOME application set. EXT4 growth uses Fedora's standard systemd
+The next image revision retains all RPM translations, including localized help
+and Qt catalogs. Missing files trigger exact-owner RPM reinstallation, followed
+by complete staging and independent filesystem readback audits. It also restores
+basic terminal tools and the lean GNOME application set. EXT4 growth uses Fedora's standard systemd
 service, followed by a physical-capacity check and the existing half-RAM disk
 swap policy before graphical setup. Hardware acceptance remains separate.
 
