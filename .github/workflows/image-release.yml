@@ -33,7 +33,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   compose:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/Fedora'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 360
     outputs:

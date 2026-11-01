@@ -47,7 +47,7 @@ jobs:
           shellcheck --source-path=uke-fedora-builder ukelinux.sh uke-fedora-builder/src/public/*.sh uke-fedora-builder/src/image/*.sh uke-fedora-builder/src/audit/*.sh uke-fedora-builder/tests/*.sh
   refresh:
     if: >-
-      github.ref == 'refs/heads/main' &&
+      github.ref == 'refs/heads/Fedora' &&
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-24.04
     permissions:
@@ -70,4 +70,4 @@ jobs:
           git -c user.name='github-actions[bot]' \
               -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
               commit -m 'Update component branch snapshots'
-          git push origin HEAD:main
+          git push origin HEAD:Fedora

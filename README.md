@@ -33,6 +33,17 @@ Charging protection, suspend, microphones, cameras, and sustained hardware video
 
 The latest recorded development boot is **7.3.0-48**, on **29 October 2026**, using the stock Android bootloader. These results are separate from the downloadable image below.
 
+## Distribution roadmap
+
+**Fedora Rawhide is the only active distribution port.** The intended primary
+branch is `Fedora`. Ubuntu and Arch Linux editions are planned, but neither
+has a qualified image, installer, or physical-device result. Shared kernel,
+device support and boot experiments do not constitute distro support.
+
+Past TEST and EL2/KVM work is retained in Git history for future reference,
+without replacing the currently reviewed Fedora submodule pins. See the
+[distribution roadmap and consolidated branch notes](DISTRIBUTIONS.md).
+
 ## Downloads
 
 The [KDE EXT4 singleboot testing image](https://github.com/MCC45TR/uke-linux/releases/tag/prebuild-fedora-kde-singleboot-ext4-20261026-k7.3.0-16-testing), published on **26 October 2026**, includes signed **Linux 7.3.0-16** and matching modules. These files have passed checks on the build host but **have not yet been tested on a tablet**.
@@ -181,7 +192,7 @@ These results cover Fedora Rawhide AArch64 development builds tested between **1
 ## Build from source
 
 ```sh
-git clone --recurse-submodules https://github.com/MCC45TR/uke-linux.git
+git clone --branch Fedora --recurse-submodules https://github.com/MCC45TR/uke-linux.git
 cd uke-linux
 ./ukelinux.sh
 ```
@@ -211,7 +222,7 @@ The menu includes desktop, filesystem, boot-layout, and package-channel options.
 ### Manual GitHub image builds
 
 Open [EXT4 singleboot image and release](https://github.com/MCC45TR/uke-linux/actions/workflows/image-release.yml)
-and select **Run workflow** on `main`. The native `ubuntu-24.04-arm` job downloads
+and select **Run workflow** on `Fedora`. The native `ubuntu-24.04-arm` job downloads
 signed COPR/Fedora packages and composes a Rawhide KDE or GNOME EXT4 image; it
 does not rebuild the kernel or hardware packages. The default initial capacity
 is 16 GiB. `latest` resolves one signed testing kernel tuple for that run; an
@@ -239,6 +250,7 @@ Keep the kernel, modules, device trees, and boot profile matched, and retain a w
 | --- | --- |
 | Builds and installation | [Public build guide](https://github.com/MCC45TR/uke-fedora-builder/blob/main/docs/PUBLIC-BUILD.md) · [Manual installation and rollback](https://github.com/MCC45TR/uke-fedora-builder/blob/main/docs/PUBLIC-BUILD.md#output-and-manual-installation) |
 | Development updates | [Changelog](CHANGELOG.md) |
+| Distribution roadmap and archived branches | [DISTRIBUTIONS.md](DISTRIBUTIONS.md) |
 | Screenshots | [Fedora KDE gallery](assets/screenshots/README.md) |
 | Contributions and bug reports | [Contributing guide](CONTRIBUTING.md) · [Open an issue](https://github.com/MCC45TR/uke-linux/issues/new?template=bug_report.yml) |
 | Security reports | [Security policy](SECURITY.md) |
