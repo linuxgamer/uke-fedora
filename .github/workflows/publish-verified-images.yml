@@ -1,0 +1,104 @@
+name: Publish verified images with dated names (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the verified 1 November image pair without rebuilding it
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: publish-verified-images-011126-r0
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/Fedora' && inputs.publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_ID: '430535478'
+      RELEASE_TAG: fedora-rawhide-uke-senemos-011126-r0
+      PACKAGING_SOURCE: 28b040bdbfb8f040341af9410d38e514b67ca3f8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 28b040bdbfb8f040341af9410d38e514b67ca3f8
+          path: packaging
+          submodules: recursive
+          persist-credentials: false
+      - name: Verify the original successful producer
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/41295768791" > producer.json
+          jq -e '.conclusion=="success" and .head_sha=="903038b3a9f540d6289bec5750d0863e817a6ec4" and .workflow_id==400659112' producer.json
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ext4-singleboot-release
+          run-id: '41295768791'
+          github-token: ${{ github.token }}
+          path: original
+      - name: Verify existing bytes and prepare the dated layout
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends jq zstd
+          (cd original; sha256sum --check --strict SHA256SUMS)
+          test "$(sha256sum original/boot.img | cut -d ' ' -f1)" = aa16000c2fc26a97713997ebfbde180f9925a076cf9e4bd6c5921552d4eba4f8
+          test "$(sha256sum original/system.img.zst | cut -d ' ' -f1)" = 6a4ca141da013805b6692fd04e36ec4b16e7b9f3640f16082a8b262bd0ea790e
+          grep -Fx 'workspace 903038b3a9f540d6289bec5750d0863e817a6ec4' original/SOURCE.txt
+          mkdir -p input/kernel
+          cp original/boot.img original/manifest.json original/FLASHING.txt original/installed-rpms.tsv input/
+          cp original/kernel-packages.tsv input/kernel/packages.tsv
+          cp original/kernel-RPM-SHA256SUMS input/kernel/RPM-SHA256SUMS
+          zstd -d --no-progress original/system.img.zst -o input/userdata.img
+          tool=packaging/uke-fedora-builder/src/public/release-layout.sh
+          bash "$tool" stage input delivery 011126 0 original/system.img.zst
+          cp original/SOURCE.txt delivery/receipts/SOURCE.txt
+          cp producer.json delivery/receipts/producer-run.json
+          export UKE_RELEASE_BUILD_RUNS="41295768791,$GITHUB_RUN_ID"
+          bash "$tool" body delivery delivery/receipts/images.tsv > delivery/receipts/RELEASE.md
+          sed -i '/^fastboot set_active b$/d; /^fastboot reboot$/d' delivery/receipts/RELEASE.md
+          cat >> delivery/receipts/RELEASE.md <<'NOTES'
+
+          ## Provenance of these existing image bytes
+
+          This publication renames and packages verified existing images. Neither the kernel nor the root filesystem was rebuilt.
+
+          Original image workspace: `903038b3a9f540d6289bec5750d0863e817a6ec4`; original image builder: `246688d8753ca420acb0cbec52447970fd92297b`; successful image run: https://github.com/MCC45TR/uke-linux/actions/runs/41295768791 .
+
+          Packaging/publisher workspace revision: `28b040bdbfb8f040341af9410d38e514b67ca3f8`; builder revision: `dc24464021b8c48fd54d73cfd5261f91b27bead8`.
+
+          Confirm boot_b is the intended target and retain matching slot-B firmware before writing. Boot-slot selection and reboot remain separate manual steps in the verified device-specific procedure. No active-slot change is included in these commands. The earlier release and all its original download URLs are preserved.
+          NOTES
+          printf '\nPublication workflow revision: `%s`; publication/receipt run: https://github.com/%s/actions/runs/%s\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> delivery/receipts/RELEASE.md
+          if grep -E '^fastboot (set_active|--set-active|reboot)' delivery/receipts/RELEASE.md; then exit 1; fi
+      - name: Retain repackaging manifests and provenance
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verified-images-011126-r0-receipts
+          path: delivery/receipts/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Upload only the exact verified image pair and publish
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > release.json
+          jq -e --arg tag "$RELEASE_TAG" --arg source "$PACKAGING_SOURCE" '.tag_name==$tag and .target_commitish==$source and .prerelease==true' release.json
+          while IFS=$'\t' read -r name _ hash; do
+            digest=$(jq -r --arg name "$name" '.assets[]|select(.name==$name)|.digest' release.json)
+            if [[ -n $digest ]]; then test "$digest" = "sha256:$hash"
+            else gh release upload "$RELEASE_TAG" "delivery/assets/$name" --repo "$GITHUB_REPOSITORY"; fi
+          done < delivery/receipts/images.tsv
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > uploaded.json
+          jq -e '.assets|length==2 and all(.[]; .state=="uploaded" and (.name|test("[.]img([.]zst)?$")))' uploaded.json
+          while IFS=$'\t' read -r name bytes hash; do
+            jq -e --arg name "$name" --arg hash "sha256:$hash" --argjson bytes "$bytes" 'any(.assets[]; .name==$name and .digest==$hash and .size==$bytes)' uploaded.json
+          done < delivery/receipts/images.tsv
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --notes-file delivery/receipts/RELEASE.md --draft=false --prerelease
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" --jq '{html_url,draft,prerelease,assets:[.assets[]|{name,size,digest}]}' >> "$GITHUB_STEP_SUMMARY"
