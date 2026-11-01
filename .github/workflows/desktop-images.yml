@@ -1,5 +1,5 @@
-name: Sequential shared-core desktop images (manual)
-run-name: Shared core → KDE → GNOME → Cutefish → NextKDE · r${{ inputs.revision }}
+name: Parallel shared-core desktop images (manual)
+run-name: Shared core → four independent desktops → one release · r${{ inputs.revision }}
 on:
   workflow_dispatch:
     inputs:
@@ -13,6 +13,22 @@ on:
         default: '1'
       core_run_id:
         description: Optional completed series run with a successful core job to reuse without rebuilding
+        type: string
+        default: ''
+      kde_run_id:
+        description: Optional completed series run containing a validated KDE delivery
+        type: string
+        default: ''
+      gnome_run_id:
+        description: Optional completed series run containing a validated GNOME delivery
+        type: string
+        default: ''
+      cutefish_run_id:
+        description: Optional completed series run containing a validated Cutefish delivery
+        type: string
+        default: ''
+      nextkde_run_id:
+        description: Optional completed series run containing a validated NextKDE delivery
         type: string
         default: ''
       size_mib:
@@ -40,6 +56,7 @@ jobs:
       producer_builder: ${{ steps.core.outputs.producer_builder }}
       producer_workspace: ${{ steps.core.outputs.producer_workspace }}
       producer_run_id: ${{ steps.core.outputs.producer_run_id }}
+      core_sha256: ${{ steps.core.outputs.core_sha256 }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -100,9 +117,12 @@ jobs:
     needs: core
     uses: ./.github/workflows/desktop-image-stage.yml
     permissions:
-      contents: write
+      contents: read
+      actions: read
     with:
       desktop: kde
+      core_sha256: ${{ needs.core.outputs.core_sha256 }}
+      reuse_run_id: ${{ inputs.kde_run_id }}
       core_producer: ${{ needs.core.outputs.producer_builder }}
       core_workspace: ${{ needs.core.outputs.producer_workspace }}
       core_run_id: ${{ needs.core.outputs.producer_run_id }}
@@ -110,14 +130,16 @@ jobs:
       kernel_rpm: ${{ inputs.kernel_rpm }}
       size_mib: ${{ inputs.size_mib }}
       revision: ${{ inputs.revision }}
-      publish: ${{ inputs.publish }}
   gnome:
-    needs: [core, kde]
+    needs: core
     uses: ./.github/workflows/desktop-image-stage.yml
     permissions:
-      contents: write
+      contents: read
+      actions: read
     with:
       desktop: gnome
+      core_sha256: ${{ needs.core.outputs.core_sha256 }}
+      reuse_run_id: ${{ inputs.gnome_run_id }}
       core_producer: ${{ needs.core.outputs.producer_builder }}
       core_workspace: ${{ needs.core.outputs.producer_workspace }}
       core_run_id: ${{ needs.core.outputs.producer_run_id }}
@@ -125,14 +147,16 @@ jobs:
       kernel_rpm: ${{ inputs.kernel_rpm }}
       size_mib: ${{ inputs.size_mib }}
       revision: ${{ inputs.revision }}
-      publish: ${{ inputs.publish }}
   cutefish:
-    needs: [core, gnome]
+    needs: core
     uses: ./.github/workflows/desktop-image-stage.yml
     permissions:
-      contents: write
+      contents: read
+      actions: read
     with:
       desktop: cutefish
+      core_sha256: ${{ needs.core.outputs.core_sha256 }}
+      reuse_run_id: ${{ inputs.cutefish_run_id }}
       core_producer: ${{ needs.core.outputs.producer_builder }}
       core_workspace: ${{ needs.core.outputs.producer_workspace }}
       core_run_id: ${{ needs.core.outputs.producer_run_id }}
@@ -140,14 +164,16 @@ jobs:
       kernel_rpm: ${{ inputs.kernel_rpm }}
       size_mib: ${{ inputs.size_mib }}
       revision: ${{ inputs.revision }}
-      publish: ${{ inputs.publish }}
   nextkde:
-    needs: [core, cutefish]
+    needs: core
     uses: ./.github/workflows/desktop-image-stage.yml
     permissions:
-      contents: write
+      contents: read
+      actions: read
     with:
       desktop: nextkde
+      core_sha256: ${{ needs.core.outputs.core_sha256 }}
+      reuse_run_id: ${{ inputs.nextkde_run_id }}
       core_producer: ${{ needs.core.outputs.producer_builder }}
       core_workspace: ${{ needs.core.outputs.producer_workspace }}
       core_run_id: ${{ needs.core.outputs.producer_run_id }}
@@ -155,4 +181,53 @@ jobs:
       kernel_rpm: ${{ inputs.kernel_rpm }}
       size_mib: ${{ inputs.size_mib }}
       revision: ${{ inputs.revision }}
-      publish: ${{ inputs.publish }}
+  publish:
+    needs: [core, kde, gnome, cutefish, nextkde]
+    if: inputs.publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq zstd
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-kde
+          path: delivery/kde
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-gnome
+          path: delivery/gnome
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-cutefish
+          path: delivery/cutefish
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-nextkde
+          path: delivery/nextkde
+      - name: Require four validated independent desktops and one identical boot
+        env:
+          CORE_SHA: ${{ needs.core.outputs.core_sha256 }}
+        run: |
+          set -euo pipefail
+          bash uke-fedora-builder/scripts/merge-desktop-deliveries.sh "$RUNNER_TEMP/desktop-set" "$CORE_SHA" \
+            delivery/kde delivery/gnome delivery/cutefish delivery/nextkde
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: complete-desktop-set-receipts
+          path: ${{ runner.temp }}/desktop-set/receipts/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Publish exactly one boot and four root images together
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_COMMIT: ${{ github.sha }}
+          UKE_REQUIRE_DESKTOP_SET: '1'
+          UKE_EXPECTED_CORE_SHA: ${{ needs.core.outputs.core_sha256 }}
+        run: bash uke-fedora-builder/scripts/publish-image-release.sh "$RUNNER_TEMP/desktop-set" | tee -a "$GITHUB_STEP_SUMMARY"
