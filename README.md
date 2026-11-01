@@ -46,6 +46,13 @@ without replacing the currently reviewed Fedora submodule pins. See the
 
 ## Downloads
 
+Current image work targets GNOME and KDE Plasma only. Cutefish and NextKDE
+support is suspended; their r1 downloads below are retained as historical artifacts.
+The next image revision restores runtime translations, basic terminal tools and
+the lean GNOME application set. EXT4 growth uses Fedora's standard systemd
+service, followed by a physical-capacity check and the existing half-RAM disk
+swap policy before graphical setup. Hardware acceptance remains separate.
+
 The experimental [Senemos 011126 r1 release](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-011126-r1),
 published on **1 November 2026**, provides four Fedora Rawhide desktop
 editions with **Linux 7.3.1-115**. Download one desktop image and the shared

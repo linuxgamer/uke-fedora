@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.ref == 'refs/heads/Fedora'
+    if: ${{ false }} # Suspended; historical r1 assets remain available.
     runs-on: ubuntu-latest
     permissions:
       contents: write

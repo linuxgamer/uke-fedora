@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   core:
-    if: github.ref == 'refs/heads/Fedora'
+    if: ${{ false }} # Suspended; historical r1 assets remain available.
     runs-on: ubuntu-latest
     outputs:
       producer_builder: ${{ steps.core.outputs.producer_builder }}
