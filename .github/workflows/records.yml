@@ -26,6 +26,9 @@ jobs:
             git -C "$component" rev-parse --verify HEAD >/dev/null
             branch=$(git config -f .gitmodules --get "submodule.$component.branch")
             test -n "$branch"
+            if ! git -C "$component" rev-parse --verify "origin/$branch" >/dev/null 2>&1; then
+              git -C "$component" fetch --depth=1 origin "refs/heads/$branch:refs/remotes/origin/$branch"
+            fi
             git -C "$component" rev-parse --verify "origin/$branch" >/dev/null
           done
           test ! -e docs
