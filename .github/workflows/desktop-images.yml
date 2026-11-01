@@ -31,6 +31,10 @@ on:
         description: Optional completed series run containing a validated NextKDE delivery
         type: string
         default: ''
+      build_cutefish:
+        description: Include Cutefish attempt; failure never blocks the other three validated images
+        type: boolean
+        default: true
       size_mib:
         description: EXT4 capacity in MiB, identical for every desktop
         type: choice
@@ -149,6 +153,7 @@ jobs:
       revision: ${{ inputs.revision }}
   cutefish:
     needs: core
+    if: inputs.build_cutefish
     uses: ./.github/workflows/desktop-image-stage.yml
     permissions:
       contents: read
@@ -183,7 +188,7 @@ jobs:
       revision: ${{ inputs.revision }}
   publish:
     needs: [core, kde, gnome, cutefish, nextkde]
-    if: inputs.publish
+    if: ${{ always() && !cancelled() && inputs.publish && needs.core.result == 'success' && needs.kde.result == 'success' && needs.gnome.result == 'success' && needs.nextkde.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -203,6 +208,7 @@ jobs:
           name: desktop-delivery-gnome
           path: delivery/gnome
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: needs.cutefish.result == 'success'
         with:
           name: desktop-delivery-cutefish
           path: delivery/cutefish
@@ -210,24 +216,28 @@ jobs:
         with:
           name: desktop-delivery-nextkde
           path: delivery/nextkde
-      - name: Require four validated independent desktops and one identical boot
+      - name: Verify independent desktops and one identical boot; isolate Cutefish failure
         env:
           CORE_SHA: ${{ needs.core.outputs.core_sha256 }}
+          CUT_RESULT: ${{ needs.cutefish.result }}
+          UKE_ALLOW_MISSING_CUTEFISH: '1'
         run: |
           set -euo pipefail
-          bash uke-fedora-builder/scripts/merge-desktop-deliveries.sh "$RUNNER_TEMP/desktop-set" "$CORE_SHA" \
-            delivery/kde delivery/gnome delivery/cutefish delivery/nextkde
+          deliveries=(delivery/kde delivery/gnome delivery/nextkde)
+          if [[ "$CUT_RESULT" == success ]]; then deliveries+=(delivery/cutefish); fi
+          bash uke-fedora-builder/scripts/merge-desktop-deliveries.sh "$RUNNER_TEMP/desktop-set" "$CORE_SHA" "${deliveries[@]}"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: complete-desktop-set-receipts
           path: ${{ runner.temp }}/desktop-set/receipts/
           retention-days: 90
           if-no-files-found: error
-      - name: Publish exactly one boot and four root images together
+      - name: Publish validated images together; add Cutefish only after success
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           SOURCE_COMMIT: ${{ github.sha }}
           UKE_REQUIRE_DESKTOP_SET: '1'
+          UKE_ALLOW_MISSING_CUTEFISH: '1'
           UKE_EXPECTED_CORE_SHA: ${{ needs.core.outputs.core_sha256 }}
         run: bash uke-fedora-builder/scripts/publish-image-release.sh "$RUNNER_TEMP/desktop-set" | tee -a "$GITHUB_STEP_SUMMARY"
