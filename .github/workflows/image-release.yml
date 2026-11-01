@@ -25,7 +25,7 @@ on:
       publish:
         description: Publish validated files as a GitHub pre-release
         type: boolean
-        default: true
+        default: false
 permissions:
   contents: read
 concurrency:
