@@ -46,21 +46,32 @@ without replacing the currently reviewed Fedora submodule pins. See the
 
 ## Downloads
 
-The [KDE EXT4 singleboot testing image](https://github.com/MCC45TR/uke-linux/releases/tag/prebuild-fedora-kde-singleboot-ext4-20261026-k7.3.0-16-testing), published on **26 October 2026**, includes signed **Linux 7.3.0-16** and matching modules. These files have passed checks on the build host but **have not yet been tested on a tablet**.
+The experimental [Senemos 011126 r1 release](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-011126-r1),
+published on **1 November 2026**, provides four Fedora Rawhide desktop
+editions with **Linux 7.3.1-115**. Download one desktop image and the shared
+boot image. Boot and initial setup have **not yet been verified on physical
+tablets for these exact images**.
 
 | File | Download size | Installation target |
 | --- | ---: | --- |
-| [boot.img](https://github.com/MCC45TR/uke-linux/releases/download/prebuild-fedora-kde-singleboot-ext4-20261026-k7.3.0-16-testing/boot.img) | 96 MiB | `boot_b` |
-| [system.img.zst](https://github.com/MCC45TR/uke-linux/releases/download/prebuild-fedora-kde-singleboot-ext4-20261026-k7.3.0-16-testing/system.img.zst) | 991 MiB | Decompress to `system.img`, then flash to `userdata` |
+| [KDE Plasma](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r1/fedora-rawhide-kde-plasma-uke-senemos-system-011126-r1.img.zst) | 937 MB | Decompress, then flash to `userdata` |
+| [GNOME](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r1/fedora-rawhide-gnome-uke-senemos-system-011126-r1.img.zst) | 690 MB | Decompress, then flash to `userdata` |
+| [Cutefish](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r1/fedora-rawhide-cutefish-uke-senemos-system-011126-r1.img.zst) | 686 MB | Decompress, then flash to `userdata` |
+| [NextKDE](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r1/fedora-rawhide-nextkde-uke-senemos-system-011126-r1.img.zst) | 959 MB | Decompress, then flash to `userdata` |
+| [Shared boot image](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r1/fedora-rawhide-uke-senemos-boot-011126-r1.img) | 96 MiB | `boot_b` |
 
-The system image is an Android sparse image compressed with Zstandard, with an initial **16 GiB EXT4 filesystem**. Read the release instructions for checksums, storage requirements, installation, and recovery before flashing.
-
-**Flashing `userdata` deletes Android apps, files, and encryption metadata. This image does not provide a data-preserving dual-boot installation.**
+Read the release instructions for SHA256 checksums, desktop-specific setup,
+compatible slot-B firmware requirements, installation and recovery.
+**Flashing `userdata` deletes the existing system and personal data. Back up first.**
+This image does not provide a data-preserving dual-boot installation.
 
 > [!IMPORTANT]
-> Touchscreen setup requires a device-specific reference file that is not included in the image. Follow the release instructions to provide your tablet's own file before creating an account using touch. Do not use a file from another tablet. Setup using only a USB keyboard or mouse has not been verified.
+> No device-specific touch reference is included. Follow the release instructions
+> for provisioning your own tablet; do not use a reference from another device.
 
-First setup, filesystem expansion, updates, and recovery still need full testing with this image. Package sources and test results are listed in the [release record](https://github.com/MCC45TR/uke-linux-images/tree/main/releases/prebuild-fedora-kde-singleboot-ext4-20261026-k7.3.0-16-testing).
+First setup, filesystem expansion, updates and recovery still need full
+testing with these images. Build manifests and receipts are retained in
+GitHub Actions; checksums are listed in the release notes.
 
 [All releases](https://github.com/MCC45TR/uke-linux/releases) · [Development packages on COPR](https://copr.fedorainfracloud.org/coprs/mcc45tr/uke-linux-test/) · [Archived images](https://github.com/MCC45TR/uke-linux-images/releases) · [Experimental OrangeFox builds](https://github.com/MCC45TR/orangefox_device_xiaomi_uke/releases)
 
@@ -217,22 +228,21 @@ For a kernel-only build:
 ./ukelinux.sh --build kernel
 ```
 
-The menu includes desktop, filesystem, boot-layout, and package-channel options. Build output is saved to `out/` in the directory where the command is run. See the [public build guide](https://github.com/MCC45TR/uke-fedora-builder/blob/main/docs/PUBLIC-BUILD.md) for supported hosts, requirements, and installation instructions. The [pinned release recipe](https://github.com/MCC45TR/uke-fedora-builder/blob/b0fd2380b07dbaaf37403c057b74796faf8f5ed3/docs/PUBLIC-BUILD.md) describes the published KDE EXT4 image.
+The menu includes desktop, filesystem, boot-layout, and package-channel options. Build output is saved to `out/` in the directory where the command is run. See the [public build guide](https://github.com/MCC45TR/uke-fedora-builder/blob/main/docs/PUBLIC-BUILD.md) for supported hosts, requirements, and installation instructions. The [pinned release recipe](https://github.com/MCC45TR/uke-fedora-builder/blob/b0fd2380b07dbaaf37403c057b74796faf8f5ed3/docs/PUBLIC-BUILD.md) describes the earlier 26 October KDE EXT4 image.
 
 ### Manual GitHub image builds
 
 Open [EXT4 singleboot image and release](https://github.com/MCC45TR/uke-linux/actions/workflows/image-release.yml)
-and select **Run workflow** on `Fedora`. The native `ubuntu-24.04-arm` job downloads
-signed COPR/Fedora packages and composes a Rawhide KDE or GNOME EXT4 image; it
-does not rebuild the kernel or hardware packages. The default initial capacity
-is 16 GiB. `latest` resolves one signed testing kernel tuple for that run; an
-exact `7.3.x-N.fc46` tuple can also be selected.
+and select **Run workflow** on `Fedora`. Choose KDE Plasma, GNOME, Cutefish
+or NextKDE, a login shell, and an initial 16 GiB or 8 GiB filesystem
+(16 GiB is the default). `latest` selects the testing kernel for that run;
+an exact `7.3.x-N.fc46` tuple can also be supplied.
 
-After content, metadata, signature, boot/module, sparse-decoder and compression
-checks pass, the workflow optionally publishes a pre-release containing
-`boot.img`, `system.img.zst`, checksums, manifests and installation/source records.
-No device-specific touch reference is included. Host validation does not prove
-physical tablet boot, first-account setup, charging or recovery acceptance.
+The native ARM64 workflow composes and validates the image from signed
+packages. Optional publication creates an image-only pre-release; manifests
+and build receipts are retained in Actions for 90 days. Host validation
+does not establish physical tablet boot, first-account setup, charging or
+recovery acceptance.
 
 ### Updates
 
