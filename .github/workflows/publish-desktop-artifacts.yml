@@ -1,0 +1,79 @@
+name: Publish validated desktop artifacts (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Completed parallel series containing validated KDE, GNOME and NextKDE deliveries
+        type: string
+        default: '41315132841'
+      release_id:
+        description: Existing matching draft release numeric ID (no duplicate release is created)
+        type: string
+        default: '430631439'
+      core_sha256:
+        description: Expected immutable common-core archive hash
+        type: string
+        default: '91e2cee535cb73220de1391ab337e374cb518ff3cbcdcfdcd7ca83136ef2941b'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ext4-singleboot-image
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/Fedora'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq zstd
+      - name: Require the successful independent composition jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.source_run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN" =~ ^[1-9][0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > /tmp/source-run.json
+          jq -e '.status=="completed" and .head_branch=="Fedora" and .event=="workflow_dispatch" and .path==".github/workflows/desktop-images.yml"' /tmp/source-run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/jobs?filter=latest&per_page=100" --paginate --slurp > /tmp/source-jobs.json
+          for desktop in kde gnome nextkde; do
+            jq -e --arg name "$desktop / compose" '[.[].jobs[]|select(.name==$name and .conclusion=="success")]|length==1' /tmp/source-jobs.json
+          done
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-kde
+          path: delivery/kde
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-gnome
+          path: delivery/gnome
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-nextkde
+          path: delivery/nextkde
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+      - name: Verify and publish the existing images through the authenticated release ID
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_COMMIT: ${{ github.sha }}
+          UKE_RELEASE_ID: ${{ inputs.release_id }}
+          UKE_EXPECTED_CORE_SHA: ${{ inputs.core_sha256 }}
+          UKE_REQUIRE_DESKTOP_SET: '1'
+          UKE_ALLOW_MISSING_CUTEFISH: '1'
+        run: |
+          set -euo pipefail
+          bash uke-fedora-builder/scripts/merge-desktop-deliveries.sh "$RUNNER_TEMP/desktop-set" "$UKE_EXPECTED_CORE_SHA" delivery/kde delivery/gnome delivery/nextkde
+          bash uke-fedora-builder/scripts/publish-image-release.sh "$RUNNER_TEMP/desktop-set" | tee -a "$GITHUB_STEP_SUMMARY"

@@ -240,4 +240,6 @@ jobs:
           UKE_REQUIRE_DESKTOP_SET: '1'
           UKE_ALLOW_MISSING_CUTEFISH: '1'
           UKE_EXPECTED_CORE_SHA: ${{ needs.core.outputs.core_sha256 }}
-        run: bash uke-fedora-builder/scripts/publish-image-release.sh "$RUNNER_TEMP/desktop-set" | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          set -euo pipefail
+          bash uke-fedora-builder/scripts/publish-image-release.sh "$RUNNER_TEMP/desktop-set" | tee -a "$GITHUB_STEP_SUMMARY"
