@@ -13,7 +13,7 @@
 </tr>
 <tr>
 <td colspan="2" align="center">
-<img src="assets/screenshots/Fedora_Rawhide_X1_UKE_KDE_Plasma_Fastfetch_731.png" width="100%" alt="Fedora Rawhide with KDE Plasma on the Uke development installation, 17 October 2026">
+<img src="assets/screenshots/KDE-Plasma/Fedora_Rawhide_X1_UKE_KDE_Plasma_Fastfetch_731.png" width="100%" alt="Fedora Rawhide with KDE Plasma on the Uke development installation, 17 October 2026">
 </td>
 </tr>
 </table>
