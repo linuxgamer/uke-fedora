@@ -1,5 +1,34 @@
 # Development changes
 
+## 1 November 2026
+
+This update combines the maintainer's latest hardware confirmation with
+repository and release changes. Development-system results remain separate
+from acceptance of the downloadable images.
+
+- **Microphones and VRR:** microphones now work, and adaptive sync / VRR
+  works across the full 30–144 Hz range, as confirmed by the maintainer.
+  This supersedes the earlier microphone and VRR status below; it does not
+  qualify Bluetooth microphone modes, USB recording, or every release image.
+- **Four desktop images:** the experimental
+  [Senemos 011126 r1 release](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-011126-r1)
+  provides KDE Plasma, GNOME, Cutefish and NextKDE images with Linux
+  7.3.1-115 and one shared boot image. Boot and initial setup remain
+  unverified on physical tablets for these exact images.
+- **Image delivery:** desktop builds reuse a common Fedora core. The
+  publication workflow checks compatibility before appending another
+  desktop to the same release; Cutefish can be built separately without
+  rebuilding the other editions. Public releases contain the image files,
+  while manifests and build receipts are retained in Actions.
+- **Unified builder:** the workspace now tracks the builder's `main`
+  branch. Distribution selection defaults to Fedora; Ubuntu and Arch
+  choices stop explicitly before host preparation because their native
+  image backends are not implemented. This source change does not establish
+  additional distribution support or alter the published images.
+- **Documentation and gallery:** hardware status now reflects the
+  microphone and VRR confirmation, and screenshots are organized by
+  desktop environment.
+
 ## 29 October 2026
 
 Environment: POCO Pad X1, 8 GB / 512 GB, Fedora Rawhide AArch64 and original
