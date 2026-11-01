@@ -1,0 +1,112 @@
+name: Append Cutefish to verified desktop prerelease (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      core_run_id:
+        description: Completed original series containing the successful immutable common core
+        type: string
+        default: '41306508082'
+      release_id:
+        description: Existing published compatible prerelease numeric ID
+        type: string
+        default: '430631439'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ext4-singleboot-image
+  cancel-in-progress: false
+jobs:
+  core:
+    if: github.ref == 'refs/heads/Fedora'
+    runs-on: ubuntu-latest
+    outputs:
+      producer_builder: ${{ steps.core.outputs.producer_builder }}
+      producer_workspace: ${{ steps.core.outputs.producer_workspace }}
+      producer_run_id: ${{ steps.core.outputs.producer_run_id }}
+      core_sha256: ${{ steps.core.outputs.core_sha256 }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq zstd unzip
+      - name: Verify and reuse the frozen core without rebuilding
+        id: core
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CORE_RUN_ID: ${{ inputs.core_run_id }}
+          IMAGE_KERNEL_RPM: 7.3.1-115.fc46
+          IMAGE_SIZE_MIB: '8192'
+        run: |
+          set -euo pipefail
+          bash uke-fedora-builder/scripts/reuse-verified-core.sh
+          expected=91e2cee535cb73220de1391ab337e374cb518ff3cbcdcfdcd7ca83136ef2941b
+          actual=$(sed -n 's/^core_sha256=//p' "$GITHUB_OUTPUT")
+          test "$actual" = "$expected"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: shared-core-internal
+          path: ${{ steps.core.outputs.core_archive }}
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: shared-core-receipts
+          path: |
+            ${{ steps.core.outputs.core_receipts }}/core-origin.json
+            ${{ steps.core.outputs.core_receipts }}/core-installed-rpms.tsv
+            ${{ steps.core.outputs.core_receipts }}/request.json
+          retention-days: 90
+          if-no-files-found: error
+  cutefish:
+    needs: core
+    uses: ./.github/workflows/desktop-image-stage.yml
+    permissions:
+      contents: read
+      actions: read
+    with:
+      desktop: cutefish
+      core_sha256: ${{ needs.core.outputs.core_sha256 }}
+      core_producer: ${{ needs.core.outputs.producer_builder }}
+      core_workspace: ${{ needs.core.outputs.producer_workspace }}
+      core_run_id: ${{ needs.core.outputs.producer_run_id }}
+      build_date: '011126'
+      kernel_rpm: 7.3.1-115.fc46
+      size_mib: '8192'
+      revision: '1'
+  publish:
+    needs: [core, cutefish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq zstd
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-cutefish
+          path: delivery/cutefish
+      - name: Append only Cutefish after comparing the published boot and cohort
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_COMMIT: ${{ github.sha }}
+          UKE_RELEASE_ID: ${{ inputs.release_id }}
+          UKE_REQUIRE_EXISTING_RELEASE: '1'
+          UKE_EXPECTED_CORE_SHA: ${{ needs.core.outputs.core_sha256 }}
+        run: |
+          set -euo pipefail
+          bash uke-fedora-builder/scripts/publish-image-release.sh delivery/cutefish | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: cutefish-publication-receipts
+          path: delivery/cutefish/receipts/
+          retention-days: 90
+          if-no-files-found: error
