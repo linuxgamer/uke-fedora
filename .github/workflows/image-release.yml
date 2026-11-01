@@ -22,6 +22,10 @@ on:
         description: COPR kernel version-release (latest or exact 7.3.x-N.fc46)
         type: string
         default: latest
+      revision:
+        description: Daily numeric image revision (0 produces r0; increment for different image contents)
+        type: string
+        default: '0'
       publish:
         description: Publish validated files as a GitHub pre-release
         type: boolean
@@ -60,14 +64,22 @@ jobs:
           IMAGE_SHELL: ${{ inputs.login_shell }}
           IMAGE_SIZE_MIB: ${{ inputs.size_mib }}
           IMAGE_KERNEL_RPM: ${{ inputs.kernel_rpm }}
+          IMAGE_REVISION: ${{ inputs.revision }}
         run: bash uke-fedora-builder/scripts/hosted-image.sh
       - name: Retain validated image and receipts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ext4-singleboot-release
-          path: ${{ steps.image.outputs.release_dir }}/*
+          path: ${{ steps.image.outputs.release_dir }}/
           compression-level: 0
           retention-days: 7
+          if-no-files-found: error
+      - name: Retain image manifests and build records
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: image-receipts-${{ inputs.desktop }}-r${{ inputs.revision }}
+          path: ${{ steps.image.outputs.release_dir }}/receipts/
+          retention-days: 90
           if-no-files-found: error
       - name: Retain failed-stage diagnostics
         if: failure()
@@ -84,23 +96,21 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - name: Prepare publication verification tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq zstd
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ext4-singleboot-release
-          path: release
+          path: delivery
       - name: Verify and publish the completed pre-release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ needs.compose.outputs.tag }}
           SOURCE_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
-          cd release
-          sha256sum --check --strict SHA256SUMS
-          jq -e '.image_built and .filesystem=="ext4" and .partition=="userdata" and .device_private_data_included==false' manifest.json
-          gh release create "$RELEASE_TAG" ./* --target "$SOURCE_COMMIT" --draft --prerelease \
-            --title "Fedora $(jq -r .desktop manifest.json) EXT4 singleboot · Linux $(jq -r .kernel_release manifest.json)" \
-            --notes-file RELEASE.md
-          gh release edit "$RELEASE_TAG" --draft=false --prerelease
-          gh release view "$RELEASE_TAG" --json url --jq .url >> "$GITHUB_STEP_SUMMARY"
+          bash uke-fedora-builder/scripts/publish-image-release.sh delivery | tee -a "$GITHUB_STEP_SUMMARY"
