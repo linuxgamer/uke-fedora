@@ -46,43 +46,39 @@ without replacing the currently reviewed Fedora submodule pins. See the
 
 ## Downloads
 
-Current image work targets GNOME and KDE Plasma only. Cutefish and NextKDE
-support is suspended; their r1 downloads below are retained as historical artifacts.
-The next image revision retains all RPM translations, including localized help
-and Qt catalogs. Missing files trigger exact-owner RPM reinstallation, followed
-by complete staging and independent filesystem readback audits. It also restores
-basic terminal tools and the lean GNOME application set. EXT4 growth uses Fedora's standard systemd
-service, followed by a physical-capacity check and the existing half-RAM disk
-swap policy before graphical setup. Hardware acceptance remains separate.
+The current [Senemos 2026-11-02 R4 (TESTING) prerelease](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-021126-r4)
+provides **GNOME** and **KDE Plasma** for Fedora Rawhide AArch64 on Xiaomi Pad 7
+and POCO Pad X1. Cutefish and NextKDE support is suspended. The kernel release is
+**7.3.1-1010**, supplied by COPR package **7.3.1-1010.1.fc46**. Download one
+desktop image and the matching shared boot image.
 
-The experimental [Senemos 011126 r1 release](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-011126-r1),
-published on **1 November 2026**, provides four Fedora Rawhide desktop
-editions with **Linux 7.3.1-115**. Download one desktop image and the shared
-boot image. Boot and initial setup have **not yet been verified on physical
-tablets for these exact images**.
-
-| File | Download size | Installation target |
+| File | Download size (bytes) | Installation target |
 | --- | ---: | --- |
-| [KDE Plasma](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r1/fedora-rawhide-kde-plasma-uke-senemos-system-011126-r1.img.zst) | 937 MB | Decompress, then flash to `userdata` |
-| [GNOME](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r1/fedora-rawhide-gnome-uke-senemos-system-011126-r1.img.zst) | 690 MB | Decompress, then flash to `userdata` |
-| [Cutefish](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r1/fedora-rawhide-cutefish-uke-senemos-system-011126-r1.img.zst) | 686 MB | Decompress, then flash to `userdata` |
-| [NextKDE](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r1/fedora-rawhide-nextkde-uke-senemos-system-011126-r1.img.zst) | 959 MB | Decompress, then flash to `userdata` |
-| [Shared boot image](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r1/fedora-rawhide-uke-senemos-boot-011126-r1.img) | 96 MiB | `boot_b` |
+| [KDE Plasma](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-021126-r4/fedora-rawhide-kde-plasma-uke-senemos-system-021126-r4.img.zst) | 1,158,994,521 | Decompress, then flash to `userdata` |
+| [GNOME](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-021126-r4/fedora-rawhide-gnome-uke-senemos-system-021126-r4.img.zst) | 1,081,331,910 | Decompress, then flash to `userdata` |
+| [Shared boot image](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-021126-r4/fedora-rawhide-uke-senemos-boot-021126-r4.img) | 100,663,296 | `boot_b` |
 
-Read the release instructions for SHA256 checksums, desktop-specific setup,
-compatible slot-B firmware requirements, installation and recovery.
+Verify the [SHA256 checksums](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-021126-r4#sha256)
+and follow the [release installation instructions](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-021126-r4#advanced-installation),
+including product/capacity checks, compatible slot-B firmware and recovery requirements.
 **Flashing `userdata` deletes the existing system and personal data. Back up first.**
 This image does not provide a data-preserving dual-boot installation.
+
+R4 retains all RPM translations, including Turkish, localized help and Qt catalogs,
+basic terminal tools and the lean GNOME application set. EXT4 expansion uses
+Fedora's standard systemd service, followed by the physical-capacity check and
+half-RAM disk swap before graphical setup.
 
 > [!IMPORTANT]
 > No device-specific touch reference is included. Follow the release instructions
 > for provisioning your own tablet; do not use a reference from another device.
 
-First setup, filesystem expansion, updates and recovery still need full
-testing with these images. Build manifests and receipts are retained in
-GitHub Actions; checksums are listed in the release notes.
+Automated image checks passed. Positive R4 user feedback and a separate unresolved
+Pad 7 KDE boot report are recorded in the [testing status](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-021126-r4#testing-status);
+they do not establish complete hardware acceptance. Build manifests and receipts
+remain in [GitHub Actions](https://github.com/MCC45TR/uke-linux/actions/runs/41430801872).
 
-[All releases](https://github.com/MCC45TR/uke-linux/releases) · [Development packages on COPR](https://copr.fedorainfracloud.org/coprs/mcc45tr/uke-linux-test/) · [Archived images](https://github.com/MCC45TR/uke-linux-images/releases) · [Experimental OrangeFox builds](https://github.com/MCC45TR/orangefox_device_xiaomi_uke/releases)
+[All releases](https://github.com/MCC45TR/uke-linux/releases) · [R4 packages on COPR](https://copr.fedorainfracloud.org/coprs/mcc45tr/uke-linux-unstable/) · [Archived images](https://github.com/MCC45TR/uke-linux-images/releases) · [Experimental OrangeFox builds](https://github.com/MCC45TR/orangefox_device_xiaomi_uke/releases)
 
 ## Hardware support
 
