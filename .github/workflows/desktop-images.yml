@@ -1,5 +1,5 @@
 name: Parallel shared-core desktop images (manual)
-run-name: Shared core → GNOME and Plasma → one release · r${{ inputs.revision }}
+run-name: Shared core → GNOME and Plasma → validated images · r${{ inputs.revision }}
 on:
   workflow_dispatch:
     inputs:
@@ -139,6 +139,57 @@ jobs:
       kernel_rpm: ${{ inputs.kernel_rpm }}
       size_mib: ${{ inputs.size_mib }}
       revision: ${{ inputs.revision }}
+  verify_artifacts:
+    needs: [core, kde, gnome]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq zstd
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-kde
+          path: delivery/kde
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-gnome
+          path: delivery/gnome
+      - name: Validate both independent desktops and one shared boot without publishing
+        id: verified
+        env:
+          CORE_SHA: ${{ needs.core.outputs.core_sha256 }}
+          UKE_DESKTOP_SET_POLICY: gnome-plasma
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          joined="$RUNNER_TEMP/verified-desktop-set"
+          bash uke-fedora-builder/scripts/merge-desktop-deliveries.sh "$joined" "$CORE_SHA" delivery/kde delivery/gnome
+          boot=$(jq -er .boot "$joined/receipts/layout.json")
+          boot_dir="$RUNNER_TEMP/shared-boot"
+          mkdir "$boot_dir"
+          cp "$joined/assets/$boot" "$boot_dir/"
+          cp "$joined/receipts/cohort.json" "$boot_dir/"
+          (cd "$boot_dir"; sha256sum "$boot" > SHA256SUMS)
+          printf 'Use this boot only with the GNOME or KDE system image from this same Actions run. System images target userdata; flashing userdata erases its existing data. Verify the device, partition sizes and intended boot slot before any write. Hardware validation remains pending.\n' > "$boot_dir/README.txt"
+          printf 'boot_dir=%s\nreceipts=%s\n' "$boot_dir" "$joined/receipts" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: shared-boot
+          path: ${{ steps.verified.outputs.boot_dir }}/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verified-desktop-set-receipts
+          path: ${{ steps.verified.outputs.receipts }}/
+          retention-days: 90
+          if-no-files-found: error
   publish:
     needs: [core, kde, gnome]
     if: ${{ always() && !cancelled() && inputs.publish && needs.core.result == 'success' && needs.kde.result == 'success' && needs.gnome.result == 'success' }}
