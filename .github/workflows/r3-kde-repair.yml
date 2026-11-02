@@ -1,0 +1,74 @@
+name: Repair and publish the existing R2 KDE system image
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: r3-kde-offline-repair
+  cancel-in-progress: false
+jobs:
+  repair:
+    if: github.ref_name == 'Fedora'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: MCC45TR/uke-fedora-builder
+          ref: 1ebc3075fb2ee023c3c4c6d648e273a997df957d
+          path: builder
+          persist-credentials: false
+      - name: Install original distribution filesystem tools
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          free=$(df -B1 --output=avail "$RUNNER_TEMP" | tail -n1)
+          ((free >= 16106127360))
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends android-sdk-libsparse-utils e2fsprogs zstd jq
+          bash -n builder/scripts/repair-r2-kde-image.sh
+      - name: Download and repair only the existing R2 KDE image
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl --fail --location --retry 2 \
+            https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-011126-r2/fedora-rawhide-kde-plasma-uke-senemos-system-011126-r2.img.zst \
+            --output "$RUNNER_TEMP/r2-kde.img.zst"
+          bash builder/scripts/repair-r2-kde-image.sh "$RUNNER_TEMP/r2-kde.img.zst" "$RUNNER_TEMP/uke-r3-repair"
+      - name: Publish the single validated image to the existing R3 draft
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -Eeuo pipefail
+          tag=fedora-rawhide-uke-senemos-021126-r3
+          repo=MCC45TR/uke-linux
+          release_id=431075320
+          asset="$RUNNER_TEMP/uke-r3-repair/assets/fedora-rawhide-kde-plasma-uke-senemos-system-021126-r3.img.zst"
+          hash=$(sha256sum "$asset" | cut -d' ' -f1)
+          bytes=$(stat -c %s "$asset")
+          name=$(basename "$asset")
+          record=$(gh api "repos/$repo/releases/$release_id")
+          jq -e --arg tag "$tag" '.tag_name==$tag and .draft==true and .prerelease==true and (.assets|length)<=1' <<<"$record"
+          if [[ $(jq '.assets|length' <<<"$record") == 0 ]]; then
+            gh release upload "$tag" "$asset" --repo "$repo"
+          fi
+          record=$(gh api "repos/$repo/releases/$release_id")
+          jq -e --arg name "$name" --arg digest "sha256:$hash" --argjson bytes "$bytes" \
+            '(.assets|length)==1 and .assets[0].name==$name and .assets[0].state=="uploaded" and .assets[0].size==$bytes and .assets[0].digest==$digest' <<<"$record"
+          sed "s/@IMAGE_SHA256@/$hash/g" builder/docs/R3-KDE-REPAIR-RELEASE.md > "$RUNNER_TEMP/r3-release.md"
+          gh release edit "$tag" --repo "$repo" --target "$GITHUB_SHA" --notes-file "$RUNNER_TEMP/r3-release.md" --prerelease --draft=false
+          gh api "repos/$repo/releases/$release_id" > "$RUNNER_TEMP/uke-r3-repair/receipts/published-release.json"
+          jq -e '.draft==false and .prerelease==true and (.assets|length)==1' "$RUNNER_TEMP/uke-r3-repair/receipts/published-release.json"
+          echo "Published https://github.com/$repo/releases/tag/$tag" >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain repair receipts separately from release images
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: r3-kde-repair-receipts
+          path: |
+            ${{ runner.temp }}/uke-r3-repair/receipts
+          if-no-files-found: warn
+          retention-days: 90
