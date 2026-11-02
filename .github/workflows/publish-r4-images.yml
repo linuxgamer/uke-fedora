@@ -1,0 +1,102 @@
+name: Publish verified R4 GNOME and KDE images (no rebuild)
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the exact validated 2 November R4 images as a testing prerelease
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: publish-verified-021126-r4
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/Fedora' && inputs.publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_COMMIT: c109abfc35dd96e5a36f90a487ed1ba952e45478
+      UKE_RELEASE_BUILD_RUNS: 41430801872,${{ github.run_id }}
+      UKE_EXPECTED_CORE_SHA: d5533b4fa28e4ead4551e6a92abedd7b7002e10cb9316c9c1fae4d1d8432855a
+      UKE_REQUIRE_DESKTOP_SET: '1'
+      UKE_DESKTOP_SET_POLICY: gnome-plasma
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - name: Require the exact successful R4 producer and validation jobs
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/41430801872" > producer.json
+          jq -e '.status=="completed" and .conclusion=="success" and .head_sha=="c109abfc35dd96e5a36f90a487ed1ba952e45478" and .head_branch=="Fedora" and .path==".github/workflows/desktop-images.yml"' producer.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/41430801872/jobs?per_page=100" > producer-jobs.json
+          for name in core 'kde / compose' 'gnome / compose' verify_artifacts; do
+            jq -e --arg name "$name" '[.jobs[]|select(.name==$name and .conclusion=="success")]|length==1' producer-jobs.json
+          done
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends jq zstd
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-kde
+          path: delivery/kde
+          run-id: '41430801872'
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-delivery-gnome
+          path: delivery/gnome
+          run-id: '41430801872'
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: shared-boot
+          path: shared-boot
+          run-id: '41430801872'
+          github-token: ${{ github.token }}
+      - name: Verify all existing bytes and prepare the requested release template
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          joined="$RUNNER_TEMP/r4-release"
+          bash uke-fedora-builder/scripts/merge-desktop-deliveries.sh "$joined" "$UKE_EXPECTED_CORE_SHA" delivery/kde delivery/gnome
+          cmp uke-fedora-builder/configs/releases/021126-r4.tsv "$joined/receipts/images.tsv"
+          (cd shared-boot; sha256sum --check --strict SHA256SUMS)
+          cmp shared-boot/fedora-rawhide-uke-senemos-boot-021126-r4.img "$joined/assets/fedora-rawhide-uke-senemos-boot-021126-r4.img"
+          cp producer.json producer-jobs.json "$joined/receipts/"
+          bash uke-fedora-builder/src/public/release-layout.sh body "$joined" "$joined/receipts/images.tsv" > "$joined/receipts/RELEASE.md"
+      - name: Publish only the three verified images as an experimental prerelease
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash uke-fedora-builder/scripts/publish-image-release.sh "$RUNNER_TEMP/r4-release" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Download and compare every published asset
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          joined="$RUNNER_TEMP/r4-release"
+          mkdir "$RUNNER_TEMP/r4-public-download"
+          gh release download fedora-rawhide-uke-senemos-021126-r4 --repo "$GITHUB_REPOSITORY" --pattern '*.img*' --dir "$RUNNER_TEMP/r4-public-download"
+          while IFS=$'\t' read -r name bytes hash; do
+            test "$(stat -c %s "$RUNNER_TEMP/r4-public-download/$name")" = "$bytes"
+            test "$(sha256sum "$RUNNER_TEMP/r4-public-download/$name" | cut -d' ' -f1)" = "$hash"
+            cmp "$joined/assets/$name" "$RUNNER_TEMP/r4-public-download/$name"
+          done < uke-fedora-builder/configs/releases/021126-r4.tsv
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/fedora-rawhide-uke-senemos-021126-r4" > "$joined/receipts/published-release.json"
+          jq -e '.draft==false and .prerelease==true and (.assets|length)==3 and (.name|contains("R4 (TESTING)"))' "$joined/receipts/published-release.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: published-r4-image-receipts
+          path: ${{ runner.temp }}/r4-release/receipts/
+          retention-days: 90
+          if-no-files-found: warn
