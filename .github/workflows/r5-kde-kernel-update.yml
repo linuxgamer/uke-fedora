@@ -1,0 +1,60 @@
+name: Update R4 KDE to R5 test kernel (no Release)
+run-name: R4 KDE → R5 · Linux 7.3.1-1101 · artifacts only
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: r5-kde-offline-update
+  cancel-in-progress: false
+jobs:
+  update:
+    if: github.ref_name == 'Fedora'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: MCC45TR/uke-fedora-builder
+          ref: 781079d9d3c2095005d3fe235f828d2a90553764
+          path: builder
+          persist-credentials: false
+      - name: Prepare disposable server tools
+        run: |
+          set -Eeuo pipefail
+          test "$(uname -m)" = aarch64
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends android-sdk-libsparse-utils e2fsprogs zstd jq g++ libssl-dev attr
+          test "$(df -B1 --output=avail "$RUNNER_TEMP" | tail -n1)" -ge 23000000000
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          repository: MCC45TR/uke-linux
+          run-id: 41430801872
+          name: desktop-receipts-kde
+          path: ${{ runner.temp }}/r4-receipts
+      - name: Update the verified existing R4 images and validate readback
+        env:
+          R5_WORK: ${{ runner.temp }}/r5-kde
+          R4_RECEIPTS: ${{ runner.temp }}/r4-receipts
+        run: bash .github/scripts/r5-kde-kernel-update.sh
+      - name: Retain the paired test images, checksums and instructions
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: r5-kde-and-matching-boot-test
+          path: ${{ runner.temp }}/r5-kde/delivery/
+          compression-level: 0
+          retention-days: 90
+          if-no-files-found: error
+      - name: Retain validation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: r5-kde-update-receipts
+          path: ${{ runner.temp }}/r5-kde/receipts/
+          retention-days: 90
+          if-no-files-found: warn
