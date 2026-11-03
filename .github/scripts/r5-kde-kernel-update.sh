@@ -163,7 +163,11 @@ grep -Fxq automatic=0 /target/etc/senemos/kernel-update.conf
 # Label only the changed kernel subtrees, owned nondirectories and RPM database.
 # Shared directory ownership never permits recursively relabeling userland.
 contexts=/target/etc/selinux/targeted/contexts/files/file_contexts
-setfiles -F -m -r /target "$contexts" "/target/usr/lib/modules/$new" "/target/usr/lib/senemos/kernel-updates/$new" "/target/usr/share/senemos/uke/$new" /target/usr/lib/sysimage/rpm
+label_roots=("/target/usr/lib/modules/$new" "/target/usr/lib/senemos/kernel-updates/$new" "/target/usr/share/senemos/uke/$new" /target/usr/lib/sysimage/rpm)
+for candidate in "/target/usr/lib/firmware/$new" "/target/usr/share/licenses/$base-boot-$evr"; do
+    [[ ! -d $candidate ]] || label_roots+=("$candidate")
+done
+setfiles -F -m -r /target "$contexts" "${label_roots[@]}"
 : > /tmp/label-paths
 while IFS= read -r relative; do
     candidate=/target/$relative
@@ -177,7 +181,9 @@ rpm --root /target -V "${names[@]}" > /receipts/kernel-rpm-verify.txt || {
 UPDATE
 chmod 755 "$inputs/update.sh"
 cp "$work/boot-image" "$inputs/boot-image"
-docker run --rm --network=none \
+# security.selinux xattrs need SYS_ADMIN on a host without the SELinux LSM.
+# Only this disposable regular-file image is writable; no host device is passed.
+docker run --rm --network=none --cap-add SYS_ADMIN \
     --mount "type=bind,src=$inputs,dst=/inputs,readonly" \
     --mount "type=bind,src=$root,dst=/target" \
     --mount "type=bind,src=$receipts,dst=/receipts" \
@@ -219,7 +225,7 @@ zstd --test "$work/delivery/$image"
 (cd "$work/delivery"; sha256sum "$image" "$boot" > SHA256SUMS)
 cp "$repo/.github/testing/R5-KDE-1101.md" "$work/delivery/INSTALL.md"
 jq -n --arg raw "$raw_hash" --arg sparse "$sparse_hash" --arg source "$source_commit" --arg signer "$fingerprint" --arg run "$GITHUB_RUN_ID" --arg workflow "$GITHUB_SHA" \
-    '{date:"2026-11-03",revision:"r5",desktop:"kde",origin:"verified R4 published KDE and shared boot",r4_run:"41430801872",r4_system_sha256:"92978ad81acd87127739e93f2ea7570f5516c948234546c7cefdc44cbbf51b55",r4_boot_sha256:"74edd331899945932e78aa9916e5ed3ed581751fb7f7f6fb3422d8cbd3165b50",kernel_release:"7.3.1-1101",kernel_rpm_version_release:"7.3.1-1101.fc46",kernel_source_commit:$source,kernel_copr_build:11247906,signer_fingerprint:$signer,root_raw_bytes:8589934592,root_raw_sha256:$raw,root_sparse_sha256:$sparse,userland_preserved:true,firmware_preserved:true,non_kernel_content_and_metadata_compared:true,rpm_scriptlets_executed:false,target_programs_executed:false,aosp_decoder_roundtrip:true,physical_boot_tested:false,hardware_tested:false,rollback_tested:false,github_release_created:false,artifact_retention_days:90,workflow_run:$run,workflow_commit:$workflow}' > "$receipts/result.json"
+    '{date:"2026-11-03",revision:"r5",desktop:"kde",origin:"verified R4 published KDE and shared boot",r4_run:"41430801872",r4_system_sha256:"92978ad81acd87127739e93f2ea7570f5516c948234546c7cefdc44cbbf51b55",r4_boot_sha256:"74edd331899945932e78aa9916e5ed3ed581751fb7f7f6fb3422d8cbd3165b50",kernel_release:"7.3.1-1101",kernel_rpm_version_release:"7.3.1-1101.fc46",kernel_source_commit:$source,kernel_copr_build:11247906,signer_fingerprint:$signer,root_raw_bytes:8589934592,root_raw_sha256:$raw,root_sparse_sha256:$sparse,userland_preserved:true,generic_oem_firmware_preserved:true,kernel_owned_topology_updated:true,non_kernel_content_and_metadata_compared:true,rpm_scriptlets_executed:false,target_programs_executed:false,aosp_decoder_roundtrip:true,physical_boot_tested:false,hardware_tested:false,rollback_tested:false,github_release_created:false,artifact_retention_days:90,workflow_run:$run,workflow_commit:$workflow}' > "$receipts/result.json"
 cp "$receipts/result.json" "$work/delivery/PROVENANCE.json"
 cat "$work/delivery/SHA256SUMS" >> "$GITHUB_STEP_SUMMARY"
 echo 'R4-derived R5 KDE + matching signed 1101 userdata boot: all host checks passed. Physical testing remains pending. No Release was created.' >> "$GITHUB_STEP_SUMMARY"
