@@ -43,12 +43,23 @@ curl -fLsS --retry 2 --max-time 30 https://download.copr.fedorainfracloud.org/re
 for component in uke-kernel-update uke-installation-profile uke-boot-integration; do
     curl -fLsS --retry 3 --max-time 300 "https://download.copr.fedorainfracloud.org/results/mcc45tr/uke-linux-unstable/fedora-rawhide-aarch64/Packages/u/$component-1.8.30-1.fc46.aarch64.rpm" -o "$inputs/$component-1.8.30-1.fc46.aarch64.rpm"
 done
+curl -fLsS --retry 3 --max-time 300 https://download.copr.fedorainfracloud.org/results/mcc45tr/uke-linux-unstable/fedora-rawhide-aarch64/Packages/u/uke-pipewire-plugin-libcamera-1.6.10-2.fc46.aarch64.rpm -o "$inputs/uke-pipewire-plugin-libcamera-1.6.10-2.fc46.aarch64.rpm"
+for component in linux-firmware linux-firmware-whence; do
+    curl -fLsS --retry 3 --max-time 300 "https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/aarch64/os/Packages/l/$component-20261019-1.fc46.noarch.rpm" -o "$inputs/$component-20261019-1.fc46.noarch.rpm"
+done
+cp "$repo/builder/configs/keys/fedora-46.asc" "$inputs/fedora-key.asc"
 cat > "$receipts/support-RPM-SHA256SUMS" <<'HASHES'
 af528aff8cccc1d7698b9d80682b51e6a0da148219e79a45343431dec64160ea  uke-kernel-update-1.8.30-1.fc46.aarch64.rpm
 037b27a687c2d4c5c979c9fccbd7d12972bac65e992657e226172d714300ea81  uke-installation-profile-1.8.30-1.fc46.aarch64.rpm
 7300cf7637af078af3d8fc126a392e67d7e097079792d243f19892e0defb4ada  uke-boot-integration-1.8.30-1.fc46.aarch64.rpm
 HASHES
+cat > "$receipts/additional-RPM-SHA256SUMS" <<'HASHES'
+af5c05803ce198d10b8f9359a1d64d9e05458c8951e0d259e89f9ec945985362  uke-pipewire-plugin-libcamera-1.6.10-2.fc46.aarch64.rpm
+3be523505091c31c89ad1d75ed465a09fd4c1f57203d6de8ea2173145aedeca2  linux-firmware-20261019-1.fc46.noarch.rpm
+ab9814b174894d320fa0973b9b2c844931bf9a3975c77e4bdee7ef8178759a9e  linux-firmware-whence-20261019-1.fc46.noarch.rpm
+HASHES
 (cd "$inputs"; sha256sum -c "$receipts/support-RPM-SHA256SUMS")
+(cd "$inputs"; sha256sum -c "$receipts/additional-RPM-SHA256SUMS")
 (cd "$inputs"; sha256sum -- *.rpm) > "$receipts/RPM-SHA256SUMS"
 
 # The server SDK is separate from the target root. No target package manager,
@@ -101,10 +112,11 @@ old=7.3.1-1010
 new=7.3.1-1101
 evr=7.3.1-1101.fc46
 kernel_archives=(/inputs/senemos-*.aarch64.rpm)
-support_archives=(/inputs/uke-*.aarch64.rpm)
-archives=("${kernel_archives[@]}" "${support_archives[@]}")
-[[ ${#kernel_archives[@]} == 6 && ${#support_archives[@]} == 3 && ${#archives[@]} == 9 ]]
-mkdir /tmp/gpg /tmp/keydb /tmp/support-keydb
+support_archives=(/inputs/uke-*-1.8.30-1.fc46.aarch64.rpm)
+additional_archives=(/inputs/uke-pipewire-plugin-libcamera-1.6.10-2.fc46.aarch64.rpm /inputs/linux-firmware-20261019-1.fc46.noarch.rpm /inputs/linux-firmware-whence-20261019-1.fc46.noarch.rpm)
+archives=("${kernel_archives[@]}" "${support_archives[@]}" "${additional_archives[@]}")
+[[ ${#kernel_archives[@]} == 6 && ${#support_archives[@]} == 3 && ${#additional_archives[@]} == 3 && ${#archives[@]} == 12 ]]
+mkdir /tmp/gpg /tmp/keydb /tmp/support-keydb /tmp/fedora-keydb
 chmod 700 /tmp/gpg
 [[ $(gpg --homedir /tmp/gpg --batch --show-keys --with-colons /inputs/test-key.asc | awk -F: '$1=="fpr" {print $10;exit}') == DAFC3C5A881FB49C7167EE2D6F772E3D487BD13E ]]
 rpmkeys --dbpath /tmp/keydb --import /inputs/test-key.asc
@@ -118,11 +130,20 @@ for archive in "${support_archives[@]}"; do
     rpmkeys --dbpath /tmp/support-keydb --checksig "$archive" | tee -a /receipts/support-signatures.txt | grep -F 'signatures OK'
     [[ $(rpm -qp --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$archive") == 1.8.30-1.fc46.aarch64 ]]
 done
+rpmkeys --dbpath /tmp/support-keydb --checksig "${additional_archives[0]}" | tee -a /receipts/additional-signatures.txt | grep -F 'signatures OK'
+[[ $(rpm -qp --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "${additional_archives[0]}") == 1.6.10-2.fc46.aarch64 ]]
+[[ $(gpg --homedir /tmp/gpg --batch --show-keys --with-colons /inputs/fedora-key.asc | awk -F: '$1=="fpr" {print $10;exit}') == D924B10D3E810DABDD8B56B596E7E91491211FCE ]]
+rpmkeys --dbpath /tmp/fedora-keydb --import /inputs/fedora-key.asc
+for archive in "${additional_archives[@]:1}"; do
+    rpmkeys --dbpath /tmp/fedora-keydb --checksig "$archive" | tee -a /receipts/additional-signatures.txt | grep -F 'signatures OK'
+    [[ $(rpm -qp --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$archive") == 20261019-1.fc46.noarch ]]
+done
 # RPM 6's payload reader consults the SDK's own keyring as well. Import the
 # already fingerprint-verified public key into this disposable SDK only.
 # The target root's R4 trust store remains unchanged.
 rpmkeys --import /inputs/test-key.asc
 rpmkeys --import /inputs/unstable-key.asc
+rpmkeys --import /inputs/fedora-key.asc
 mkdir /tmp/expected
 for archive in "${archives[@]}"; do
     rpm2cpio "$archive" > /tmp/archive.cpio
@@ -135,12 +156,17 @@ source /builder/src/public/cohort.sh
 cohort_payload_inventory "/tmp/expected/usr/lib/modules/$new" > /receipts/producer-payload.sha256
 rpm -qp --qf '%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' "${kernel_archives[@]}" | sort > /receipts/new-kernel-rpms.tsv
 rpm -qp --qf '%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' "${support_archives[@]}" | sort > /receipts/new-boot-support-rpms.tsv
+rpm -qp --qf '%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' "${additional_archives[@]}" | sort > /receipts/added-dependency-rpms.tsv
 rpm --root /target -qa --qf '%{NAME}\t%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' | sort > /receipts/rpms-before.tsv
 names=()
 for component in '' -core -modules -dtbs -boot -singleboot; do
     name=$base$component
     [[ $(rpm --root /target -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$name") == 7.3.1-1010.1.fc46.aarch64 ]]
     names+=("$name")
+done
+additional_names=(uke-pipewire-plugin-libcamera linux-firmware linux-firmware-whence)
+for name in "${additional_names[@]}"; do
+    if rpm --root /target -q "$name" >/dev/null 2>&1; then echo "Dependency unexpectedly already present: $name" >&2; exit 1; fi
 done
 support_names=(uke-kernel-update uke-installation-profile uke-boot-integration)
 for name in "${support_names[@]}"; do
@@ -150,7 +176,13 @@ done
 find /target -xdev -type d -printf '%P\n' | sort > /tmp/directories-before
 sha256sum /target/etc/senemos/kernel-update.conf /target/etc/senemos/userdata-update.conf > /receipts/activation-config-before.sha256
 # Save exact owned paths; directory ownership does not allow modifying children.
-{ rpm --root /target -ql "${names[@]}"; rpm -qpl "${archives[@]}"; } | sed 's|^/||' | sort -u > /receipts/allowed-owned-paths.txt
+{ rpm --root /target -ql "${names[@]}"; rpm -qpl "${kernel_archives[@]}" "${support_archives[@]}"; } | sed 's|^/||' | sort -u > /receipts/allowed-owned-paths.txt
+rpm -qpl "${additional_archives[@]}" | sed 's|^/||' | sort -u > /receipts/addition-owned-paths.txt
+# Additional dependencies may add new paths, but never exempt existing R4
+# files from the content/metadata preservation check (especially OEM firmware).
+awk -F '\t' 'NR==FNR {before[$1]=1;next} !($0 in before)' /receipts/before.tsv /receipts/addition-owned-paths.txt > /receipts/allowed-added-paths.txt
+cat /receipts/allowed-owned-paths.txt /receipts/allowed-added-paths.txt | sort -u > /receipts/allowed-mutation-paths.txt
+cat /receipts/allowed-owned-paths.txt /receipts/addition-owned-paths.txt | sort -u > /receipts/all-owned-paths.txt
 rpm --root /target -qa --qf '%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' | sort > /receipts/installed-rpms-before.tsv
 cmp /receipts/r4/builds/fedora-rawhide-kde-plasma-uke-senemos-system-021126-r4/installed-rpms.tsv /receipts/installed-rpms-before.tsv
 cmp /inputs/r4-boot.img "/target/usr/lib/senemos/kernel-updates/$old/userdata.img"
@@ -160,7 +192,7 @@ cmp /tmp/r4.Image "/target/usr/lib/modules/$old/vmlinuz"
 # No dependency bypass, force, scriptlets or triggers are permitted.
 if ! rpm --root /target -U --test --noscripts --notriggers --nosignature "${archives[@]}" > /receipts/rpm-plan.txt 2>&1; then
     cat /receipts/rpm-plan.txt >&2
-    printf '%s\n' 'The exact six-kernel plus three-boot-support RPM transaction did not close. No dependency bypass or additional package update is permitted; no transaction was applied.' >&2
+    printf '%s\n' 'The exact twelve-RPM transaction did not close. No dependency bypass or additional package update is permitted; no transaction was applied.' >&2
     exit 1
 fi
 rpm --root /target -Uvh --noscripts --notriggers --nosignature "${archives[@]}" > /receipts/rpm-transaction.txt 2>&1
@@ -170,10 +202,15 @@ done
 for name in "${support_names[@]}"; do
     [[ $(rpm --root /target -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$name") == 1.8.30-1.fc46.aarch64 ]]
 done
+[[ $(rpm --root /target -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' uke-pipewire-plugin-libcamera) == 1.6.10-2.fc46.aarch64 ]]
+for name in linux-firmware linux-firmware-whence; do
+    [[ $(rpm --root /target -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$name") == 20261019-1.fc46.noarch ]]
+done
+names+=("${additional_names[@]}")
 sha256sum -c /receipts/activation-config-before.sha256 > /receipts/activation-config-preserved.txt
 rpm --root /target -qa --qf '%{NAME}\t%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' | sort > /receipts/rpms-after.tsv
-awk -F '\t' '$1 !~ /^senemos-uke-linux-kernel-mainline($|-)/ && $1 !~ /^uke-(kernel-update|installation-profile|boot-integration)$/' /receipts/rpms-before.tsv > /receipts/userland-before.tsv
-awk -F '\t' '$1 !~ /^senemos-uke-linux-kernel-mainline($|-)/ && $1 !~ /^uke-(kernel-update|installation-profile|boot-integration)$/' /receipts/rpms-after.tsv > /receipts/userland-after.tsv
+awk -F '\t' '$1 !~ /^senemos-uke-linux-kernel-mainline($|-)/ && $1 !~ /^(uke-(kernel-update|installation-profile|boot-integration|pipewire-plugin-libcamera)|linux-firmware|linux-firmware-whence)$/' /receipts/rpms-before.tsv > /receipts/userland-before.tsv
+awk -F '\t' '$1 !~ /^senemos-uke-linux-kernel-mainline($|-)/ && $1 !~ /^(uke-(kernel-update|installation-profile|boot-integration|pipewire-plugin-libcamera)|linux-firmware|linux-firmware-whence)$/' /receipts/rpms-after.tsv > /receipts/userland-after.tsv
 cmp /receipts/userland-before.tsv /receipts/userland-after.tsv
 diff -u --label R4 --label R5 /receipts/rpms-before.tsv /receipts/rpms-after.tsv > /receipts/package-changes.diff || [[ $? == 1 ]]
 [[ $(find /target/usr/lib/modules -mindepth 1 -maxdepth 1 -printf '%f\n') == "$new" ]]
@@ -213,13 +250,13 @@ while IFS= read -r relative; do
     if [[ -d $candidate && ! -L $candidate ]] && ! grep -Fxq "$relative" /tmp/directories-before; then
         label_roots+=("$candidate")
     fi
-done < /receipts/allowed-owned-paths.txt
+done < /receipts/all-owned-paths.txt
 setfiles -F -m -r /target "$contexts" "${label_roots[@]}"
 : > /tmp/label-paths
 while IFS= read -r relative; do
     candidate=/target/$relative
     if [[ ! -d $candidate && ( -e $candidate || -L $candidate ) ]]; then printf '%s\n' "$candidate" >> /tmp/label-paths; fi
-done < /receipts/allowed-owned-paths.txt
+done < /receipts/all-owned-paths.txt
 setfiles -F -m -r /target -f /tmp/label-paths "$contexts"
 rpm --root /target -V "${names[@]}" > /receipts/kernel-rpm-verify.txt || {
     # Image-owned config overrides must be unchanged according to the whole-root diff.
@@ -243,7 +280,7 @@ diff -u --label R4 --label R5 "$receipts/before.tsv" "$receipts/after.tsv" > "$r
 filter_inventory() {
     awk -F '\t' 'NR==FNR {owned[$0]=1;next}
       !owned[$1] && $1 !~ /^usr\/lib\/modules\/7[.]3[.]1-(1010|1101)(\/|$)/ &&
-      $1 !~ /^usr\/lib\/sysimage\/rpm(\/|$)/ && $1 !~ /^var\/lib\/rpm\// {print}' "$receipts/allowed-owned-paths.txt" "$1"
+      $1 !~ /^usr\/lib\/sysimage\/rpm(\/|$)/ && $1 !~ /^var\/lib\/rpm\// {print}' "$receipts/allowed-mutation-paths.txt" "$1"
 }
 filter_inventory "$receipts/before.tsv" > "$receipts/unchanged-before.tsv"
 filter_inventory "$receipts/after.tsv" > "$receipts/unchanged-after.tsv"
@@ -274,7 +311,7 @@ zstd --test "$work/delivery/$image"
 cp "$work/delivery/SHA256SUMS" "$receipts/SHA256SUMS"
 cp "$repo/.github/testing/R5-KDE-1101.md" "$work/delivery/INSTALL.md"
 jq -n --arg raw "$raw_hash" --arg sparse "$sparse_hash" --arg source "$source_commit" --arg signer "$fingerprint" --arg run "$GITHUB_RUN_ID" --arg workflow "$GITHUB_SHA" \
-    '{date:"2026-11-03",revision:"r5",desktop:"kde",origin:"verified R4 published KDE and shared boot",r4_run:"41430801872",r4_system_sha256:"92978ad81acd87127739e93f2ea7570f5516c948234546c7cefdc44cbbf51b55",r4_boot_sha256:"74edd331899945932e78aa9916e5ed3ed581751fb7f7f6fb3422d8cbd3165b50",kernel_release:"7.3.1-1101",kernel_rpm_version_release:"7.3.1-1101.fc46",kernel_source_commit:$source,kernel_copr_build:11247906,signer_fingerprint:$signer,boot_support_version_release:"1.8.30-1.fc46",boot_support_packages:["uke-kernel-update","uke-installation-profile","uke-boot-integration"],boot_support_signer_fingerprint:"2204A661EA630A5303500085538797E72A3E4ECA",changed_package_count:9,dependency_check_passed:true,root_raw_bytes:8589934592,root_raw_sha256:$raw,root_sparse_sha256:$sparse,unrelated_r4_userland_preserved:true,generic_oem_firmware_preserved:true,kernel_owned_topology_updated:true,out_of_scope_content_and_metadata_compared:true,automatic_activation_config_preserved:true,rpm_scriptlets_executed:false,target_programs_executed:false,aosp_decoder_roundtrip:true,physical_boot_tested:false,hardware_tested:false,rollback_tested:false,github_release_created:false,artifact_retention_days:90,workflow_run:$run,workflow_commit:$workflow}' > "$receipts/result.json"
+    '{date:"2026-11-03",revision:"r5",desktop:"kde",origin:"verified R4 published KDE and shared boot",r4_run:"41430801872",r4_system_sha256:"92978ad81acd87127739e93f2ea7570f5516c948234546c7cefdc44cbbf51b55",r4_boot_sha256:"74edd331899945932e78aa9916e5ed3ed581751fb7f7f6fb3422d8cbd3165b50",kernel_release:"7.3.1-1101",kernel_rpm_version_release:"7.3.1-1101.fc46",kernel_source_commit:$source,kernel_copr_build:11247906,signer_fingerprint:$signer,boot_support_version_release:"1.8.30-1.fc46",boot_support_packages:["uke-kernel-update","uke-installation-profile","uke-boot-integration"],boot_support_signer_fingerprint:"2204A661EA630A5303500085538797E72A3E4ECA",changed_package_count:12,upgraded_package_count:9,added_package_count:3,added_dependencies:["uke-pipewire-plugin-libcamera-1.6.10-2.fc46.aarch64","linux-firmware-20261019-1.fc46.noarch","linux-firmware-whence-20261019-1.fc46.noarch"],fedora_signer_fingerprint:"D924B10D3E810DABDD8B56B596E7E91491211FCE",dependency_check_passed:true,root_raw_bytes:8589934592,root_raw_sha256:$raw,root_sparse_sha256:$sparse,unrelated_r4_userland_preserved:true,generic_oem_firmware_preserved:true,kernel_owned_topology_updated:true,out_of_scope_content_and_metadata_compared:true,automatic_activation_config_preserved:true,rpm_scriptlets_executed:false,target_programs_executed:false,aosp_decoder_roundtrip:true,physical_boot_tested:false,hardware_tested:false,rollback_tested:false,github_release_created:false,artifact_retention_days:90,workflow_run:$run,workflow_commit:$workflow}' > "$receipts/result.json"
 cp "$receipts/result.json" "$work/delivery/PROVENANCE.json"
 cat "$work/delivery/SHA256SUMS" >> "$GITHUB_STEP_SUMMARY"
 echo 'R4-derived R5 KDE + matching signed 1101 userdata boot: all host checks passed. Physical testing remains pending. No Release was created.' >> "$GITHUB_STEP_SUMMARY"
