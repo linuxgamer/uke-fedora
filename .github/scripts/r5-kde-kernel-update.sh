@@ -208,6 +208,28 @@ for name in linux-firmware linux-firmware-whence; do
 done
 names+=("${additional_names[@]}")
 sha256sum -c /receipts/activation-config-before.sha256 > /receipts/activation-config-preserved.txt
+# RPM may create implicit parent directories omitted from its ownership list.
+# Admit only new, real directories derived from signed package path ancestors;
+# existing R4 directories and unowned files receive no additional exemption.
+: > /tmp/package-ancestors
+while IFS= read -r relative; do
+    while [[ $relative == */* ]]; do
+        relative=${relative%/*}
+        [[ -n $relative && $relative != . ]] || exit 1
+        printf '%s\n' "$relative" >> /tmp/package-ancestors
+    done
+done < /receipts/all-owned-paths.txt
+sort -u /tmp/package-ancestors > /tmp/package-ancestors-sorted
+: > /receipts/generated-parent-directories.txt
+while IFS= read -r relative; do
+    if [[ -d /target/$relative && ! -L /target/$relative ]] && ! grep -Fxq "$relative" /tmp/directories-before; then
+        printf '%s\n' "$relative" >> /receipts/generated-parent-directories.txt
+    fi
+done < /tmp/package-ancestors-sorted
+cat /receipts/allowed-mutation-paths.txt /receipts/generated-parent-directories.txt | sort -u > /tmp/mutation-paths
+mv /tmp/mutation-paths /receipts/allowed-mutation-paths.txt
+cat /receipts/all-owned-paths.txt /receipts/generated-parent-directories.txt | sort -u > /tmp/label-owned-paths
+mv /tmp/label-owned-paths /receipts/all-owned-paths.txt
 rpm --root /target -qa --qf '%{NAME}\t%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' | sort > /receipts/rpms-after.tsv
 awk -F '\t' '$1 !~ /^senemos-uke-linux-kernel-mainline($|-)/ && $1 !~ /^(uke-(kernel-update|installation-profile|boot-integration|pipewire-plugin-libcamera)|linux-firmware|linux-firmware-whence)$/' /receipts/rpms-before.tsv > /receipts/userland-before.tsv
 awk -F '\t' '$1 !~ /^senemos-uke-linux-kernel-mainline($|-)/ && $1 !~ /^(uke-(kernel-update|installation-profile|boot-integration|pipewire-plugin-libcamera)|linux-firmware|linux-firmware-whence)$/' /receipts/rpms-after.tsv > /receipts/userland-after.tsv
@@ -240,7 +262,14 @@ printf '%s  %s\n' a4f949fb89c7eaad9da85a5885cd2dcc1fffbf08bc1e7ffe9f0bb97c1769b3
 grep -Fxq automatic=0 /target/etc/senemos/kernel-update.conf
 # Label only the changed kernel subtrees, owned nondirectories and RPM database.
 # Shared directory ownership never permits recursively relabeling userland.
-contexts=/target/etc/selinux/targeted/contexts/files/file_contexts
+# Use the unchanged R4 text policy, avoiding compiled PCRE cache ABI differences
+# between the disposable SDK and R4. No target policy/cache file is modified.
+mkdir /tmp/label-policy
+for suffix in '' .local .homedirs .subs .subs_dist; do
+    candidate=/target/etc/selinux/targeted/contexts/files/file_contexts$suffix
+    if [[ -f $candidate && ! -L $candidate ]]; then cp "$candidate" "/tmp/label-policy/file_contexts$suffix"; fi
+done
+contexts=/tmp/label-policy/file_contexts
 label_roots=("/target/usr/lib/modules/$new" "/target/usr/lib/senemos/kernel-updates/$new" "/target/usr/share/senemos/uke/$new" /target/usr/lib/sysimage/rpm)
 for candidate in "/target/usr/lib/firmware/$new" "/target/usr/share/licenses/$base-boot-$evr"; do
     [[ ! -d $candidate ]] || label_roots+=("$candidate")
