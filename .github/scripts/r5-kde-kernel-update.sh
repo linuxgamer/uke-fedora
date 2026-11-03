@@ -39,6 +39,16 @@ curl -fLsS --retry 2 --max-time 30 https://download.copr.fedorainfracloud.org/re
 for component in '' -core -modules -dtbs -boot -singleboot; do
     curl -fLsS --retry 3 --max-time 300 "$copr/$base$component-$evr.aarch64.rpm" -o "$inputs/$base$component-$evr.aarch64.rpm"
 done
+curl -fLsS --retry 2 --max-time 30 https://download.copr.fedorainfracloud.org/results/mcc45tr/uke-linux-unstable/pubkey.gpg -o "$inputs/unstable-key.asc"
+for component in uke-kernel-update uke-installation-profile uke-boot-integration; do
+    curl -fLsS --retry 3 --max-time 300 "https://download.copr.fedorainfracloud.org/results/mcc45tr/uke-linux-unstable/fedora-rawhide-aarch64/Packages/u/$component-1.8.30-1.fc46.aarch64.rpm" -o "$inputs/$component-1.8.30-1.fc46.aarch64.rpm"
+done
+cat > "$receipts/support-RPM-SHA256SUMS" <<'HASHES'
+af528aff8cccc1d7698b9d80682b51e6a0da148219e79a45343431dec64160ea  uke-kernel-update-1.8.30-1.fc46.aarch64.rpm
+037b27a687c2d4c5c979c9fccbd7d12972bac65e992657e226172d714300ea81  uke-installation-profile-1.8.30-1.fc46.aarch64.rpm
+7300cf7637af078af3d8fc126a392e67d7e097079792d243f19892e0defb4ada  uke-boot-integration-1.8.30-1.fc46.aarch64.rpm
+HASHES
+(cd "$inputs"; sha256sum -c "$receipts/support-RPM-SHA256SUMS")
 (cd "$inputs"; sha256sum -- *.rpm) > "$receipts/RPM-SHA256SUMS"
 
 # The server SDK is separate from the target root. No target package manager,
@@ -46,7 +56,7 @@ done
 worker=r5-kde-kernel-update:$GITHUB_RUN_ID
 fedora_base=$(jq -er .fedora_rawhide_images.aarch64 "$repo/builder/configs/build-rules.json")
 cat > "$work/Containerfile" <<'DOCKER'
-ARG BASE_IMAGE
+ARG BASE_IMAGE=scratch
 FROM ${BASE_IMAGE}
 RUN --mount=type=secret,id=proxy_ca if [ -f /run/secrets/proxy_ca ]; then printf '\nsslcacert=/run/secrets/proxy_ca\n' >> /etc/dnf/dnf.conf; fi && dnf5 -y --setopt=install_weak_deps=False install rpm kmod cpio jq gnupg2 policycoreutils && dnf5 clean all && sed -i '/^sslcacert=\/run\/secrets\/proxy_ca$/d' /etc/dnf/dnf.conf
 DOCKER
@@ -84,25 +94,35 @@ sudo "$work/inventory" "$root" | tee "$receipts/before.tsv" >/dev/null
 cat > "$inputs/update.sh" <<'UPDATE'
 #!/usr/bin/env bash
 set -Eeuo pipefail
+trap 'status=$?; printf "Offline update failed at line %s: %s (status %s)\n" "$LINENO" "$BASH_COMMAND" "$status" >&2; exit "$status"' ERR
 export LC_ALL=C
 base=senemos-uke-linux-kernel-mainline
 old=7.3.1-1010
 new=7.3.1-1101
 evr=7.3.1-1101.fc46
-archives=(/inputs/*.aarch64.rpm)
-[[ ${#archives[@]} == 6 ]]
-mkdir /tmp/gpg /tmp/keydb
+kernel_archives=(/inputs/senemos-*.aarch64.rpm)
+support_archives=(/inputs/uke-*.aarch64.rpm)
+archives=("${kernel_archives[@]}" "${support_archives[@]}")
+[[ ${#kernel_archives[@]} == 6 && ${#support_archives[@]} == 3 && ${#archives[@]} == 9 ]]
+mkdir /tmp/gpg /tmp/keydb /tmp/support-keydb
 chmod 700 /tmp/gpg
 [[ $(gpg --homedir /tmp/gpg --batch --show-keys --with-colons /inputs/test-key.asc | awk -F: '$1=="fpr" {print $10;exit}') == DAFC3C5A881FB49C7167EE2D6F772E3D487BD13E ]]
 rpmkeys --dbpath /tmp/keydb --import /inputs/test-key.asc
-for archive in "${archives[@]}"; do
+for archive in "${kernel_archives[@]}"; do
     rpmkeys --dbpath /tmp/keydb --checksig "$archive" | tee -a /receipts/signatures.txt | grep -F 'signatures OK'
     [[ $(rpm -qp --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$archive") == "$evr.aarch64" ]]
+done
+[[ $(gpg --homedir /tmp/gpg --batch --show-keys --with-colons /inputs/unstable-key.asc | awk -F: '$1=="fpr" {print $10;exit}') == 2204A661EA630A5303500085538797E72A3E4ECA ]]
+rpmkeys --dbpath /tmp/support-keydb --import /inputs/unstable-key.asc
+for archive in "${support_archives[@]}"; do
+    rpmkeys --dbpath /tmp/support-keydb --checksig "$archive" | tee -a /receipts/support-signatures.txt | grep -F 'signatures OK'
+    [[ $(rpm -qp --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$archive") == 1.8.30-1.fc46.aarch64 ]]
 done
 # RPM 6's payload reader consults the SDK's own keyring as well. Import the
 # already fingerprint-verified public key into this disposable SDK only.
 # The target root's R4 trust store remains unchanged.
 rpmkeys --import /inputs/test-key.asc
+rpmkeys --import /inputs/unstable-key.asc
 mkdir /tmp/expected
 for archive in "${archives[@]}"; do
     rpm2cpio "$archive" > /tmp/archive.cpio
@@ -113,7 +133,8 @@ done
 source /builder/src/public/cohort.sh
 [[ $(cohort_repository_release /tmp/expected 7.3.1-1101) == "$new" ]]
 cohort_payload_inventory "/tmp/expected/usr/lib/modules/$new" > /receipts/producer-payload.sha256
-rpm -qp --qf '%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' "${archives[@]}" | sort > /receipts/new-kernel-rpms.tsv
+rpm -qp --qf '%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' "${kernel_archives[@]}" | sort > /receipts/new-kernel-rpms.tsv
+rpm -qp --qf '%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' "${support_archives[@]}" | sort > /receipts/new-boot-support-rpms.tsv
 rpm --root /target -qa --qf '%{NAME}\t%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' | sort > /receipts/rpms-before.tsv
 names=()
 for component in '' -core -modules -dtbs -boot -singleboot; do
@@ -121,6 +142,13 @@ for component in '' -core -modules -dtbs -boot -singleboot; do
     [[ $(rpm --root /target -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$name") == 7.3.1-1010.1.fc46.aarch64 ]]
     names+=("$name")
 done
+support_names=(uke-kernel-update uke-installation-profile uke-boot-integration)
+for name in "${support_names[@]}"; do
+    [[ $(rpm --root /target -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$name") == 1.8.24-1.fc46.aarch64 ]]
+    names+=("$name")
+done
+find /target -xdev -type d -printf '%P\n' | sort > /tmp/directories-before
+sha256sum /target/etc/senemos/kernel-update.conf /target/etc/senemos/userdata-update.conf > /receipts/activation-config-before.sha256
 # Save exact owned paths; directory ownership does not allow modifying children.
 { rpm --root /target -ql "${names[@]}"; rpm -qpl "${archives[@]}"; } | sed 's|^/||' | sort -u > /receipts/allowed-owned-paths.txt
 rpm --root /target -qa --qf '%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' | sort > /receipts/installed-rpms-before.tsv
@@ -132,17 +160,22 @@ cmp /tmp/r4.Image "/target/usr/lib/modules/$old/vmlinuz"
 # No dependency bypass, force, scriptlets or triggers are permitted.
 if ! rpm --root /target -U --test --noscripts --notriggers --nosignature "${archives[@]}" > /receipts/rpm-plan.txt 2>&1; then
     cat /receipts/rpm-plan.txt >&2
-    printf '%s\n' 'The signed kernel cannot replace the R4 kernel without changing additional boot-support packages. The strict R4 userland boundary remains enforced; no transaction was applied.' >&2
+    printf '%s\n' 'The exact six-kernel plus three-boot-support RPM transaction did not close. No dependency bypass or additional package update is permitted; no transaction was applied.' >&2
     exit 1
 fi
 rpm --root /target -Uvh --noscripts --notriggers --nosignature "${archives[@]}" > /receipts/rpm-transaction.txt 2>&1
 for component in '' -core -modules -dtbs -boot -singleboot; do
     [[ $(rpm --root /target -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$base$component") == "$evr.aarch64" ]]
 done
+for name in "${support_names[@]}"; do
+    [[ $(rpm --root /target -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$name") == 1.8.30-1.fc46.aarch64 ]]
+done
+sha256sum -c /receipts/activation-config-before.sha256 > /receipts/activation-config-preserved.txt
 rpm --root /target -qa --qf '%{NAME}\t%{NEVRA}\t%{SOURCERPM}\t%{VENDOR}\n' | sort > /receipts/rpms-after.tsv
-awk -F '\t' '$1 !~ /^senemos-uke-linux-kernel-mainline($|-)/' /receipts/rpms-before.tsv > /receipts/userland-before.tsv
-awk -F '\t' '$1 !~ /^senemos-uke-linux-kernel-mainline($|-)/' /receipts/rpms-after.tsv > /receipts/userland-after.tsv
+awk -F '\t' '$1 !~ /^senemos-uke-linux-kernel-mainline($|-)/ && $1 !~ /^uke-(kernel-update|installation-profile|boot-integration)$/' /receipts/rpms-before.tsv > /receipts/userland-before.tsv
+awk -F '\t' '$1 !~ /^senemos-uke-linux-kernel-mainline($|-)/ && $1 !~ /^uke-(kernel-update|installation-profile|boot-integration)$/' /receipts/rpms-after.tsv > /receipts/userland-after.tsv
 cmp /receipts/userland-before.tsv /receipts/userland-after.tsv
+diff -u --label R4 --label R5 /receipts/rpms-before.tsv /receipts/rpms-after.tsv > /receipts/package-changes.diff || [[ $? == 1 ]]
 [[ $(find /target/usr/lib/modules -mindepth 1 -maxdepth 1 -printf '%f\n') == "$new" ]]
 [[ $(cat /target/usr/share/senemos/uke/$new/source-commit) == 99b0762b241c317d3c06ab921509b16b78437a0a ]]
 jq -e '.kernel_release=="7.3.1-1101" and .panel_variants==["o82_36_02_0a","o82_42_02_0b"] and .touch_variants==["tianma","csot"] and .firmware_payload_included==false and .physical_acceptance==false' "/target/usr/share/senemos/uke/$new/source-composition.json"
@@ -175,6 +208,12 @@ label_roots=("/target/usr/lib/modules/$new" "/target/usr/lib/senemos/kernel-upda
 for candidate in "/target/usr/lib/firmware/$new" "/target/usr/share/licenses/$base-boot-$evr"; do
     [[ ! -d $candidate ]] || label_roots+=("$candidate")
 done
+while IFS= read -r relative; do
+    candidate=/target/$relative
+    if [[ -d $candidate && ! -L $candidate ]] && ! grep -Fxq "$relative" /tmp/directories-before; then
+        label_roots+=("$candidate")
+    fi
+done < /receipts/allowed-owned-paths.txt
 setfiles -F -m -r /target "$contexts" "${label_roots[@]}"
 : > /tmp/label-paths
 while IFS= read -r relative; do
@@ -184,7 +223,7 @@ done < /receipts/allowed-owned-paths.txt
 setfiles -F -m -r /target -f /tmp/label-paths "$contexts"
 rpm --root /target -V "${names[@]}" > /receipts/kernel-rpm-verify.txt || {
     # Image-owned config overrides must be unchanged according to the whole-root diff.
-    awk '$2!="c" || $3!="/etc/senemos/kernel-update.conf" {bad=1} END {exit bad}' /receipts/kernel-rpm-verify.txt
+    awk '$2!="c" || ($3!="/etc/senemos/kernel-update.conf" && $3!="/etc/senemos/userdata-update.conf") {bad=1} END {exit bad}' /receipts/kernel-rpm-verify.txt
 }
 UPDATE
 chmod 755 "$inputs/update.sh"
@@ -198,8 +237,9 @@ docker run --rm --network=none --cap-add SYS_ADMIN \
     --mount "type=bind,src=$repo/builder,dst=/builder,readonly" \
     "$worker" bash /inputs/update.sh
 sudo "$work/inventory" "$root" | tee "$receipts/after.tsv" >/dev/null
-# Kernel-owned exact paths, the two ABI subtrees and the RPM database are the
-# complete mutation boundary. A directory entry does not exempt its descendants.
+# Kernel/boot-support owned exact paths, ABI subtrees and the RPM database are
+# the complete mutation boundary. Directory ownership never exempts descendants.
+diff -u --label R4 --label R5 "$receipts/before.tsv" "$receipts/after.tsv" > "$receipts/all-file-changes.diff" || [[ $? == 1 ]]
 filter_inventory() {
     awk -F '\t' 'NR==FNR {owned[$0]=1;next}
       !owned[$1] && $1 !~ /^usr\/lib\/modules\/7[.]3[.]1-(1010|1101)(\/|$)/ &&
@@ -207,7 +247,7 @@ filter_inventory() {
 }
 filter_inventory "$receipts/before.tsv" > "$receipts/unchanged-before.tsv"
 filter_inventory "$receipts/after.tsv" > "$receipts/unchanged-after.tsv"
-diff -u "$receipts/unchanged-before.tsv" "$receipts/unchanged-after.tsv" > "$receipts/userland-diff.txt"
+diff -u --label R4 --label R5 "$receipts/unchanged-before.tsv" "$receipts/unchanged-after.tsv" > "$receipts/userland-diff.txt"
 # Full new payload independently matches the signed RPM archives, including DTs.
 cp "$root/usr/lib/senemos/kernel-updates/$new/userdata.img" "$work/delivery/$boot"
 "$work/boot-image" inspect "$work/delivery/$boot" > "$receipts/boot-header.json"
@@ -234,7 +274,7 @@ zstd --test "$work/delivery/$image"
 cp "$work/delivery/SHA256SUMS" "$receipts/SHA256SUMS"
 cp "$repo/.github/testing/R5-KDE-1101.md" "$work/delivery/INSTALL.md"
 jq -n --arg raw "$raw_hash" --arg sparse "$sparse_hash" --arg source "$source_commit" --arg signer "$fingerprint" --arg run "$GITHUB_RUN_ID" --arg workflow "$GITHUB_SHA" \
-    '{date:"2026-11-03",revision:"r5",desktop:"kde",origin:"verified R4 published KDE and shared boot",r4_run:"41430801872",r4_system_sha256:"92978ad81acd87127739e93f2ea7570f5516c948234546c7cefdc44cbbf51b55",r4_boot_sha256:"74edd331899945932e78aa9916e5ed3ed581751fb7f7f6fb3422d8cbd3165b50",kernel_release:"7.3.1-1101",kernel_rpm_version_release:"7.3.1-1101.fc46",kernel_source_commit:$source,kernel_copr_build:11247906,signer_fingerprint:$signer,root_raw_bytes:8589934592,root_raw_sha256:$raw,root_sparse_sha256:$sparse,userland_preserved:true,generic_oem_firmware_preserved:true,kernel_owned_topology_updated:true,non_kernel_content_and_metadata_compared:true,rpm_scriptlets_executed:false,target_programs_executed:false,aosp_decoder_roundtrip:true,physical_boot_tested:false,hardware_tested:false,rollback_tested:false,github_release_created:false,artifact_retention_days:90,workflow_run:$run,workflow_commit:$workflow}' > "$receipts/result.json"
+    '{date:"2026-11-03",revision:"r5",desktop:"kde",origin:"verified R4 published KDE and shared boot",r4_run:"41430801872",r4_system_sha256:"92978ad81acd87127739e93f2ea7570f5516c948234546c7cefdc44cbbf51b55",r4_boot_sha256:"74edd331899945932e78aa9916e5ed3ed581751fb7f7f6fb3422d8cbd3165b50",kernel_release:"7.3.1-1101",kernel_rpm_version_release:"7.3.1-1101.fc46",kernel_source_commit:$source,kernel_copr_build:11247906,signer_fingerprint:$signer,boot_support_version_release:"1.8.30-1.fc46",boot_support_packages:["uke-kernel-update","uke-installation-profile","uke-boot-integration"],boot_support_signer_fingerprint:"2204A661EA630A5303500085538797E72A3E4ECA",changed_package_count:9,dependency_check_passed:true,root_raw_bytes:8589934592,root_raw_sha256:$raw,root_sparse_sha256:$sparse,unrelated_r4_userland_preserved:true,generic_oem_firmware_preserved:true,kernel_owned_topology_updated:true,out_of_scope_content_and_metadata_compared:true,automatic_activation_config_preserved:true,rpm_scriptlets_executed:false,target_programs_executed:false,aosp_decoder_roundtrip:true,physical_boot_tested:false,hardware_tested:false,rollback_tested:false,github_release_created:false,artifact_retention_days:90,workflow_run:$run,workflow_commit:$workflow}' > "$receipts/result.json"
 cp "$receipts/result.json" "$work/delivery/PROVENANCE.json"
 cat "$work/delivery/SHA256SUMS" >> "$GITHUB_STEP_SUMMARY"
 echo 'R4-derived R5 KDE + matching signed 1101 userdata boot: all host checks passed. Physical testing remains pending. No Release was created.' >> "$GITHUB_STEP_SUMMARY"
