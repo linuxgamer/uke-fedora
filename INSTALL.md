@@ -18,7 +18,7 @@ After unlocking, choose any available image you want, there are multiple variant
 
 ## 2. Check the tablet in fastboot
 
-Run these commands yourself on a computer with reliable fastboot connection(USB 2.0).
+Run these commands yourself on a computer with a reliable fastboot connection (USB 2.0).
 
 ```sh
 fastboot devices
@@ -46,8 +46,7 @@ It is also recommended to install TWRP in case your system breaks:
 fastboot flash recovery_ab "twrp_recovery_ab.img"
 ```
 
-`cd` into the extracted folder with Fedora images. On tablets where bootloader
-fastboot accepts `userdata`, use:
+`cd` into the extracted folder with Fedora images and use bootloader fastboot:
 
 ```sh
 fastboot flash userdata "userdata.img"
@@ -56,20 +55,12 @@ fastboot set_active a
 fastboot reboot
 ```
 
-If flashing `userdata` fails in bootloader fastboot, **do not reboot into
-Fedora**. One installer reported that it worked in userspace fastboot
-(`fastbootd`) instead. From bootloader fastboot, use:
-
-```sh
-fastboot reboot fastboot
-fastboot getvar is-userspace    # must say yes
-fastboot flash userdata "userdata.img"
-fastboot reboot bootloader
-fastboot getvar is-userspace    # must say no
-fastboot flash boot_a "fedora_boot.img"
-fastboot set_active a
-fastboot reboot
-```
+If flashing `userdata` fails, **do not reboot into Fedora**. Check the exact
+error, the fastboot version and the USB connection before retrying. The
+reported need for `fastbootd` in
+[issue #5](https://github.com/linuxgamer/uke-fedora/issues/5) was later traced
+to a broken `termux-fastboot` installation; the reporter confirmed the commands
+above work from bootloader fastboot.
 
 These commands overwrite `boot_a` and **all existing userdata!**
 Do not touch `userdata` afterward, that would erase the
