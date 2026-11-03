@@ -130,7 +130,11 @@ cmp /inputs/r4-boot.img "/target/usr/lib/senemos/kernel-updates/$old/userdata.im
 cmp /tmp/r4.Image "/target/usr/lib/modules/$old/vmlinuz"
 # Independent keydb verified every archive above; preserve the target's R4 key set.
 # No dependency bypass, force, scriptlets or triggers are permitted.
-rpm --root /target -U --test --noscripts --notriggers --nosignature "${archives[@]}" > /receipts/rpm-plan.txt 2>&1
+if ! rpm --root /target -U --test --noscripts --notriggers --nosignature "${archives[@]}" > /receipts/rpm-plan.txt 2>&1; then
+    cat /receipts/rpm-plan.txt >&2
+    printf '%s\n' 'The signed kernel cannot replace the R4 kernel without changing additional boot-support packages. The strict R4 userland boundary remains enforced; no transaction was applied.' >&2
+    exit 1
+fi
 rpm --root /target -Uvh --noscripts --notriggers --nosignature "${archives[@]}" > /receipts/rpm-transaction.txt 2>&1
 for component in '' -core -modules -dtbs -boot -singleboot; do
     [[ $(rpm --root /target -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' "$base$component") == "$evr.aarch64" ]]
