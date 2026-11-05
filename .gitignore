@@ -35,15 +35,27 @@ __pycache__/
 /SOURCE-MAP.md
 /AGENTS.md
 /AGENTS.local.md
-/CLAUDE.md
-/GEMINI.md
 /MEMORY.md
 /TODO.md
-/.codex/
-/.agents/
-/.claude/
-/.cursor/
-/.aider*
+# Local development state stays private. Public root documentation and project
+# configuration are explicitly admitted below.
+/.*
+!/.github/
+!/.gitignore
+!/.gitmodules
+!/.gitattributes
+!/.editorconfig
+!/.mailmap
+/*.md
+!/README.md
+!/CONTRIBUTING.md
+!/CHANGELOG.md
+!/DISTRIBUTIONS.md
+!/SECURITY.md
+!/AUTHORS.md
+!/LICENSE.md
+!/COPYING.md
+!/NOTICE.md
 
 # Local compilation, release downloads and editor state.
 *.img.zst

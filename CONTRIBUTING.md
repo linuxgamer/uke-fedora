@@ -61,6 +61,55 @@ out of photos. Keep error codes, driver names and relative timestamps intact;
 replace private values with `[redacted]`. Public issues are not a place for raw
 private logs. Use [private security reporting](SECURITY.md) for vulnerabilities.
 
+# Hardware integration policy
+
+5 November 2026. Use original distribution KDE and GNOME packages. Uke
+repositories and COPR projects must not carry project forks or project-rebuilt
+variants of those packages. Resolve hardware support in Device Tree and the
+kernel whenever practical. Keep other package forks and userspace adaptations
+to the necessary minimum, with a documented reason when a kernel/DT solution
+cannot address the requirement.
+
+Research relevant OSS sources comprehensively before implementation. For
+hardware support, compare the exact Uke OEM source, relevant same-SoC or
+shared-IP implementations, current upstream and their active patch queues.
+Use the pinned source inventory and donor review policy. Record exact revisions,
+files, licenses, attribution,
+compatibility limits and remaining gaps; a similar device or successful build
+does not establish support on Uke.
+
+Build device candidates through COPR and install or update them through DNF.
+Keep compilation off the tablet and deliver packaged changes instead of copied
+binaries. Keep device-specific calibration private, access EEPROM read-only and
+avoid full-image backups or unnecessary large artifacts during bring-up.
+
+# Package delivery and COPR housekeeping
+
+Publish only necessary runtime, integration and essential build/test packages.
+Retire completed temporary/test-only and superseded packages when they no
+longer serve a source/build dependency, supported upgrade or recovery route.
+Keep concise source and test evidence reproducible after cleanup. Coordinate
+cleanup with active builds and the shared kernel delivery queue.
+
+Deliver fixes as correctly versioned RPM updates through the supported
+repository and channel. Other users must receive the change through the normal
+`sudo dnf update` workflow. Verify dependency closure, upgrade behavior and
+preservation of persistent preferences. Stable kernel promotion remains a
+separate decision; automatic seamless staging and the selected local rollback
+preference must survive package upgrades.
+
+# Branch management
+
+Keep remote branches to the necessary minimum. Reuse an appropriate existing
+workstream branch, and use local worktrees to isolate unrelated work. Track
+successive trials with commits and unique COPR releases. Create another remote
+branch only when a distinct review or integration requires it.
+
+Remove completed branches after preserving their integrated work and required
+source references. Check active work, builds and shared integration dependencies
+before cleanup; the cumulative kernel baseline and recovery route remain
+required.
+
 # Documentation style
 
 Use this report style across Uke repositories, including README status sections,
@@ -70,9 +119,11 @@ State the report date, tested device and software, observed result and remaining
 work. Name the device directly. For example: "The USB port did not supply power
 to the ESP32-S3."
 
-Use concise, natural English. Omit personal ownership labels, conversational
-narration, promotional wording and internal review jargon. A configured model
-name is not a hardware identity; record the tested commercial model separately.
+Use professional, concise, natural English. Write for a reader who has not
+followed the development conversation. Omit boilerplate, personal ownership
+labels, conversational narration, promotional wording and internal review jargon.
+A configured model name is not a hardware identity; record the tested commercial
+model separately.
 
 Keep README introductions and project status brief. Group hardware tables in
 collapsible sections with Feature, Status and Notes columns, following the
@@ -86,8 +137,7 @@ the private engineering records.
 
 ## Commit authorship
 
-24 October 2026. Code contributions retain their human authors and human
-`Co-authored-by` credit. Do not list AI tools as authors or co-authors. Tool-use
-notes may remain in the pull request description. Preserve human contributor
-credit, source attribution and license notices when squashing or editing commit
-messages. Maintenance workflows may retain their normal service-account author.
+Code contributions retain their authors and verified `Co-authored-by` credit.
+Preserve contributor attribution, source references and license notices when
+squashing changes or editing commit messages. Maintenance workflows retain
+their normal service-account identity.
