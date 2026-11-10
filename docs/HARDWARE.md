@@ -41,7 +41,7 @@ firmware bring-up before it can be tested.
 | Reboot | partial | works in some tests | — |
 | Shutdown | partial | can hang or reboot | — |
 | zram swap | fixed after r1 | `zram-generator`, `CONFIG_ZRAM=m` | verify on the next image |
-| Boot reliability | uncertain | issue #8 | `boot_a` ends in fastboot after some use; cause unknown, see `private/issue-8-hypotheses.md` |
+| Boot reliability | verified | issue #8 closed | the report was a reporter tablet fault, not the port; keep watching for a recurrence |
 
 ## Notes for bring-up work
 
