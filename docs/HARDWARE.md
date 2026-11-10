@@ -20,7 +20,7 @@ firmware bring-up before it can be tested.
 | Touch (NT36532) | verified | TM tablet | multitouch unreliable |
 | GPU OpenGL | verified | `freedreno` renderer | — |
 | GPU Vulkan | partial | experimental | not qualified |
-| Video decode (H.264/HEVC) | broken | no `/dev/video*` | candidate series in `patches/video/` now prepares and compiles on 7.3.1; boot DTB overlay and device test remain |
+| Video decode (H.264/HEVC) | broken | no `/dev/video*` | series active in kernel preparation and media config; boot overlay gated by `UKE_VIDEO_OVERLAY=1` (fail-soft); build/device test pending |
 | CPU / DVFS | verified | all cores | — |
 | Storage (UFS, growfs) | verified | rootfs grows to partition | — |
 | Wi-Fi | verified | connects, transfers | — |
