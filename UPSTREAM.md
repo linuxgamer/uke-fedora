@@ -85,3 +85,34 @@ then move the pin with `tools/sync-upstream.sh pin --to <new-rev>`.
 - The umbrella has no CI; `verify` is the only automated check in this file.
 - Bot pointer commits are filtered from history by `prepare` but still exist
   upstream; do not reintroduce the snapshot-bot workflow.
+
+## Component rebases (2026-11-10)
+
+Each component fork now has a local sync branch rebased onto the current
+upstream tip. Push them before moving the umbrella gitlinks.
+
+| Component | Branch | Upstream base | Net delta | Verification |
+| --- | --- | --- | --- | --- |
+| kernel | `sync/upstream-20261105` | `fd33b917` (2026-11-05) | 21 files, +85/−93 | `make validate` passes until a test that needs host `rpm`; that test fails on clean upstream too |
+| builder | `sync/upstream-20261102` | `781079d` (2026-11-02) | 80 files, +2128/−9965 | `device-preflight` passes; two image tests require root and fail on clean upstream too |
+| hardware | `sync/upstream-20261106` | `5903eb7` (2026-11-06) | 414 files, +6858/−2779 | `make validate` passes |
+
+Exported delta: `build/patches-<component>/0001-port-delta.patch` (build output,
+not committed).
+
+Rules learned from the first rebase:
+
+- Rebase with `git merge` (or a merge in a worktree), not by applying a
+  whole-tree patch. Upstream deletes and renames paths, and a patch generated
+  from the old tree fails on modifications to files upstream removed.
+- Do not union upstream's package sets blindly. `uke-orangefox-packaging` has no
+  `validate` target here, and upstream's `python_target_payload` check requires
+  the field to exist in `xiaomi-uke-firmware/manifests/component.json`.
+- Regenerate source locks after a rebase. The kernel `boot-payload.json` had 29
+  of 310 stale hashes that still described the pre-rebase tree.
+- Keep upstream's `AGENTS.md`; a forked copy conflicts on every sync and belongs
+  in the umbrella instead.
+
+Next: push the branches, move the umbrella gitlinks, then replace the fork
+URLs in `.gitmodules` with the upstream repositories plus a `patches/` stack
+applied by the build.
