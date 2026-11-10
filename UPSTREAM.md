@@ -108,6 +108,9 @@ Rules learned from the first rebase:
 - Do not union upstream's package sets blindly. `uke-orangefox-packaging` has no
   `validate` target here, and upstream's `python_target_payload` check requires
   the field to exist in `xiaomi-uke-firmware/manifests/component.json`.
+- Check merged JSON lists for union contradictions. A merge can keep both sides
+  of a list, so a package may end up admitted and withdrawn at once; the
+  native-runtime catalog did exactly that after the hardware rebase.
 - Regenerate source locks after a rebase. The kernel `boot-payload.json` had 29
   of 310 stale hashes that still described the pre-rebase tree.
 - Keep upstream's `AGENTS.md`; a forked copy conflicts on every sync and belongs
