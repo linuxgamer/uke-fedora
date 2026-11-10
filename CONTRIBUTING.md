@@ -2,10 +2,10 @@
 
 The Fedora images are an **alpha release, not suitable for daily use**. Check the
 [hardware status](README.md#hardware-support) and
-[existing issues](https://github.com/MCC45TR/uke-linux/issues) before reporting a
+[existing issues](https://github.com/linuxgamer/uke-fedora/issues) before reporting a
 problem. A listed limitation can still have useful new evidence.
 
-Open a [bug report](https://github.com/MCC45TR/uke-linux/issues/new?template=bug_report.yml)
+Open a [bug report](https://github.com/linuxgamer/uke-fedora/issues/new)
 for one problem at a time. Include:
 
 - Device model, RAM/storage variant and stock firmware version, if known.
@@ -23,7 +23,7 @@ for one problem at a time. Include:
 The development installation uses `userdata` as its Linux root. The published
 26 October 2026 singleboot image has passed host checks but has not been tested
 on a tablet. A successful build or checksum check does not establish that the
-exported image boots. See the [downloads](README.md#downloads) and linked release
+exported image boots. See the [downloads](README.md#downloads-and-building) and linked release
 instructions for its installation and recovery requirements.
 
 ## Useful evidence from a running Fedora session
