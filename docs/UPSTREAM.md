@@ -13,7 +13,7 @@ onto a `sync/*` branch, and the paths this fork owns are never overwritten.
 | Commit | `5786c9cdf3c4af557d4c9bff10e1c93fc0ed774f` |
 | Date | 2026-11-06 |
 
-The machine-readable copy is [upstream.lock](upstream.lock). `tools/sync-upstream.sh`
+The machine-readable copy is [upstream.lock](../upstream.lock). `tools/sync-upstream.sh`
 reads only that file; edit the pin with `tools/sync-upstream.sh pin --to <rev>`.
 
 ## Why not merge
@@ -33,10 +33,10 @@ A merge looks cheaper than it is:
 
 | Path | Owner | Sync rule |
 | --- | --- | --- |
-| `README.md`, `INSTALL.md`, `UPSTREAM.md` | this fork | never taken from upstream |
+| `README.md`, `INSTALL.md`, `docs/UPSTREAM.md` | this fork | never taken from upstream |
 | `.gitignore`, `.gitmodules`, `.github/` | this fork | never taken; edit by hand |
 | `tools/`, `upstream.lock` | this fork | not in upstream at all |
-| `CONTRIBUTING.md`, `SECURITY.md` | upstream | vendored, then adjusted locally |
+| `docs/CONTRIBUTING.md`, `SECURITY.md` | upstream | vendored, then adjusted locally |
 | `senemos-uke-kernel`, `uke-fedora-builder`, `uke-linux-hardware-support` | upstream + fork patches | pointers moved by hand only |
 | `recovery-uke-ofox`, `uke-linux-images`, `uke-project-aloha`, `uke-desktop-environment-support` | upstream | dropped by this fork |
 

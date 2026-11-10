@@ -3,7 +3,7 @@
 #
 # The workspace never merges upstream branches. This tool applies the upstream
 # content commits since the recorded base onto a sync/* branch, one commit at a
-# time, and refuses to overwrite paths this fork owns. See UPSTREAM.md.
+# time, and refuses to overwrite paths this fork owns. See docs/UPSTREAM.md.
 set -Eeuo pipefail
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
@@ -19,7 +19,7 @@ fail() { printf 'FAIL  %s\n' "$*"; failures=$((failures + 1)); }
 # to these are reported, never applied automatically.
 protected=(
     .gitignore .gitmodules .gitattributes .github
-    README.md INSTALL.md UPSTREAM.md
+    README.md INSTALL.md docs/UPSTREAM.md
     recovery-uke-ofox senemos-uke-kernel uke-fedora-builder
     uke-linux-hardware-support uke-linux-images uke-project-aloha
     uke-desktop-environment-support

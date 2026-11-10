@@ -1,7 +1,7 @@
 # Reporting a problem
 
 The Fedora images are an **alpha release, not suitable for daily use**. Check the
-[hardware status](README.md#hardware-support) and
+[hardware status](../README.md#hardware-support) and
 [existing issues](https://github.com/linuxgamer/uke-fedora/issues) before reporting a
 problem. A listed limitation can still have useful new evidence.
 
@@ -23,7 +23,7 @@ for one problem at a time. Include:
 The development installation uses `userdata` as its Linux root. The published
 26 October 2026 singleboot image has passed host checks but has not been tested
 on a tablet. A successful build or checksum check does not establish that the
-exported image boots. See the [downloads](README.md#downloads-and-building) and linked release
+exported image boots. See the [downloads](../README.md#downloads-and-building) and linked release
 instructions for its installation and recovery requirements.
 
 ## Useful evidence from a running Fedora session
@@ -59,7 +59,7 @@ serial numbers, unit identifiers, MAC addresses, SSIDs, IP addresses, usernames,
 hostnames, home-directory paths and calibration data. Crop personal information
 out of photos. Keep error codes, driver names and relative timestamps intact;
 replace private values with `[redacted]`. Public issues are not a place for raw
-private logs. Use [private security reporting](SECURITY.md) for vulnerabilities.
+private logs. Report vulnerabilities privately to the maintainer.
 
 # Hardware integration policy
 
@@ -127,7 +127,7 @@ model separately.
 
 Keep README introductions and project status brief. Group hardware tables in
 collapsible sections with Feature, Status and Notes columns, following the
-[project README](README.md#hardware-support). Keep detailed development history
+[project README](../README.md#hardware-support). Keep detailed development history
 in the changelog and engineering evidence in the private records.
 
 Keep source review, build, package, VM and tablet results separate. Preserve
