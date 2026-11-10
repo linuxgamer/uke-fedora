@@ -28,10 +28,12 @@ the Fedora image path.
 
 1. **Set the knob.** `config/fedora-release` holds the number; `ukelinux.sh`
    exports it as `FEDORA_RELEASE`, and the image entry script consumes it.
-2. **Rename the builder scripts.** Done: `build-images.sh`, `build-rootfs.sh`,
-   `build-boot-a.sh`. Still hardcoded: helper script names, `.fedora44-*` cache
-   directories, OEM package names and the `fedora44-image-data-srpm` target in
-   hardware-support. Those need a tested pass, not a blind rename.
+2. **Rename the builder scripts.** Done: `build-*.sh`, helper scripts, the
+   package lock, cache directories, container tags, and the OEM data spec,
+   package, target and verifier in hardware-support. Still versioned on
+   purpose: `uke-ssc-fedora44.target` (runtime unit name), `fc44` suffixes on
+   RPM versions, and the four spec conditionals that mix `%{fedora} == 44` with
+   fc46 pins.
 3. **Specs.** Replace `%if 0%{?fedora} == 44` blocks with a comparison against
    `%{fedora}` (for example `>= 45`) or drop the conditional entirely; package
    pins that name a release should use `%{fedora}` instead of a literal.
