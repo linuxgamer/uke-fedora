@@ -116,3 +116,25 @@ Rules learned from the first rebase:
 Next: push the branches, move the umbrella gitlinks, then replace the fork
 URLs in `.gitmodules` with the upstream repositories plus a `patches/` stack
 applied by the build.
+
+## Deletion policy
+
+This fork deliberately drops upstream material that is documentation, reports or
+policy the port does not use: `docs/`, `reports/`, `SECURITY.md`, per-component
+`docs/lessons/` and `referances/README.md`, and the OrangeFox recovery packaging.
+Conflicts in those paths are resolved by keeping them deleted; do not restore
+them just to silence a conflict.
+
+Functional files are different. Before accepting a deletion during a rebase,
+check that nothing in the tree still references the path:
+
+```sh
+git grep -n '<deleted-file-name>' <sync-branch>
+```
+
+The first rebase caught one such regression: the builder had deleted
+`src/audit/check-target-payload.sh` and `tests/original-kde-payload.sh`, while
+`src/public/stage.sh`, `packaging/uke-image-tools.spec` and three tests still
+invoked them. Both files were restored from upstream. The deleted builder
+manifests (`source-plan.json`, runtime locks, stale reports) have no references
+and stay deleted.
