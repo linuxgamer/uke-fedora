@@ -20,7 +20,7 @@ firmware bring-up before it can be tested.
 | Touch (NT36532) | verified | TM tablet | multitouch unreliable |
 | GPU OpenGL | verified | `freedreno` renderer | — |
 | GPU Vulkan | partial | experimental | not qualified |
-| Video decode (H.264/HEVC) | broken | no `/dev/video*` | needs Iris: `videocc-cliffs`, `cliffs-iris` data, signed firmware, media config; see `private/issue-11-bringup.md` |
+| Video decode (H.264/HEVC) | broken | no `/dev/video*` | needs Iris: `videocc-cliffs`, `cliffs-iris` data, media config (dormant candidate series in `patches/video/`); firmware now packaged |
 | CPU / DVFS | verified | all cores | — |
 | Storage (UFS, growfs) | verified | rootfs grows to partition | — |
 | Wi-Fi | verified | connects, transfers | — |
