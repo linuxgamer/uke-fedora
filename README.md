@@ -36,6 +36,9 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 
 🟢 Working · 🟡 Partial · 🔴 Not working · ⚪ Not verified
 
+For developer-level status with evidence, blockers and verification commands,
+see [docs/HARDWARE.md](docs/HARDWARE.md).
+
 ## Downloads and building
 
 Go to [releases](https://github.com/linuxgamer/uke-fedora/releases) and download any desktop you want. Then look at [installation guide](INSTALL.md).
