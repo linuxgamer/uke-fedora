@@ -12,7 +12,7 @@ release=$(<"$root/config/fedora-release") || {
     exit 1
 }
 export FEDORA_RELEASE=$release
-builder=$root/uke-fedora-builder/build-fedora44-images.sh
+builder=$root/uke-fedora-builder/build-images.sh
 [[ -x $builder ]] || {
     printf '%s\n' 'Initialize the image builder: git submodule update --init uke-fedora-builder' >&2
     exit 1

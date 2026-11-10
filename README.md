@@ -41,7 +41,7 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 Go to [releases](https://github.com/linuxgamer/uke-fedora/releases) and download any desktop you want. Then look at [installation guide](INSTALL.md).
 
 To build separate Fedora 44 images on an x86_64 PC, use
-`./uke-fedora-builder/build-fedora44-images.sh --cross-kernel --output build/<DESIRED FOLDER>`.
+`./uke-fedora-builder/build-images.sh --cross-kernel --output build/<DESIRED FOLDER>`.
 By default all desktop variants are built, add `--profiles <ANY DE YOU WANT>,<DE 2>` to select DEs.
 `--cross-kernel` speeds up the kernel compilation by running Clang natively
 on the x86 PC, other packages and rootfs still use AArch64 containers. On an ARM64
