@@ -116,9 +116,9 @@ Rules learned from the first rebase:
 - Keep upstream's `AGENTS.md`; a forked copy conflicts on every sync and belongs
   in the umbrella instead.
 
-Next: push the branches, move the umbrella gitlinks, then replace the fork
-URLs in `.gitmodules` with the upstream repositories plus a `patches/` stack
-applied by the build.
+The umbrella gitlinks now point at these branches. The idea of replacing the
+fork URLs with upstream repositories plus an applied patch stack was evaluated
+on 2026-11-10 and rejected; see "Component model" below.
 
 ## Deletion policy
 
@@ -144,3 +144,21 @@ The first rebase caught one such regression: the builder had deleted
 invoked them. Both files were restored from upstream. The deleted builder
 manifests (`source-plan.json`, runtime locks, stale reports) have no references
 and stay deleted.
+
+## Component model (decided 2026-11-10)
+
+The components stay as rebased forks. Patches are an export for review, not the
+build mechanism.
+
+Why not upstream URLs plus an applied patch stack: the delta is dominated by
+binaries. The builder adds an 11.5 MB boot payload and the hardware component
+carries roughly 35 MB of OEM firmware; the `referances` deletions alone encode
+about 150 MB in a patch. Applying that from the umbrella would add hundreds of
+megabytes and a second way to get the tree wrong.
+
+- Sync: `git -C <component> rebase upstream/main`, resolve, push. The forks sit
+  at their upstream base plus one delta commit.
+- Review: `tools/export-patches.sh` writes text-only patches to
+  `build/patches/` (gitignored, about 1.5 MB total).
+- Never apply an exported patch to a pristine upstream tree; it is a review
+  artifact, not a build input.
