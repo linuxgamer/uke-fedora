@@ -26,8 +26,9 @@ the Fedora image path.
 
 ## Steps for a bump (example: 44 → 45)
 
-1. **Set the knob.** Add `config/fedora-release` with the target number and read
-   it in the entry point (`ukelinux.sh`) as `FEDORA_RELEASE`.
+1. **Set the knob.** `config/fedora-release` holds the number; `ukelinux.sh`
+   exports it as `FEDORA_RELEASE`. The builder scripts do not read it yet, so the
+   next step is to replace their embedded `fedora44` names and tags with it.
 2. **Rename the builder scripts.** `build-fedora44-images.sh`,
    `build-fedora44-rootfs.sh`, `build-fedora44-boot-a.sh` become
    `build-images.sh`, `build-rootfs.sh`, `build-boot-a.sh`; replace the embedded
