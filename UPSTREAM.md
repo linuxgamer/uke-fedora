@@ -121,7 +121,10 @@ applied by the build.
 
 This fork deliberately drops upstream material that is documentation, reports or
 policy the port does not use: `docs/`, `reports/`, `SECURITY.md`, per-component
-`docs/lessons/` and `referances/README.md`, and the OrangeFox recovery packaging.
+`docs/lessons/`, the `referances/` trees, and the OrangeFox recovery packaging.
+Donor sources and build inputs for the port live in `private/`, so `referances/`
+only duplicated build files; upstream's Ubuntu recipes that point into it are
+unused here.
 Conflicts in those paths are resolved by keeping them deleted; do not restore
 them just to silence a conflict.
 
