@@ -10,6 +10,19 @@ TTY, KDE, GNOME, Phosh and Plasma Mobile images. The boot image goes to **`boot_
 These images were built and tested against HyperOS **3.304 Global**. Confirm
 that firmware baseline and unlock the bootloader before installing; other OEM
 versions have not been validated for this release.
+### Unlocking the bootloader
+
+1. In HyperOS, enable Developer options, then `OEM unlocking` and USB debugging.
+2. Use Xiaomi's Mi Unlock tool on a Windows host with the same Mi account as the
+   tablet. Xiaomi may enforce a waiting period (often 168 hours) before the
+   unlock is allowed; plan for it.
+3. Unlocking wipes all user data and may affect the warranty. Back up first.
+4. Never re-lock the bootloader while a non-stock `boot` or `vendor_boot` image
+   is flashed.
+5. Do not flash firmware from an older ROM: anti-rollback can brick the tablet.
+
+Official unlock request: <https://en.miui.com/unlock/>
+
 After unlocking, choose any available image you want, there are multiple variants:
 - KDE - Best support
 - GNOME - boots and works on the tested TM tablet.
