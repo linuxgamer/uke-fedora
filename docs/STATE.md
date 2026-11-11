@@ -17,7 +17,7 @@ rebased component forks; patches are exported for review only. See
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
 | `senemos-uke-kernel` | `main` | `57d7fbb3` (gitlink and worktree) | video series active; native `%prep` fixed; `referances/` removed and its last path strings scrubbed from manifests |
 | `uke-fedora-builder` | `main` | `e9d0cca` (gitlink and worktree) | apps, ru locale, COPR repo; reports removed |
-| `uke-linux-hardware-support` | `main` | `604b443` (gitlink and worktree) | firmware payload; top-level docs removed |
+| `uke-linux-hardware-support` | `main` | `bd04ec9` (gitlink and worktree) | firmware payload; top-level docs and manifest local paths removed |
 
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
@@ -84,8 +84,8 @@ the worktree head with the recorded gitlink before moving a pointer.
   it (all entry points: kernel `96ee63a6`), and scrubbed the last
   `referances/` path strings from the research/source-plan manifests (kernel
   `57d7fbb3`). Added `tools/check-forbidden-paths.sh` and documented the policy
-  in AGENTS/UPSTREAM/DEVELOPING; component commits `2d6ed7b8`/`96ee63a6`,
-  `e9d0cca`, `604b443`.
+  in AGENTS/UPSTREAM/DEVELOPING; component commits `2d6ed7b8`/`96ee63a6`/
+  `57d7fbb3`, `e9d0cca`, `604b443`/`bd04ec9`.
 - Rewrote all three component `AGENTS.md` from the umbrella template and
   removed October documents: 26 kernel, 3 builder and 18 hardware-support
   files created in October 2026 or earlier that were unreferenced and not
