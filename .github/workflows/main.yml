@@ -6,8 +6,8 @@ on:
 
 jobs:
   ssh-session:
-    runs-on: ubuntu-24.04-arm # Official GitHub-hosted ARM64 runner [7†L6-L8]
-    timeout-minutes: 360 # Max job duration (6 hours)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 360
 
     steps:
       - name: Checkout code
@@ -22,23 +22,24 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq openssh-server
           sudo mkdir -p /run/sshd
-          echo "root:root" | sudo chpasswd # Sets a simple password for root
+          echo "root:root" | sudo chpasswd
           sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
           sudo /usr/sbin/sshd -D &
-      
-      - name: Start Cloudflare Quick Tunnel & Keep Session Alive
+
+      - name: Start Cloudflare TCP Tunnel & Keep Session Alive
         run: |
           echo "========== SSH CONNECTION INFO =========="
           echo "Username: root"
           echo "Password: root"
-          echo "Starting Cloudflare tunnel... (URL will appear below)"
+          echo "Starting Cloudflare TCP tunnel... (URL will appear below)"
           echo "=========================================="
-          
-          # Start cloudflared in the background and log its output
-          cloudflared tunnel --url ssh://localhost:22 --protocol http2 > /tmp/cloudflared.log 2>&1 &
-          
-          # Wait for the URL to be generated in the log
+
+          # Use tcp:// instead of ssh:// to avoid protocol errors
+          # Use 127.0.0.1 instead of localhost to avoid IPv6 resolution issues
+          cloudflared tunnel --url tcp://127.0.0.1:22 --protocol http2 > /tmp/cloudflared.log 2>&1 &
+
+          # Wait for the URL to be generated
           for i in {1..30}; do
             if grep -q "trycloudflare.com" /tmp/cloudflared.log; then
               echo "✅ Tunnel URL found:"
@@ -48,10 +49,9 @@ jobs:
             echo "Waiting for tunnel URL... ($i/30)"
             sleep 2
           done
-          
+
           echo ""
           echo "🟢 The session is now active. You have up to 6 hours to connect."
           echo "🛑 To end the session, simply cancel the workflow run."
-          
-          # Keep the job alive indefinitely (until the 6-hour timeout or manual cancellation)
-          sleep 21600 # 6 hours in seconds
+
+          sleep 21600
