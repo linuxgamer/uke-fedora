@@ -1,4 +1,4 @@
-name: ARM64 SSH Session via Cloudflare Tunnel
+name: ARM64 SSH Session via ngrok TCP Tunnel
 
 on:
   push:
@@ -13,45 +13,46 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install cloudflared
+      - name: Install ngrok
         run: |
-          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb
-          sudo dpkg -i cloudflared-linux-arm64.deb
+          wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.tgz
+          sudo tar -xzf ngrok-v3-stable-linux-arm64.tgz -C /usr/local/bin
+          ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
 
       - name: Setup SSH Server
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq openssh-server
           sudo mkdir -p /run/sshd
-          echo "root:root" | sudo chpasswd
+          echo "runner:runner" | sudo chpasswd # Changed user for clarity
           sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
           sudo /usr/sbin/sshd -D &
 
-      - name: Start Cloudflare TCP Tunnel & Keep Session Alive
+      - name: Start ngrok TCP Tunnel & Keep Session Alive
         run: |
           echo "========== SSH CONNECTION INFO =========="
-          echo "Username: root"
-          echo "Password: root"
-          echo "Starting Cloudflare TCP tunnel... (URL will appear below)"
+          echo "Username: runner"
+          echo "Password: runner"
+          echo "Starting ngrok TCP tunnel on port 22..."
           echo "=========================================="
-
-          # Use tcp:// instead of ssh:// to avoid protocol errors
-          # Use 127.0.0.1 instead of localhost to avoid IPv6 resolution issues
-          cloudflared tunnel --url tcp://127.0.0.1:22 --protocol http2 > /tmp/cloudflared.log 2>&1 &
-
-          # Wait for the URL to be generated
+          
+          # Start ngrok in the background, listening on port 22
+          ngrok tcp 22 --log=stdout > /tmp/ngrok.log 2>&1 &
+          
+          # Wait for the ngrok URL to appear in the log
           for i in {1..30}; do
-            if grep -q "trycloudflare.com" /tmp/cloudflared.log; then
-              echo "✅ Tunnel URL found:"
-              grep -o 'https://[^ ]*\.trycloudflare\.com' /tmp/cloudflared.log
+            if grep -q "url=tcp://" /tmp/ngrok.log; then
+              echo "✅ ngrok tunnel established!"
+              echo "Your SSH connection address is:"
+              grep -o 'url=tcp://[^ ]*' /tmp/ngrok.log | cut -d'/' -f3
               break
             fi
-            echo "Waiting for tunnel URL... ($i/30)"
+            echo "Waiting for ngrok... ($i/30)"
             sleep 2
           done
-
+          
           echo ""
-          echo "🟢 The session is now active. You have up to 6 hours to connect."
-          echo "🛑 To end the session, simply cancel the workflow run."
-
+          echo "🟢 Session active. You have up to 6 hours to connect."
+          echo "🛑 Cancel the workflow run to end the session."
+          
           sleep 21600
