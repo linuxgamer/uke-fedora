@@ -15,9 +15,9 @@ rebased component forks; patches are exported for review only. See
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
-| `senemos-uke-kernel` | `main` | `e942f625` (gitlink and worktree) | video series active; native `%prep` fixed and passing locally |
-| `uke-fedora-builder` | `main` | `9b83d79` (gitlink and worktree) | apps, ru locale, COPR repo, parallel build; SRPM stage fixed |
-| `uke-linux-hardware-support` | `main` | `1fdc4af` (gitlink and worktree) | firmware payload, Python rule removed |
+| `senemos-uke-kernel` | `main` | `0a0a2631` (gitlink and worktree) | video series active; native `%prep` fixed and passing locally; agent rules refreshed |
+| `uke-fedora-builder` | `main` | `0a48226` (gitlink and worktree) | apps, ru locale, COPR repo, parallel build; SRPM stage and agent rules fixed |
+| `uke-linux-hardware-support` | `main` | `88ffc06` (gitlink and worktree) | firmware payload; agent rules and checks refreshed |
 
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
@@ -63,7 +63,7 @@ the worktree head with the recorded gitlink before moving a pointer.
 - Updated the three component `AGENTS.md`: removed links to the dropped
   `referances/` and `uke-linux-docs/` trees, retired the OrangeFox and missing
   ACCESSORY paths, added the real checks with host prerequisites and the
-  umbrella gitlink/PR flow (component commits `0a0a2631`, `0a48226`, `733ad66`).
+  umbrella gitlink/PR flow (component commits `0a0a2631`, `0a48226` and `88ffc06`).
   Also moved `INSTALL.md` to `docs/INSTALL.md`, fixed every link and restored the
   Fedora 44 and CSOT wording in README (`531d154`).
 - Findings recorded in the backlog: builder CI parity runner (B12), kernel
@@ -74,13 +74,16 @@ the worktree head with the recorded gitlink before moving a pointer.
 - Split the private journal: decisions and host quirks stay in `private/NOTES.md`,
   owner-only actions moved to `private/TODO.md`; public work remains here and in
   the backlog.
+- Component source-contracts CI passed for builder `0a48226` and hardware
+  `88ffc06`; the kernel workflow runs on pull requests only.
 
 ## Previous session (2026-11-11, earlier)
 
 - Added the first version of the root `AGENTS.md`, `docs/STATE.md` and
   `docs/BACKLOG.md`; rewrote the private notes as a decision/host journal.
 - Created the COPR project and published eight userland packages. The kernel
-  still fails in `%prep` (latest attempts: 11307436, 11307449, 11307468).
+  `%prep` failure was later root-caused from the public builder log and fixed
+  in `e942f625`; the COPR upload is still pending.
 - The image CI run 43008866968 was cancelled; the extended workflow has not run.
 - No image has been built after the broad native archive fix (`30dfa729`).
 
