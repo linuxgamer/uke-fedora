@@ -37,7 +37,7 @@ A merge looks cheaper than it is:
 
 | Path | Owner | Sync rule |
 | --- | --- | --- |
-| `README.md`, `INSTALL.md`, `docs/UPSTREAM.md` | this fork | never taken from upstream |
+| `README.md`, `docs/INSTALL.md`, `docs/UPSTREAM.md` | this fork | never taken from upstream |
 | `.gitignore`, `.gitmodules`, `.github/` | this fork | never taken; edit by hand |
 | `tools/`, `upstream.lock` | this fork | not in upstream at all |
 | `AGENTS.md`, `docs/DEVELOPING.md`, `docs/STATE.md`, `docs/BACKLOG.md` | this fork | never taken from upstream |

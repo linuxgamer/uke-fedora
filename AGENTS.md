@@ -132,7 +132,7 @@ same output directory, do not kill another agent's build, and use
 ## Documentation rules
 
 - Developer docs are [docs/](docs/) and this file; user docs are
-  [README.md](README.md) and [INSTALL.md](INSTALL.md). Keep the audiences
+  [README.md](README.md) and [docs/INSTALL.md](docs/INSTALL.md). Keep the audiences
   separate: commands, evidence and limitations go to developer docs.
 - Write English. State the date, environment, observed result and remaining
   work. Name the device directly.
@@ -150,7 +150,7 @@ Document map:
 | File | Audience | Purpose |
 | --- | --- | --- |
 | `README.md` | users | Project, hardware status, downloads |
-| `INSTALL.md` | users | Flashing and recovery |
+| `docs/INSTALL.md` | users | Flashing and recovery |
 | `docs/DEVELOPING.md` | contributors | First-hour setup, checks, git flow |
 | `docs/STATE.md` | contributors | Current heads, CI, blockers |
 | `docs/BACKLOG.md` | contributors | Ordered work |

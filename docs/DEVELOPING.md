@@ -58,7 +58,7 @@ git submodule status    # '+' means the worktree is ahead of the recorded gitlin
 
 | Path | Owner | Change it when |
 | --- | --- | --- |
-| `README.md`, `INSTALL.md` | umbrella | User-visible facts, hardware table, flashing |
+| `README.md`, `docs/INSTALL.md` | umbrella | User-visible facts, hardware table, flashing |
 | `docs/` | umbrella | Developer documentation and status |
 | `AGENTS.md` | umbrella | Rules for contributors and AI agents |
 | `tools/` | umbrella | Host tooling for docs, sync and COPR |

@@ -22,7 +22,7 @@ for one problem at a time. Include:
   whether touch input or SSH remained available.
 
 The released images install the Fedora root on `userdata` and the boot image on
-`boot_a`; see the [installation guide](../INSTALL.md). Tested hardware and known
+`boot_a`; see the [installation guide](INSTALL.md). Tested hardware and known
 limitations are in the [README](../README.md#hardware-support) and
 [HARDWARE.md](HARDWARE.md). A successful build or checksum check does not
 establish that an image boots, and a boot does not prove a hardware block. Report
