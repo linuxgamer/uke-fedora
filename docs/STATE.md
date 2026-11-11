@@ -1,6 +1,6 @@
 # State
 
-Updated: 2026-11-11. Verify with commands before relying on it; update this file
+Updated: 2026-11-11 (end of session). Verify with commands before relying on it; update this file
 at the end of every session. History and decisions live in `private/NOTES.md`.
 
 ## Upstream and forks
@@ -11,9 +11,20 @@ patches are exported for review only.
 
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
+| umbrella | `main` | `1e84e11` | entry-point docs added |
 | `senemos-uke-kernel` | `main` | `80c0af3e` | video series active, kernel COPR prep failing |
 | `uke-fedora-builder` | `main` | `d2c3393` | apps, ru locale, COPR repo, parallel build |
 | `uke-linux-hardware-support` | `main` | `1fdc4af` | firmware payload, Python rule removed |
+
+## Last session (2026-11-11)
+
+- Added the root `AGENTS.md`, `docs/STATE.md` and `docs/BACKLOG.md`; rewrote
+  `private/NOTES.md` as a decision/host journal.
+- Created the COPR project and published eight userland packages. The kernel
+  still fails in `%prep` (latest attempts: 11307436, 11307449, 11307468).
+- The image CI run 43008866968 was cancelled; the extended workflow has not run.
+- No image has been built after the broad native archive fix (`30dfa729`).
+- The COPR token was pasted into chat and is still not rotated.
 
 ## Working now
 

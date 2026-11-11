@@ -8,7 +8,7 @@ Status: `todo`, `in progress`, `blocked`, `done`.
 
 | ID | Prio | Item | Status | Notes |
 | --- | --- | --- | --- | --- |
-| B1 | P0 | Fix the kernel COPR `%prep` failure | blocked | Build `11307468` fails after the ELD test at `src/video/prepare-source.sh`. The series applies locally, so reproduce the native preparation with tracing (`bash -x`) in a clean tree. |
+| B1 | P0 | Fix the kernel COPR `%prep` failure | blocked | Builds `11307436`/`11307449`/`11307468` fail after the ELD test at `src/video/prepare-source.sh`. The series applies locally, so reproduce the native preparation with tracing (`bash -x`) in a clean tree. |
 | B2 | P0 | Rotate the COPR API token | todo | Token was pasted into chat. Replace `build/.copr` (mode 600, gitignored); update no committed file. |
 | B3 | P0 | First image build and tablet test | todo | `UKE_VIDEO_OVERLAY=1 ./ukelinux.sh --profiles tty --cross-kernel --parallel 2 --output build/video11`. Check `status.json`, flash TTY, `dmesg \| grep iris`, `/dev/video*`. Also validates the parallel option. |
 | B4 | P1 | Run the image CI workflow | todo | [`build-image.yml`](../.github/workflows/build-image.yml) now has cache, `--parallel` and release packaging. Run it manually for `tty`; fix the workflow, not the builder, if it fails on setup. |
