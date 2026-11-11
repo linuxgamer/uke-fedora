@@ -15,9 +15,9 @@ rebased component forks; patches are exported for review only. See
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
-| `senemos-uke-kernel` | `main` | `0a0a2631` (gitlink and worktree) | video series active; native `%prep` fixed and passing locally; agent rules refreshed |
-| `uke-fedora-builder` | `main` | `0a48226` (gitlink and worktree) | apps, ru locale, COPR repo, parallel build; SRPM stage and agent rules fixed |
-| `uke-linux-hardware-support` | `main` | `88ffc06` (gitlink and worktree) | firmware payload; agent rules and checks refreshed |
+| `senemos-uke-kernel` | `main` | `8d968d14` (gitlink and worktree) | video series active; native `%prep` fixed; agent rules and docs cleanup |
+| `uke-fedora-builder` | `main` | `facd4e1` (gitlink and worktree) | apps, ru locale, COPR repo; agent rules and docs cleanup |
+| `uke-linux-hardware-support` | `main` | `8d95e01` (gitlink and worktree) | firmware payload; agent rules and docs cleanup |
 
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
@@ -76,6 +76,12 @@ the worktree head with the recorded gitlink before moving a pointer.
   the backlog.
 - Component source-contracts CI passed for builder `0a48226` and hardware
   `88ffc06`; the kernel workflow runs on pull requests only.
+- Rewrote all three component `AGENTS.md` from the umbrella template and
+  removed October documents: 26 kernel, 3 builder and 18 hardware-support
+  files created in October 2026 or earlier that were unreferenced and not
+  maintained in November (component commits `8d968d14`, `facd4e1`, `8d95e01`).
+  README/AGENTS/BUILDING/SECURITY, November-maintained and referenced documents
+  remain; removed files are recoverable from git history.
 
 ## Previous session (2026-11-11, earlier)
 

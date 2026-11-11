@@ -136,6 +136,12 @@ same output directory, do not kill another agent's build, and use
   separate: commands, evidence and limitations go to developer docs.
 - Write English. State the date, environment, observed result and remaining
   work. Name the device directly.
+- Remove a superseded engineering document in the same change that makes
+  it obsolete. The 2026-11-11 cleanup removed documents created before
+  November 2026 that were not README/AGENTS/BUILDING/SECURITY, not
+  maintained in November, and not referenced by code, manifests or a kept
+  document; recover them from git history. Component documents stay in the
+  component repository.
 - Link only to files that exist in the published tree. **Never use a relative
   link into a submodule**: GitHub returns 404 for it. Use the component
   repository URL instead. `tools/check-docs.sh` enforces this.

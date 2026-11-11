@@ -33,3 +33,4 @@ Status: `todo`, `in progress`, `blocked`, `done`.
 B2 is two minutes and unblocks the COPR rebuild of the fixed kernel (B1). B3 and
 B4 then need a long build; the tablet test needs the device. Documentation and
 tooling items B12–B19 are self-contained and suitable for a first contribution.
+| B20 | P2 | Clean up October documentation | done | Removed 26 kernel, 3 builder and 18 hardware-support documents created in October 2026 or earlier that were not README/AGENTS/BUILDING/SECURITY, not maintained in November, and not referenced by code, manifests, the umbrella or a kept document. Component commits: kernel `8d968d14`, builder `facd4e1`, hardware `8d95e01`; recovery is git history. |
