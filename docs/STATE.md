@@ -1,30 +1,53 @@
 # State
 
-Updated: 2026-11-11 (end of session). Verify with commands before relying on it; update this file
-at the end of every session. History and decisions live in `private/NOTES.md`.
+Updated: 2026-11-11 (documentation and agent-rules pass). Verify with commands
+before relying on it; update this file at the end of every session. Long history
+and decisions live in the private notes; this file records only facts.
 
 ## Upstream and forks
 
 Upstream: `MCC45TR/uke-linux`, branch `Fedora`, pin `5786c9c` (2026-11-06),
-recorded in [`upstream.lock`](../upstream.lock). Model B: three rebased forks,
-patches are exported for review only.
+recorded in [`upstream.lock`](../upstream.lock). Model: vendored fork with three
+rebased component forks; patches are exported for review only. See
+[UPSTREAM.md](UPSTREAM.md).
 
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
-| umbrella | `main` | `1e84e11` | entry-point docs added |
-| `senemos-uke-kernel` | `main` | `80c0af3e` | video series active, kernel COPR prep failing |
-| `uke-fedora-builder` | `main` | `d2c3393` | apps, ru locale, COPR repo, parallel build |
-| `uke-linux-hardware-support` | `main` | `1fdc4af` | firmware payload, Python rule removed |
+| umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
+| `senemos-uke-kernel` | `main` | umbrella gitlink `80c0af3e`; fork worktree advanced to `e942f625` | video series active, kernel COPR prep failing |
+| `uke-fedora-builder` | `main` | umbrella gitlink `d2c3393`; fork worktree advanced to `9b83d79` | apps, ru locale, COPR repo, parallel build |
+| `uke-linux-hardware-support` | `main` | `1fdc4af` (gitlink and worktree) | firmware payload, Python rule removed |
 
-## Last session (2026-11-11)
+Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
+the worktree head with the recorded gitlink before moving a pointer.
 
-- Added the root `AGENTS.md`, `docs/STATE.md` and `docs/BACKLOG.md`; rewrote
-  `private/NOTES.md` as a decision/host journal.
+## Last session (2026-11-11, documentation and agent-rules pass)
+
+- Published the contributor rules as [AGENTS.md](../AGENTS.md) (removed from
+  `.gitignore`) and added [docs/DEVELOPING.md](DEVELOPING.md): environment,
+  checks, submodule flow, contribution targets, troubleshooting.
+- Added `tools/check-dev-env.sh` (clone shape and host tools) and
+  `tools/check-docs.sh` (relative links in published docs).
+- Added `.github/PULL_REQUEST_TEMPLATE.md` and a developer-guide contact link in
+  the issue template config.
+- Fixed developer docs: CONTRIBUTING now has a code-contribution section and no
+  longer claims the release image is untested on a tablet; UPSTREAM no longer
+  claims `SECURITY.md` is vendored, records the real CI situation and the
+  missing evidence paths; README links into submodules (404 on GitHub) replaced
+  with repository URLs and dev/user entry points separated.
+- Findings recorded in the backlog: builder CI parity runner (B12), kernel
+  check prerequisites (B13, partly covered by `tools/check-dev-env.sh`), docs
+  and link CI (B14), stale component `AGENTS.md` evidence paths (B15), and the
+  user-facing release/docs refresh (B16, release polish B9 reopened).
+
+## Previous session (2026-11-11, earlier)
+
+- Added the first version of the root `AGENTS.md`, `docs/STATE.md` and
+  `docs/BACKLOG.md`; rewrote the private notes as a decision/host journal.
 - Created the COPR project and published eight userland packages. The kernel
   still fails in `%prep` (latest attempts: 11307436, 11307449, 11307468).
 - The image CI run 43008866968 was cancelled; the extended workflow has not run.
 - No image has been built after the broad native archive fix (`30dfa729`).
-- The COPR token was pasted into chat and is still not rotated.
 
 ## Working now
 
@@ -53,13 +76,13 @@ patches are exported for review only.
 - **No image has been built after the broad native archive fix** (`30dfa729`).
   The last local attempts failed during `%prep`; validation and pin checks now
   pass, but the first successful build is still pending.
-- **COPR token was pasted into chat.** Rotate it and replace `build/.copr`
-  (gitignored, mode 600).
+- **COPR API credentials need rotation**; do not repeat the value in public.
 - OEM firmware and sensor blobs stay out of public repositories; see
-  [COPR](COPR.md).
+  [COPR.md](COPR.md).
+- **Component `AGENTS.md` files reference evidence paths that this fork removed**
+  (backlog B15); use [DEVELOPING.md](DEVELOPING.md#missing-evidence-paths).
 
 ## Next action
 
-Debug the kernel COPR `%prep` failure or run the first image build
-(`UKE_VIDEO_OVERLAY=1 ./ukelinux.sh --profiles tty --cross-kernel --parallel 2
---output build/video11`). Both are in the backlog.
+Rotate the COPR token (B2), then debug the kernel COPR `%prep` failure (B1) or
+run the first image build (B3). All three are in the backlog.

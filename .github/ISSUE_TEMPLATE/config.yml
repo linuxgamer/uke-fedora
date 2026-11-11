@@ -3,3 +3,6 @@ contact_links:
   - name: Install and recovery guide
     url: https://github.com/linuxgamer/uke-fedora/blob/main/INSTALL.md
     about: Read this before flashing or reporting a boot problem.
+  - name: Development guide
+    url: https://github.com/linuxgamer/uke-fedora/blob/main/docs/DEVELOPING.md
+    about: Environment, checks and contribution flow for changing the port.

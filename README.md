@@ -11,9 +11,12 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 
 ## Start here
 
-New session or new contributor? Read [docs/STATE.md](docs/STATE.md) for the
-current facts, [docs/BACKLOG.md](docs/BACKLOG.md) for the ordered work, and
-[AGENTS.md](AGENTS.md) for the session and subagent policy.
+- **Installing the port:** read the [installation guide](INSTALL.md) and the
+  [releases](https://github.com/linuxgamer/uke-fedora/releases).
+- **Developing the port:** read [docs/DEVELOPING.md](docs/DEVELOPING.md) for the
+  environment, checks and contribution flow, then [AGENTS.md](AGENTS.md) for the
+  rules. Current facts are in [docs/STATE.md](docs/STATE.md), ordered work in
+  [docs/BACKLOG.md](docs/BACKLOG.md).
 
 ## Hardware support
 
@@ -66,7 +69,12 @@ To build separate Fedora 44 images on an x86_64 PC, use
 By default all desktop variants are built, add `--profiles <ANY DE YOU WANT>,<DE 2>` to select DEs.
 `--cross-kernel` speeds up the kernel compilation by running Clang natively
 on the x86 PC, other packages and rootfs still use AArch64 containers. On an ARM64
-host, omit the flag. See the [Fedora 44 build guide](uke-fedora-builder/docs/BUILD-CACHE.md) for cache, resume and rebuild options.
+host, omit the flag. Host requirements and the first-hour setup are in
+[docs/DEVELOPING.md](docs/DEVELOPING.md); see the
+[build guide](https://github.com/linuxgamer/uke-fedora-builder/blob/main/docs/BUILDING.md)
+and the
+[cache guide](https://github.com/linuxgamer/uke-fedora-builder/blob/main/docs/BUILD-CACHE.md)
+for cache, resume and rebuild options.
 
 Package updates can be published to COPR; see [docs/COPR.md](docs/COPR.md).
 
@@ -76,9 +84,9 @@ This repository brings together the following components as submodules:
 
 | Component | Repository |
 | --- | --- |
-| Kernel and device trees | [senemos-uke-kernel](senemos-uke-kernel/) |
-| Hardware support and packages | [uke-linux-hardware-support](uke-linux-hardware-support/) |
-| Fedora image builder | [uke-fedora-builder](uke-fedora-builder/) |
+| Kernel and device trees | [senemos-uke-kernel-mainline](https://github.com/linuxgamer/senemos-uke-kernel-mainline) |
+| Hardware support and packages | [uke-linux-hardware-support](https://github.com/linuxgamer/uke-linux-hardware-support) |
+| Fedora image builder | [uke-fedora-builder](https://github.com/linuxgamer/uke-fedora-builder) |
 
 To clone with the submodules:
 
