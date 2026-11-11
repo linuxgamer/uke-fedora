@@ -14,8 +14,25 @@ on:
         default: "0"
         type: choice
         options: ["0", "1"]
+      parallel:
+        description: Build up to N desktop profiles at once
+        required: true
+        default: "1"
+        type: choice
+        options: ["1", "2", "3", "4"]
+      package_release:
+        description: Create release archives with the packager
+        required: true
+        default: "yes"
+        type: choice
+        options: ["yes", "no"]
+      release_tag:
+        description: Optional existing or new GitHub release tag to upload to
+        required: false
+        default: ""
+        type: string
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: build-image-${{ github.ref }}
   cancel-in-progress: false
@@ -23,12 +40,34 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 240
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - name: Record component pins
+        id: pins
+        run: |
+          {
+            echo "kernel=$(git -C senemos-uke-kernel rev-parse HEAD)"
+            echo "builder=$(git -C uke-fedora-builder rev-parse HEAD)"
+            echo "hardware=$(git -C uke-linux-hardware-support rev-parse HEAD)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Restore build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            uke-fedora-builder/build/cache/ccache
+            uke-fedora-builder/build/cache/ccache-cross
+            uke-fedora-builder/build/cache/dnf
+            uke-fedora-builder/build/cache/dnf-x86_64
+          key: uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}
+          restore-keys: |
+            uke-cache-${{ steps.pins.outputs.kernel }}-
+            uke-cache-
 
       - name: Free disk space
         run: |
@@ -55,12 +94,23 @@ jobs:
           PROFILES: ${{ inputs.profiles }}
           UKE_VIDEO_OVERLAY: ${{ inputs.video_overlay }}
           UKE_CONTAINER: docker
+          PARALLEL: ${{ inputs.parallel }}
         run: |
           set -Eeuo pipefail
           [[ $PROFILES =~ ^[a-z,-]+$ ]] || { echo 'Invalid profiles list' >&2; exit 1; }
           output="build/ci-$GITHUB_RUN_ID"
           mkdir -p build
-          ./ukelinux.sh --profiles "$PROFILES" --cross-kernel --output "$output"
+          ./ukelinux.sh --profiles "$PROFILES" --parallel "$PARALLEL" --cross-kernel --output "$output"
+
+      - name: Package release archives
+        if: success() && inputs.package_release == 'yes'
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -Eeuo pipefail
+          tag=${RELEASE_TAG:-ci-$GITHUB_RUN_ID}
+          ./uke-fedora-builder/tools/package-release.sh --tag "$tag" \
+            --output "build/release-$tag" build/ci-$GITHUB_RUN_ID/*-pair
 
       - name: Upload image artifacts
         if: always()
@@ -73,6 +123,48 @@ jobs:
             build/ci-*/*-pair/userdata.img
             build/ci-*/*-pair/SHA256SUMS
             build/ci-*/build.log
+            build/release-*/*.tar.zst
+            build/release-*/SHA256SUMS
           if-no-files-found: warn
           compression-level: 0
           retention-days: 14
+
+      - name: Publish release
+        if: success() && inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -Eeuo pipefail
+          tag=$RELEASE_TAG
+          gh release view "$tag" >/dev/null 2>&1 || \
+            gh release create "$tag" --prerelease --title "$tag" --notes "Automated Uke image build."
+          shopt -s nullglob
+          assets=(build/release-"$tag"/*.tar.zst build/release-"$tag"/SHA256SUMS)
+          ((${#assets[@]})) || { echo 'No release archives to upload' >&2; exit 1; }
+          gh release upload "$tag" "${assets[@]}" --clobber
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo '## Uke image build'
+            echo "- profiles: \`${{ inputs.profiles }}\`"
+            echo "- video overlay: \`${{ inputs.video_overlay }}\`"
+            echo "- parallel: \`${{ inputs.parallel }}\`"
+            echo "- result: \`${{ job.status }}\`"
+            if [[ -s build/ci-$GITHUB_RUN_ID/status.json ]]; then
+              echo '```json'
+              cat build/ci-$GITHUB_RUN_ID/status.json
+              echo '```'
+            fi
+            shopt -s nullglob
+            for f in build/ci-$GITHUB_RUN_ID/*-pair/fedora_boot.img; do
+              printf -- '- %s: %s\n' "$f" "$(du -h "$f" | cut -f1)"
+            done
+            if [[ -d build/release-* ]]; then
+              echo '```'
+              cat build/release-*/SHA256SUMS 2>/dev/null || true
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
