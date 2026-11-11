@@ -75,6 +75,7 @@ tools/sync-upstream.sh plan            # what is content, what is pointer noise
 tools/sync-upstream.sh prepare --dry-run
 tools/sync-upstream.sh prepare         # vendor content onto sync/<pin>
 tools/sync-upstream.sh verify          # policy checks on the sync branch
+tools/check-forbidden-paths.sh         # removed trees must not come back
 ```
 
 `prepare` refuses a dirty tree, creates `sync/<pin-short>` from `main`, and

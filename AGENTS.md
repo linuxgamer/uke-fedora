@@ -100,6 +100,7 @@ Full setup, expected outputs and known failure modes are in
 | --- | --- | --- |
 | `tools/check-dev-env.sh` | Clone shape, submodules, host tools | Use `--quick` for docs-only work |
 | `tools/check-docs.sh` | Relative links in published docs | Run for every documentation change |
+| `tools/check-forbidden-paths.sh` | Removed trees: `referances/`, `reports/`, hardware top-level `docs/` | Run before a commit and after every sync |
 | `make -C senemos-uke-kernel check-pins` | Source and manifest digests | Fast |
 | `make -C senemos-uke-kernel validate` | Kernel source contracts | Needs `rpm`, `rpmspec`, `dtc`, `clang`; can fail silently, see DEVELOPING |
 | `make -C uke-linux-hardware-support validate` | Package, source and schema contracts | Fast enough for every change |
@@ -141,7 +142,8 @@ same output directory, do not kill another agent's build, and use
   November 2026 that were not README/AGENTS/BUILDING/SECURITY, not
   maintained in November, and not referenced by code, manifests or a kept
   document; recover them from git history. Component documents stay in the
-  component repository.
+  component repository. The removed `referances/`, `reports/` and hardware
+  top-level `docs/` trees must not return; the guard above enforces that.
 - Link only to files that exist in the published tree. **Never use a relative
   link into a submodule**: GitHub returns 404 for it. Use the component
   repository URL instead. `tools/check-docs.sh` enforces this.
@@ -214,5 +216,6 @@ Document map:
 - [ ] `docs/BACKLOG.md` marks what moved, what is blocked, and what is new.
 - [ ] The relevant checks were run; exceptions are written down.
 - [ ] `tools/check-docs.sh` passes for documentation changes.
+- [ ] `tools/check-forbidden-paths.sh` passes (removed trees did not return).
 - [ ] Commits are pushed; submodule pointer changes are intentional.
 - [ ] The next action is one line and does not depend on this conversation.

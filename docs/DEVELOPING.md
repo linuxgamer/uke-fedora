@@ -87,6 +87,18 @@ It fails on a link into a submodule (GitHub renders such links as 404), on a
 link into `private/` or `build/`, and on a target that does not exist. Run it for
 every documentation change; it is not wired into CI yet (backlog B14).
 
+### Tree policy
+
+```sh
+tools/check-forbidden-paths.sh
+```
+
+Fails if a component tracks or contains `referances/`, the kernel or builder
+`reports/`, or the hardware-support top-level `docs/` tree. Those trees are
+removed by policy ([UPSTREAM.md](UPSTREAM.md#deletion-policy)) and their content
+stays in git history. Run the check before a commit and after every upstream
+sync; per-component `docs/` and the `source-cache/` archive cache remain allowed.
+
 ### Kernel source checks
 
 ```sh
@@ -223,10 +235,10 @@ clean clone:
 
 | Missing path | Where it used to be referenced | Use instead |
 | --- | --- | --- |
-| `senemos-uke-kernel/referances/README.md` | kernel `AGENTS.md` | The pinned source archives under `referances/releases/`, [UPSTREAM.md](UPSTREAM.md) and the kernel README |
+| `senemos-uke-kernel/referances/README.md` | kernel `AGENTS.md` | The pinned source archives in the kernel `source-cache/releases/` cache, [UPSTREAM.md](UPSTREAM.md) and the kernel README. The `referances/` tree is removed by policy |
 | `uke-linux-docs/docs/DONOR-POLICY.md` | kernel and hardware `AGENTS.md` | The hardware integration policy in [CONTRIBUTING.md](CONTRIBUTING.md#hardware-integration-policy) and the donor rules in [UPSTREAM.md](UPSTREAM.md) |
-| `uke-linux-hardware-support/docs/research/ACCESSORY-LAB.md` | hardware `AGENTS.md` | The hardware repo's `docs/lessons/` directory |
-| `uke-linux-hardware-support/docs/testing/ACCESSORY-TEST-PLAN.md` | hardware `AGENTS.md` | The hardware repo's `docs/lessons/` directory |
+| `uke-linux-hardware-support/docs/research/ACCESSORY-LAB.md` | hardware `AGENTS.md` | The private engineering records and per-component `docs/lessons/` where a component defines one. The hardware top-level `docs/` tree is removed by policy |
+| `uke-linux-hardware-support/docs/testing/ACCESSORY-TEST-PLAN.md` | hardware `AGENTS.md` | The private engineering records and per-component `docs/lessons/` where a component defines one. The hardware top-level `docs/` tree is removed by policy |
 
 If a rule points at a path that does not exist, treat it as a documentation bug:
 use the substitute, do not invent the missing evidence, and fix the rule in the
