@@ -16,25 +16,36 @@ database. Read the log for skipped or reused stages before trusting a cache hit.
 
 ## 2. Package
 
-Each archive contains the matched pair and its own checksums:
+Use the release packager instead of hand-picking files from a pair directory:
+
+```sh
+./uke-fedora-builder/tools/package-release.sh --tag <tag> --output build/release-<tag> \
+    --twrp <twrp_recovery_ab.tar.zst> build/<name>/*-pair
+```
+
+Each archive contains exactly the shipped files and a checksum file:
 
 ```
 fedora_boot.img  userdata.img  manifest.json  SHA256SUMS
 ```
 
-Before publishing, run `sha256sum -c SHA256SUMS` inside the extracted folder.
-The file must list exactly the four shipped files; a longer list means the
-builder lock leaked build-internal paths and the release is broken.
+The inner `SHA256SUMS` lists only the three shipped files (the checksum file
+itself is not listed) and `sha256sum -c` must pass after extraction. Never copy
+the build-internal pair checksums: they name `Image`, `boot.config` and other
+files that are not in the archive.
 
-Record the archive hashes in the outer `SHA256SUMS` and publish, together with
-`twrp_recovery_ab.tar.zst`:
+The packager writes an outer `SHA256SUMS` covering the archives and the TWRP
+asset, and prints the result. Publish:
 
 - `fedora-44-uke-<tag>-kde.tar.zst`
 - `fedora-44-uke-<tag>-gnome.tar.zst`
+- `fedora-44-uke-<tag>-tty.tar.zst` if a TTY image is released
 - `SHA256SUMS`
 - `twrp_recovery_ab.tar.zst`
 
-Mark the GitHub release as a pre-release while the image is still alpha.
+Mark the GitHub release as a pre-release while the image is still alpha. The
+release notes must say so in the first line; do not present an alpha image as a
+daily-driver release.
 
 ## 3. Device smoke test
 

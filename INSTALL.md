@@ -76,7 +76,22 @@ preset password.
 
 If Fedora does not boot:
 1. Keep the exact error or a photo of the screen and make a bug report.
-2. Make sure you flashed correct images
-3. Try debugging from TWRP
-4. To return to Android, restore your Android data backup and the matching OEM
-   firmware. Switching to slot B alone cannot restore the overwritten `userdata`.
+2. Make sure you flashed the correct `fedora_boot.img` and `userdata.img` from
+   the same build.
+3. Try debugging from TWRP: extract `twrp_recovery_ab.tar.zst` from the release,
+   boot it with `fastboot boot twrp_recovery_ab.img` and inspect the partitions.
+
+### Return to Android
+
+Switching to slot B alone cannot restore `userdata`; that partition now holds
+Fedora. Keep a matching stock fastboot ROM and your data backup before flashing.
+
+1. Download the stock ROM for your region and the TWRP archive from the release.
+2. Back up anything still readable: boot into TWRP and copy the internal storage
+   or the partitions you need to a USB drive.
+3. Return to bootloader fastboot, then run the stock `flash_all.sh` (or MiFlash)
+   from the matching ROM. It erases `userdata` and restores `boot`, `vendor_boot`
+   and the stock system.
+4. Do not flash firmware from an older ROM: anti-rollback can brick the tablet.
+5. Never re-lock the bootloader while a non-stock `boot` or `vendor_boot` is
+   flashed.
