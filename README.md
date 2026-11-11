@@ -1,5 +1,7 @@
 # Uke Fedora
 
+[![Build images](https://github.com/linuxgamer/uke-fedora/actions/workflows/build-image.yml/badge.svg)](https://github.com/linuxgamer/uke-fedora/actions/workflows/build-image.yml)
+
 Fedora Linux port made mainly for the **Xiaomi Pad 7**, based on [MCC45TR's port](https://github.com/MCC45TR/uke-linux).
 
 This port is **work in progress**. Differences are: Fedora 44, `/userdata` install, more DEs, TM display support, build optimisations, extra QoL stuff.
@@ -39,6 +41,16 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 For developer-level status with evidence, blockers and verification commands,
 see [docs/HARDWARE.md](docs/HARDWARE.md).
 
+## Screenshots
+
+| KDE Plasma | GPU and Vulkan |
+| --- | --- |
+| ![KDE Plasma on the tablet](.github/assets/screenshots/uke-fedora-kde-2026-10-17.png) | ![Chromium GPU status](.github/assets/screenshots/Fedora_Rawhide_PAD7_UKE_Chromium_GPU_Status.png) |
+
+Older screenshots from the Rawhide bring-up are kept in
+`.github/assets/screenshots/`; they show the same tablet and are not a claim
+that every block works in the current release.
+
 ## Downloads and building
 
 Go to [releases](https://github.com/linuxgamer/uke-fedora/releases) and download any desktop you want. Then look at [installation guide](INSTALL.md).
@@ -48,7 +60,9 @@ To build separate Fedora 44 images on an x86_64 PC, use
 By default all desktop variants are built, add `--profiles <ANY DE YOU WANT>,<DE 2>` to select DEs.
 `--cross-kernel` speeds up the kernel compilation by running Clang natively
 on the x86 PC, other packages and rootfs still use AArch64 containers. On an ARM64
-host, omit the flag. See the [Fedora 44 build guide](uke-fedora-builder/docs/FEDORA44-BUILD-CACHE.md) for cache, resume and rebuild options.
+host, omit the flag. See the [Fedora 44 build guide](uke-fedora-builder/docs/BUILD-CACHE.md) for cache, resume and rebuild options.
+
+Package updates can be published to COPR; see [docs/COPR.md](docs/COPR.md).
 
 ## Source
 

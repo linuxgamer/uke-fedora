@@ -1,0 +1,90 @@
+name: Bug report
+description: Report a problem with a Fedora image on Xiaomi Pad 7
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not paste serial numbers, account names or private data.
+        A successful build is not evidence that an image boots; include the
+        exact image tag and kernel release.
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: Model and region
+      placeholder: Xiaomi Pad 7 (uke), global
+    validations:
+      required: true
+  - type: dropdown
+    id: panel
+    attributes:
+      label: Panel
+      options:
+        - TM
+        - CSOT
+        - Unknown
+    validations:
+      required: true
+  - type: input
+    id: image
+    attributes:
+      label: Image and profile
+      description: Release tag, archive name and profile (tty/kde/gnome/phosh/plasma-mobile)
+      placeholder: r1, fedora-44-uke-r1-kde.tar.zst, kde
+    validations:
+      required: true
+  - type: input
+    id: kernel
+    attributes:
+      label: Kernel release
+      description: Output of `uname -r` (or the release string in the boot log)
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware baseline
+      description: HyperOS version before installing Fedora
+      placeholder: HyperOS 3.304 Global
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you did, in order
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual result
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste the output of the commands below, trimmed to the failure
+      value: |
+        ```sh
+        uname -r
+        cat /proc/cmdline
+        journalctl -b -p err --no-pager | tail -50
+        dmesg | tail -50
+        upower --dump
+        lsusb
+        ```
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I am running an image built from the reported commit/tag
+          required: true
+        - label: I have not re-locked the bootloader while a non-stock boot image is flashed
+          required: true
+        - label: I can recover the tablet with fastboot and a stock ROM
+          required: true
