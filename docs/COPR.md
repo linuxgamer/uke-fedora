@@ -1,5 +1,8 @@
 # Publishing packages to COPR
 
+Current project: <https://copr.fedorainfracloud.org/coprs/linuxgamer/uke-fedora/>
+(`fedora-44-aarch64` and `fedora-44-x86_64`).
+
 COPR is the planned update channel: the kernel and the Uke userland packages can
 be rebuilt and published there, and the tablet can install them with `dnf`
 without reflashing `boot_a` or `userdata`.
