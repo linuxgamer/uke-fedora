@@ -55,6 +55,20 @@ The default project is `uke-fedora` with `fedora-44-aarch64` (tablet) and
 `fedora-44-x86_64` (host tools). Adjust the chroots when the Fedora baseline
 moves.
 
+## Repository in the image
+
+Official images install `/etc/yum.repos.d/uke-copr.repo` during the rootfs
+build. The repository is a soft dependency:
+
+- `skip_if_unavailable=True` keeps `dnf` working if the COPR is unreachable;
+- `exclude=senemos-uke-kernel* uke-fedora*-oem-data` keeps kernel and OEM data
+  image-owned, so an ordinary `dnf upgrade` only updates userland packages;
+- no package `Requires` the repository, and forks can build with `UKE_COPR=0`
+  to omit it entirely.
+
+A kernel update still needs a matching boot payload and a flash; that is why the
+kernel is excluded from the OTA repository.
+
 ## Build and publish
 
 ```sh
