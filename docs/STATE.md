@@ -37,8 +37,12 @@ the worktree head with the recorded gitlink before moving a pointer.
   with repository URLs and dev/user entry points separated.
 - Findings recorded in the backlog: builder CI parity runner (B12), kernel
   check prerequisites (B13, partly covered by `tools/check-dev-env.sh`), docs
-  and link CI (B14), stale component `AGENTS.md` evidence paths (B15), and the
-  user-facing release/docs refresh (B16, release polish B9 reopened).
+  and link CI (B14), stale component `AGENTS.md` evidence paths (B15), the
+  user-facing release/docs refresh (B16, release polish B9 reopened), newcomer
+  labels (B17), the security reporting channel (B18) and tooling nits (B19).
+- Split the private journal: decisions and host quirks stay in `private/NOTES.md`,
+  owner-only actions moved to `private/TODO.md`; public work remains here and in
+  the backlog.
 
 ## Previous session (2026-11-11, earlier)
 

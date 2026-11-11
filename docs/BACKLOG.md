@@ -23,10 +23,13 @@ Status: `todo`, `in progress`, `blocked`, `done`.
 | B13 | P1 | Kernel check prerequisites | todo | `make -C senemos-uke-kernel validate` fails silently on a host without `rpm`/`rpmspec`, `dtc` and `clang`. `tools/check-dev-env.sh` now reports the missing tools; still add a preflight target in the kernel repo and per-test names in the `validate` recipe. |
 | B14 | P1 | Umbrella docs and link CI | todo | The umbrella has no pull-request CI. Add a small workflow that runs `tools/check-docs.sh` (and markdown lint if cheap) on pull requests, as a model for docs-only contributions. |
 | B15 | P1 | Fix component `AGENTS.md` evidence paths | todo | Kernel and hardware `AGENTS.md` reference `referances/README.md`, `uke-linux-docs/docs/DONOR-POLICY.md`, `docs/research/ACCESSORY-LAB.md` and `docs/testing/ACCESSORY-TEST-PLAN.md`, none of which exist in this fork. Update the rules in the component repositories; use the substitutes in [DEVELOPING.md](DEVELOPING.md#missing-evidence-paths) meanwhile. |
-| B16 | P1 | User-facing docs and release refresh | todo | Follow-up to the 2026-11-11 user audit: INSTALL needs extraction/TWRP/fastboot-entry/stock-ROM steps and Windows guidance, README must not promise unverified desktops, and the r1 release page must be brought in line with the local release notes. Keep this separate from the developer-docs pass. |
+| B16 | P1 | User-facing docs and release refresh | todo | Follow-up to the 2026-11-11 user audit. INSTALL needs: `.tar.zst` extraction, TWRP source and format (`.tar.zst` vs `.img`), fastboot/recovery key combinations, Developer-options steps, stock-ROM/MiFlash links, Windows/platform-tools guidance, checksum verification, hex partition sizes, first-boot expectations and update guidance. README must not promise desktops the release does not carry and should name the exact supported models. Keep this separate from the developer-docs pass. |
+| B17 | P2 | Newcomer labels and first tasks | todo | Add `good first issue` and `help wanted` labels and label 3–5 self-contained tasks (docs CI, builder check runner, component `AGENTS.md` paths, tooling nits), then link them from [DEVELOPING.md](DEVELOPING.md#where-to-start). |
+| B18 | P2 | Security reporting channel | todo | `docs/CONTRIBUTING.md` points at GitHub private vulnerability reporting "when available". Enable it for the repository or add a `SECURITY.md` with a real private channel; the upstream `SECURITY.md` is not carried. |
+| B19 | P3 | Small tooling nits | todo | `tools/export-patches.sh --help` prints `mkdir` usage; root `.gitignore` still ignores `/tests`, `/scripts`, `/manifests`, a trap for repo-level tooling; consider installation hints in `tools/check-dev-env.sh` for the Fedora-era toolchain. |
 
 ## Next
 
 B2 is two minutes and unblocks COPR uploads. Then B1 or B3, both of which need
-the tablet or a long build. Documentation and tooling items B12–B16 are
+the tablet or a long build. Documentation and tooling items B12–B19 are
 self-contained and suitable for a first contribution.
