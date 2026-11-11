@@ -8,10 +8,10 @@ Status: `todo`, `in progress`, `blocked`, `done`.
 
 | ID | Prio | Item | Status | Notes |
 | --- | --- | --- | --- | --- |
-| B1 | P0 | Fix the kernel COPR `%prep` failure | blocked | Builds `11307436`/`11307449`/`11307468` fail after the ELD test at `src/video/prepare-source.sh`. The series applies locally, so reproduce the native preparation with tracing (`bash -x`) in a clean tree. |
+| B1 | P0 | Fix the kernel COPR `%prep` failure | in progress | Root cause: `packaging/native/prepare.sh` called `src/video/prepare-source.sh` twice; the second call exited 1 silently at its re-entry guard after `patches/video/0012` created the header. Fixed in kernel `4ed80615` and guarded by `tests/native-prepare-steps-contract.sh`; the native preparation now passes locally. Upload the fixed SRPM and confirm a green COPR build after B2. |
 | B2 | P0 | Rotate the COPR API token | todo | Replace `build/.copr` (mode 600, gitignored); update no committed file and do not repeat the value in public. |
-| B3 | P0 | First image build and tablet test | todo | `UKE_VIDEO_OVERLAY=1 ./ukelinux.sh --profiles tty --cross-kernel --parallel 2 --output build/video11`. Check `status.json`, flash TTY, `dmesg \| grep iris`, `/dev/video*`. Also validates the parallel option. |
-| B4 | P1 | Run the image CI workflow | todo | [`build-image.yml`](../.github/workflows/build-image.yml) now has cache, `--parallel` and release packaging. Run it manually for `tty`; fix the workflow, not the builder, if it fails on setup. |
+| B3 | P0 | First image build and tablet test | todo | The local cheap stage now passes the kernel `%prep` (`UKE_BUILD_STAGE source_prepare elapsed_s=1090` after kernel `4ed80615`/`e942f625` and builder `9b83d79`). `UKE_VIDEO_OVERLAY=1 ./ukelinux.sh --profiles tty --cross-kernel --parallel 2 --output build/video11`, then check `status.json`, flash TTY, `dmesg \| grep iris`, `/dev/video*`. |
+| B4 | P1 | Run the image CI workflow | todo | [`build-image.yml`](../.github/workflows/build-image.yml) now has cache, `--parallel` and release packaging. Run it manually for `tty`; fix the workflow, not the builder, if it fails on setup. The builder `cache_dir` bug (`9b83d79`) and the sanitizer `ASAN_OPTIONS` override (kernel `e942f625`) would have failed this workflow at stage 0 and in the kernel `%prep`; both are fixed. |
 | B5 | P1 | Validate userland OTA through COPR | todo | Build an image with the repo, `dnf upgrade`, confirm kernel and OEM packages are excluded and the system still boots. |
 | B6 | P1 | Host/device test automation | todo | `tools/check-dev-env.sh` covers the host preflight; still needed: one command that runs the cheap host checks and a short on-device checklist. Do not automate flashing. |
 | B7 | P2 | Fedora 45 bump | todo | Follow [FEDORA-BUMP](FEDORA-BUMP.md); finish spec conditionals and version literals, regenerate pins. Component docs that still say Rawhide (kernel README/BUILDING) should be aligned in the same pass. |
@@ -30,6 +30,6 @@ Status: `todo`, `in progress`, `blocked`, `done`.
 
 ## Next
 
-B2 is two minutes and unblocks COPR uploads. Then B1 or B3, both of which need
-the tablet or a long build. Documentation and tooling items B12–B19 are
-self-contained and suitable for a first contribution.
+B2 is two minutes and unblocks the COPR rebuild of the fixed kernel (B1). B3 and
+B4 then need a long build; the tablet test needs the device. Documentation and
+tooling items B12–B19 are self-contained and suitable for a first contribution.

@@ -1,8 +1,9 @@
 # State
 
-Updated: 2026-11-11 (documentation and agent-rules pass). Verify with commands
-before relying on it; update this file at the end of every session. Long history
-and decisions live in the private notes; this file records only facts.
+Updated: 2026-11-11 (documentation pass, then the kernel `%prep` fix). Verify
+with commands before relying on it; update this file at the end of every
+session. Long history and decisions live in the private notes; this file records
+only facts.
 
 ## Upstream and forks
 
@@ -14,12 +15,36 @@ rebased component forks; patches are exported for review only. See
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
-| `senemos-uke-kernel` | `main` | umbrella gitlink `80c0af3e`; fork worktree advanced to `e942f625` | video series active, kernel COPR prep failing |
-| `uke-fedora-builder` | `main` | umbrella gitlink `d2c3393`; fork worktree advanced to `9b83d79` | apps, ru locale, COPR repo, parallel build |
+| `senemos-uke-kernel` | `main` | `e942f625` (gitlink and worktree) | video series active; native `%prep` fixed and passing locally |
+| `uke-fedora-builder` | `main` | `9b83d79` (gitlink and worktree) | apps, ru locale, COPR repo, parallel build; SRPM stage fixed |
 | `uke-linux-hardware-support` | `main` | `1fdc4af` (gitlink and worktree) | firmware payload, Python rule removed |
 
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
+
+## Kernel preparation fix and build unblocking (2026-11-11, later)
+
+- Root-caused the kernel COPR `%prep` failure from the public COPR builder log
+  (no API token needed): `packaging/native/prepare.sh` invoked
+  `src/video/prepare-source.sh` twice. The first call applied
+  `patches/video/*.patch`, whose `0012` creates
+  `include/linux/qcom-uke-video.h`; the second call met the bare
+  `[[ ! -e ... ]]` re-entry guard and exited 1 without output, which is why the
+  log ended after the DP ELD receipt. Fixed in kernel `4ed80615`; a failing
+  preparation step now names its line and command through an ERR trap, and
+  `tests/native-prepare-steps-contract.sh` rejects a duplicated source step.
+- Kernel `e942f625` makes ten sanitizer contracts inherit the builder's
+  `ASAN_OPTIONS` (`${ASAN_OPTIONS:-detect_leaks=1}`). They forced
+  `detect_leaks=1`, which LeakSanitizer cannot do under qemu-user aarch64, so
+  the kernel `%prep` also failed on x86_64 hosts and CI runners that emulate
+  aarch64.
+- Builder `9b83d79` defines `cache_dir=/build-cache` inside the SRPM container
+  heredoc. The "skip unchanged kernel SRPM" change used the host variable there,
+  so every image build stopped at stage 0 with "cache_dir: unbound variable".
+- Local evidence: `./ukelinux.sh --profiles tty --cross-kernel --output
+  build/video13-check` logged `UKE_BUILD_STAGE source_prepare elapsed_s=1090`,
+  so the kernel `%prep` passes. The run was stopped before the cross-compile,
+  RPM packaging and rootfs stages; no image, RPM or on-device result exists yet.
 
 ## Last session (2026-11-11, documentation and agent-rules pass)
 
@@ -71,15 +96,15 @@ the worktree head with the recorded gitlink before moving a pointer.
 
 ## Blockers
 
-- **Kernel COPR build fails in `%prep`** after the ELD test, at
-  `src/video/prepare-source.sh`, with no error line in the log. The same series
-  applies locally. Needs a local reproduction of the native preparation or a
-  mock log with tracing.
+- **Kernel COPR build needs a rebuild.** The `%prep` failure is fixed and the
+  native preparation passes locally, but the fixed SRPM has not been uploaded;
+  that needs the rotated token (B2).
 - **Image CI run `43008866968` was cancelled.** The extended workflow (cache,
   `--parallel`, release packaging) has not run successfully yet.
 - **No image has been built after the broad native archive fix** (`30dfa729`).
-  The last local attempts failed during `%prep`; validation and pin checks now
-  pass, but the first successful build is still pending.
+  The blockers found on that path are fixed (kernel `4ed80615`/`e942f625`,
+  builder `9b83d79`) and the local cheap stage passes the kernel `%prep`, but no
+  full run has completed.
 - **COPR API credentials need rotation**; do not repeat the value in public.
 - OEM firmware and sensor blobs stay out of public repositories; see
   [COPR.md](COPR.md).
@@ -88,5 +113,6 @@ the worktree head with the recorded gitlink before moving a pointer.
 
 ## Next action
 
-Rotate the COPR token (B2), then debug the kernel COPR `%prep` failure (B1) or
-run the first image build (B3). All three are in the backlog.
+Rotate the COPR token (B2), then upload the fixed kernel SRPM and confirm a green
+COPR build (B1), then run the first image build (B3/B4). All three are in the
+backlog.
