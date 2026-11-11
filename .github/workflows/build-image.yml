@@ -1,0 +1,78 @@
+name: Build images (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      profiles:
+        description: Comma-separated profiles (tty,kde,gnome,phosh,plasma-mobile)
+        required: true
+        default: tty
+        type: string
+      video_overlay:
+        description: Apply the native Cliffs video overlay
+        required: true
+        default: "0"
+        type: choice
+        options: ["0", "1"]
+permissions:
+  contents: read
+concurrency:
+  group: build-image-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo apt-get clean
+          df -h /
+
+      - name: Enable arm64 emulation
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Install host tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends jq zstd g++ python3 e2fsprogs curl ca-certificates
+          curl -fsSL 'https://android.googlesource.com/platform/external/avb/+/refs/heads/main/avbtool.py?format=TEXT' \
+            | base64 -d | sudo tee /usr/local/bin/avbtool >/dev/null
+          sudo chmod +x /usr/local/bin/avbtool
+          avbtool --help >/dev/null
+
+      - name: Build image pairs
+        env:
+          PROFILES: ${{ inputs.profiles }}
+          UKE_VIDEO_OVERLAY: ${{ inputs.video_overlay }}
+          UKE_CONTAINER: docker
+        run: |
+          set -Eeuo pipefail
+          [[ $PROFILES =~ ^[a-z,-]+$ ]] || { echo 'Invalid profiles list' >&2; exit 1; }
+          output="build/ci-$GITHUB_RUN_ID"
+          mkdir -p build
+          ./ukelinux.sh --profiles "$PROFILES" --cross-kernel --output "$output"
+
+      - name: Upload image artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uke-images-${{ github.run_id }}
+          path: |
+            build/ci-*/status.json
+            build/ci-*/*-pair/fedora_boot.img
+            build/ci-*/*-pair/userdata.img
+            build/ci-*/*-pair/SHA256SUMS
+            build/ci-*/build.log
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 14
