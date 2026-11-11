@@ -14,13 +14,32 @@ without reflashing `boot_a` or `userdata`.
 
 ## One-time setup
 
+On Fedora, `sudo dnf install copr-cli` is enough. On another distribution, or
+without root, install it into the workspace venv:
+
 ```sh
-sudo dnf install copr-cli
+python3 -m venv build/.venv-copr
+build/.venv-copr/bin/pip install copr-cli
 ```
+
+`tools/copr-bootstrap.sh` finds that venv automatically, or use `COPR_CLI`.
 
 Create an API token at <https://copr.fedorainfracloud.org/api/> and save it as
 `~/.config/copr` (the page shows the exact file). The token is personal; never
-commit it.
+commit it. The file looks like:
+
+```ini
+[copr-cli]
+username = <login>
+login = <login>
+token = <token>
+copr_url = https://copr.fedorainfracloud.org
+```
+
+```sh
+chmod 600 ~/.config/copr
+build/.venv-copr/bin/copr-cli list   # verifies the token
+```
 
 Create the project and its chroots:
 

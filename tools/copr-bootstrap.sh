@@ -25,10 +25,21 @@ for arg in "$@"; do
     esac
 done
 [[ $project =~ ^[A-Za-z0-9._-]+$ ]] || die "Invalid project name: $project"
-command -v copr-cli >/dev/null || die 'Install copr-cli and configure ~/.config/copr first'
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+if [[ -n ${COPR_CLI:-} ]]; then
+    cli=$COPR_CLI
+elif command -v copr-cli >/dev/null; then
+    cli=copr-cli
+elif [[ -x $root/build/.venv-copr/bin/copr-cli ]]; then
+    cli=$root/build/.venv-copr/bin/copr-cli
+else
+    die 'Install copr-cli first (or set COPR_CLI)'
+fi
+config=${COPR_CONFIG:-$HOME/.config/copr}
+[[ $mode == dry ]] || [[ -f $config ]] || die "Missing COPR config: $config"
 
 chroots=(fedora-44-aarch64 fedora-44-x86_64)
-create=(copr-cli create "$project"
+create=("$cli" create "$project"
     --description 'Uke Fedora packages for Xiaomi Pad 7 (SM7675)'
     --instructions 'Enable with: dnf copr enable <login>/'"$project"
 )
@@ -36,7 +47,7 @@ for chroot in "${chroots[@]}"; do
     create+=(--chroot "$chroot")
 done
 
-if copr-cli get "$project" >/dev/null 2>&1; then
+if "$cli" get "$project" >/dev/null 2>&1; then
     printf 'Project %s already exists; check its chroots with: copr-cli get %s\n' "$project" "$project"
     exit 0
 fi
