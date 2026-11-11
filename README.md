@@ -9,6 +9,12 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 > [!WARNING]
 > This is not ready for daily use. Installing to `userdata` overwrites Android user data. Back up any data you have!
 
+## Start here
+
+New session or new contributor? Read [docs/STATE.md](docs/STATE.md) for the
+current facts, [docs/BACKLOG.md](docs/BACKLOG.md) for the ordered work, and
+[AGENTS.md](AGENTS.md) for the session and subagent policy.
+
 ## Hardware support
 
 | Component | Status | Notes |
