@@ -215,19 +215,23 @@ the same fields.
 
 ## Missing evidence paths
 
-Some component `AGENTS.md` files still point at material that the upstream sync
-policy removes from this fork. The paths below do **not** exist in a clean clone:
+The umbrella fork deliberately drops the upstream `referances/` and
+`uke-linux-docs/` trees (see [UPSTREAM.md](UPSTREAM.md#deletion-policy)). The
+component `AGENTS.md` files used to point at those paths; they were updated to
+use the public substitutes below. The paths themselves still do not exist in a
+clean clone:
 
-| Missing path | Where it is referenced | Use instead |
+| Missing path | Where it used to be referenced | Use instead |
 | --- | --- | --- |
-| `senemos-uke-kernel/referances/README.md` | kernel `AGENTS.md` | The public source archives under `referances/releases/`, [UPSTREAM.md](UPSTREAM.md) and the kernel README |
-| `uke-linux-docs/docs/DONOR-POLICY.md` | kernel `AGENTS.md` | The hardware integration policy in [CONTRIBUTING.md](CONTRIBUTING.md) and the donor rules in [UPSTREAM.md](UPSTREAM.md) |
+| `senemos-uke-kernel/referances/README.md` | kernel `AGENTS.md` | The pinned source archives under `referances/releases/`, [UPSTREAM.md](UPSTREAM.md) and the kernel README |
+| `uke-linux-docs/docs/DONOR-POLICY.md` | kernel and hardware `AGENTS.md` | The hardware integration policy in [CONTRIBUTING.md](CONTRIBUTING.md#hardware-integration-policy) and the donor rules in [UPSTREAM.md](UPSTREAM.md) |
 | `uke-linux-hardware-support/docs/research/ACCESSORY-LAB.md` | hardware `AGENTS.md` | The hardware repo's `docs/lessons/` directory |
 | `uke-linux-hardware-support/docs/testing/ACCESSORY-TEST-PLAN.md` | hardware `AGENTS.md` | The hardware repo's `docs/lessons/` directory |
 
-This is a known documentation bug (backlog B15). If a rule points at a path that
-does not exist, say so in your change and do not invent the missing evidence.
-The rules themselves live in the component repositories and must be fixed there.
+If a rule points at a path that does not exist, treat it as a documentation bug:
+use the substitute, do not invent the missing evidence, and fix the rule in the
+component repository. The umbrella rules for this are in
+[AGENTS.md](../AGENTS.md).
 
 ## Troubleshooting
 

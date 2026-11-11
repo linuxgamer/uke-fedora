@@ -139,11 +139,12 @@ Donor sources and build inputs for the port live in `private/`, so `referances/`
 only duplicated build files; upstream's Ubuntu recipes that point into it are
 unused here.
 
-Some component `AGENTS.md` files still reference the removed `referances/` and
-donor-policy trees. That is a known documentation bug (backlog B15): use the
-substitutes in [DEVELOPING.md](DEVELOPING.md#missing-evidence-paths) and do not
-invent the missing evidence. Fix the rule in the component repository, not with
-a forked copy in the umbrella.
+The component `AGENTS.md` files were updated to point at the public policy
+instead of the removed trees. If a rule again points at a missing path, treat it
+as a documentation bug: use the substitutes in
+[DEVELOPING.md](DEVELOPING.md#missing-evidence-paths), do not invent the missing
+evidence, and fix the rule in the component repository rather than with a forked
+copy in the umbrella.
 Conflicts in those paths are resolved by keeping them deleted; do not restore
 them just to silence a conflict.
 

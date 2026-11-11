@@ -60,6 +60,12 @@ the worktree head with the recorded gitlink before moving a pointer.
   claims `SECURITY.md` is vendored, records the real CI situation and the
   missing evidence paths; README links into submodules (404 on GitHub) replaced
   with repository URLs and dev/user entry points separated.
+- Updated the three component `AGENTS.md`: removed links to the dropped
+  `referances/` and `uke-linux-docs/` trees, retired the OrangeFox and missing
+  ACCESSORY paths, added the real checks with host prerequisites and the
+  umbrella gitlink/PR flow (component commits `0a0a2631`, `0a48226`, `733ad66`).
+  Also moved `INSTALL.md` to `docs/INSTALL.md`, fixed every link and restored the
+  Fedora 44 and CSOT wording in README (`531d154`).
 - Findings recorded in the backlog: builder CI parity runner (B12), kernel
   check prerequisites (B13, partly covered by `tools/check-dev-env.sh`), docs
   and link CI (B14), stale component `AGENTS.md` evidence paths (B15), the
@@ -108,8 +114,8 @@ the worktree head with the recorded gitlink before moving a pointer.
 - **COPR API credentials need rotation**; do not repeat the value in public.
 - OEM firmware and sensor blobs stay out of public repositories; see
   [COPR.md](COPR.md).
-- **Component `AGENTS.md` files reference evidence paths that this fork removed**
-  (backlog B15); use [DEVELOPING.md](DEVELOPING.md#missing-evidence-paths).
+- The removed upstream evidence trees are documented in
+  [DEVELOPING.md](DEVELOPING.md#missing-evidence-paths); do not recreate them.
 
 ## Next action
 
