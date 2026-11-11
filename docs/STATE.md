@@ -15,7 +15,7 @@ rebased component forks; patches are exported for review only. See
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
-| `senemos-uke-kernel` | `main` | `96ee63a6` (gitlink and worktree) | video series active; native `%prep` fixed; source cache moved to `source-cache/` in every entry point, reports removed |
+| `senemos-uke-kernel` | `main` | `57d7fbb3` (gitlink and worktree) | video series active; native `%prep` fixed; `referances/` removed and its last path strings scrubbed from manifests |
 | `uke-fedora-builder` | `main` | `e9d0cca` (gitlink and worktree) | apps, ru locale, COPR repo; reports removed |
 | `uke-linux-hardware-support` | `main` | `604b443` (gitlink and worktree) | firmware payload; top-level docs removed |
 
@@ -81,9 +81,10 @@ the worktree head with the recorded gitlink before moving a pointer.
   OEM evidence, the kernel and builder `reports/`, and the hardware-support
   top-level `docs/`. The kernel SRPM cache moved to the ignored
   `source-cache/releases/`; the Makefile and two native object checks now use
-  it (all entry points: kernel `96ee63a6`). Added
-  `tools/check-forbidden-paths.sh` and documented the policy in
-  AGENTS/UPSTREAM/DEVELOPING; component commits `2d6ed7b8`/`96ee63a6`,
+  it (all entry points: kernel `96ee63a6`), and scrubbed the last
+  `referances/` path strings from the research/source-plan manifests (kernel
+  `57d7fbb3`). Added `tools/check-forbidden-paths.sh` and documented the policy
+  in AGENTS/UPSTREAM/DEVELOPING; component commits `2d6ed7b8`/`96ee63a6`,
   `e9d0cca`, `604b443`.
 - Rewrote all three component `AGENTS.md` from the umbrella template and
   removed October documents: 26 kernel, 3 builder and 18 hardware-support
