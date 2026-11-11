@@ -21,9 +21,9 @@ jobs:
 
       - name: Setup SSH Server
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq openssh-server
+          sudo apt-get update -qq && sudo apt-get install -y -qq openssh-server jq
           sudo mkdir -p /run/sshd
-          echo "runner:runner" | sudo chpasswd # Changed user for clarity
+          echo "runner:runner" | sudo chpasswd
           sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
           sudo /usr/sbin/sshd -D &
@@ -36,23 +36,31 @@ jobs:
           echo "Starting ngrok TCP tunnel on port 22..."
           echo "=========================================="
           
-          # Start ngrok in the background, listening on port 22
-          ngrok tcp 22 --log=stdout > /tmp/ngrok.log 2>&1 &
+          # Start ngrok in background
+          ngrok tcp 22 > /tmp/ngrok.log 2>&1 &
           
-          # Wait for the ngrok URL to appear in the log
-          for i in {1..30}; do
-            if grep -q "url=tcp://" /tmp/ngrok.log; then
-              echo "✅ ngrok tunnel established!"
-              echo "Your SSH connection address is:"
-              grep -o 'url=tcp://[^ ]*' /tmp/ngrok.log | cut -d'/' -f3
-              break
-            fi
-            echo "Waiting for ngrok... ($i/30)"
-            sleep 2
-          done
+          # Wait for the local API to be ready
+          sleep 5
           
+          # Query the ngrok API for the public URL
+          TUNNEL_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+          
+          if [ -z "$TUNNEL_URL" ] || [ "$TUNNEL_URL" == "null" ]; then
+            echo "❌ Failed to get ngrok tunnel URL. Here is the log:"
+            cat /tmp/ngrok.log
+            exit 1
+          fi
+          
+          # Extract host and port from the TCP URL (e.g., tcp://0.tcp.ngrok.io:12345)
+          HOST=$(echo $TUNNEL_URL | cut -d'/' -f3 | cut -d':' -f1)
+          PORT=$(echo $TUNNEL_URL | cut -d'/' -f3 | cut -d':' -f2)
+          
+          echo "✅ ngrok tunnel established!"
+          echo "Your SSH connection address is:"
+          echo "ssh -p ${PORT} runner@${HOST}"
           echo ""
           echo "🟢 Session active. You have up to 6 hours to connect."
           echo "🛑 Cancel the workflow run to end the session."
           
+          # Keep the job alive
           sleep 21600
