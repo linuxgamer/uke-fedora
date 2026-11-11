@@ -74,8 +74,9 @@ the worktree head with the recorded gitlink before moving a pointer.
 - Split the private journal: decisions and host quirks stay in `private/NOTES.md`,
   owner-only actions moved to `private/TODO.md`; public work remains here and in
   the backlog.
-- Component source-contracts CI passed for builder `0a48226` and hardware
-  `88ffc06`; the kernel workflow runs on pull requests only.
+- Component source-contracts CI passed for the AGENTS commits (`0a48226`,
+  `88ffc06`) and the cleanup commits (`facd4e1`, `8d95e01`); the kernel
+  workflow runs on pull requests only.
 - Rewrote all three component `AGENTS.md` from the umbrella template and
   removed October documents: 26 kernel, 3 builder and 18 hardware-support
   files created in October 2026 or earlier that were unreferenced and not
