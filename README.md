@@ -39,6 +39,16 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 For developer-level status with evidence, blockers and verification commands,
 see [docs/HARDWARE.md](docs/HARDWARE.md).
 
+## Screenshots
+
+| KDE Plasma | GPU and Vulkan |
+| --- | --- |
+| ![KDE Plasma on the tablet](.github/assets/screenshots/uke-fedora-kde-2026-10-17.png) | ![Chromium GPU status](.github/assets/screenshots/Fedora_Rawhide_PAD7_UKE_Chromium_GPU_Status.png) |
+
+Older screenshots from the Rawhide bring-up are kept in
+`.github/assets/screenshots/`; they show the same tablet and are not a claim
+that every block works in the current release.
+
 ## Downloads and building
 
 Go to [releases](https://github.com/linuxgamer/uke-fedora/releases) and download any desktop you want. Then look at [installation guide](INSTALL.md).
