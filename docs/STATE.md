@@ -16,8 +16,8 @@ rebased component forks; patches are exported for review only. See
 | --- | --- | --- | --- |
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
 | `senemos-uke-kernel` | `main` | `57d7fbb3` (gitlink and worktree) | video series active; native `%prep` fixed; `referances/` removed and its last path strings scrubbed from manifests |
-| `uke-fedora-builder` | `main` | `e9d0cca` (gitlink and worktree) | apps, ru locale, COPR repo; reports removed |
-| `uke-linux-hardware-support` | `main` | `bd04ec9` (gitlink and worktree) | firmware payload; top-level docs and manifest local paths removed |
+| `uke-fedora-builder` | `main` | `3662473` (gitlink and worktree) | apps, ru locale, COPR repo; internal source cache renamed to `source-cache/` |
+| `uke-linux-hardware-support` | `main` | `847a004` (gitlink and worktree) | firmware payload; top-level docs removed, internal caches renamed |
 
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
@@ -77,6 +77,11 @@ the worktree head with the recorded gitlink before moving a pointer.
 - Component source-contracts CI passed for the AGENTS commits (`0a48226`,
   `88ffc06`) and the cleanup commits (`facd4e1`, `8d95e01`); the kernel
   workflow runs on pull requests only.
+- Renamed the remaining internal builder and hardware-support caches from
+  `referances/` to `source-cache/`, including the staging loop, pinned source
+  inputs, component/family caches, manifests' local evidence paths and the
+  nested AGENTS policy (builder `3662473`, hardware `847a004`). The unsupported
+  Ubuntu packaging route keeps its external source-layout names.
 - Removed the trees that kept reappearing: the kernel `referances/` cache and
   OEM evidence, the kernel and builder `reports/`, and the hardware-support
   top-level `docs/`. The kernel SRPM cache moved to the ignored
