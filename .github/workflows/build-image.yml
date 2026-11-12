@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       profiles:
-        description: Comma-separated profiles (tty,kde,gnome,phosh,plasma-mobile)
+        description: Comma-separated profiles
         required: true
         default: tty
         type: string
@@ -23,13 +23,13 @@ on:
         type: choice
         options: ["1", "2", "3", "4"]
       package_release:
-        description: Create release archives with the packager
+        description: Create release archives
         required: true
         default: "yes"
         type: choice
         options: ["yes", "no"]
       release_tag:
-        description: Optional existing or new GitHub release tag to upload to
+        description: Optional release tag
         required: false
         default: ""
         type: string
@@ -60,14 +60,15 @@ jobs:
             echo "hardware=$(git -C uke-linux-hardware-support rev-parse HEAD)"
           } >> "$GITHUB_OUTPUT"
 
+      # THE MASSIVE CACHE FIX
       - name: Restore build cache
         uses: actions/cache@v4
         with:
           path: |
-            uke-fedora-builder/build/cache/ccache
-            uke-fedora-builder/build/cache/ccache-cross
-            uke-fedora-builder/build/cache/dnf
-            uke-fedora-builder/build/cache/dnf-x86_64
+            senemos-uke-kernel/source-cache
+            uke-fedora-builder/build/cache
+            ~/.cache/ccache
+            ~/.cache/docker
           key: uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}
           restore-keys: |
             uke-cache-${{ steps.pins.outputs.kernel }}-
@@ -88,7 +89,7 @@ jobs:
           sudo chmod +x /usr/local/bin/avbtool
           avbtool --help >/dev/null
 
-      - name: Resolve inputs with push-safe defaults
+      - name: Resolve inputs
         run: |
           set -Eeuo pipefail
           echo "PROFILES=${{ inputs.profiles || 'tty' }}"                >> "$GITHUB_ENV"
@@ -97,14 +98,12 @@ jobs:
           echo "PACKAGE_RELEASE=${{ inputs.package_release || 'yes' }}" >> "$GITHUB_ENV"
           echo "RELEASE_TAG=${{ inputs.release_tag || '' }}"            >> "$GITHUB_ENV"
 
-      - name: Validate input combinations
+      - name: Validate inputs
         run: |
           set -Eeuo pipefail
-          [[ $PROFILES =~ ^[a-z-]+(,[a-z-]+)*$ ]] \
-            || { echo "Invalid profiles list: $PROFILES" >&2; exit 1; }
+          [[ $PROFILES =~ ^[a-z-]+(,[a-z-]+)*$ ]] || { echo "Invalid profiles list"; exit 1; }
           if [[ $PACKAGE_RELEASE == 'no' && -n $RELEASE_TAG ]]; then
-            echo "release_tag was provided but package_release is 'no'." >&2
-            exit 1
+            echo "release_tag was provided but package_release is 'no'."; exit 1
           fi
 
       - name: Build image pairs
@@ -162,18 +161,7 @@ jobs:
           {
             echo '## Uke image build'
             echo "- profiles: \`$PROFILES\`"
-            echo "- video overlay: \`$VIDEO_OVERLAY\`"
-            echo "- parallel: \`$PARALLEL\`"
             echo "- result: \`${{ job.status }}\`"
-            if [[ -s build/ci-$GITHUB_RUN_ID/status.json ]]; then
-              echo '```json'
-              cat build/ci-$GITHUB_RUN_ID/status.json
-              echo '```'
-            fi
-            shopt -s nullglob
-            for f in build/ci-$GITHUB_RUN_ID/*-pair/fedora_boot.img; do
-              printf -- '- %s: %s\n' "$f" "$(du -h "$f" | cut -f1)"
-            done
             if compgen -G 'build/release-*' >/dev/null; then
               echo '```'
               cat build/release-*/SHA256SUMS 2>/dev/null || true
