@@ -1,7 +1,8 @@
-name: Build images (manual)
+name: Build images
 
 on:
   push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       profiles:
@@ -32,10 +33,12 @@ on:
         required: false
         default: ""
         type: string
+
 permissions:
   contents: write
+
 concurrency:
-  group: build-image-${{ github.ref }}
+  group: build-image-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -76,11 +79,6 @@ jobs:
           sudo apt-get clean
           df -h /
 
-      - name: Enable arm64 emulation
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-
       - name: Install host tools
         run: |
           sudo apt-get update
@@ -90,23 +88,40 @@ jobs:
           sudo chmod +x /usr/local/bin/avbtool
           avbtool --help >/dev/null
 
-      - name: Build image pairs
-        env:
-          PROFILES: ${{ inputs.profiles }}
-          UKE_VIDEO_OVERLAY: ${{ inputs.video_overlay }}
-          UKE_CONTAINER: docker
-          PARALLEL: ${{ inputs.parallel }}
+      - name: Resolve inputs with push-safe defaults
+        id: cfg
         run: |
           set -Eeuo pipefail
-          [[ $PROFILES =~ ^[a-z,-]+$ ]] || { echo 'Invalid profiles list' >&2; exit 1; }
+          echo "PROFILES=${{ inputs.profiles || 'tty' }}"                        >> "$GITHUB_ENV"
+          echo "VIDEO_OVERLAY=${{ inputs.video_overlay || '0' }}"               >> "$GITHUB_ENV"
+          echo "PARALLEL=${{ inputs.parallel || '1' }}"                         >> "$GITHUB_ENV"
+          echo "PACKAGE_RELEASE=${{ inputs.package_release || 'yes' }}"         >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=${{ inputs.release_tag || '' }}"                    >> "$GITHUB_ENV"
+
+      - name: Validate input combinations
+        run: |
+          set -Eeuo pipefail
+          # profiles: comma-separated words, dashes allowed
+          [[ $PROFILES =~ ^[a-z-]+(,[a-z-]+)*$ ]] \
+            || { echo "Invalid profiles list: $PROFILES" >&2; exit 1; }
+          # cannot publish if packaging is disabled
+          if [[ $PACKAGE_RELEASE == 'no' && -n $RELEASE_TAG ]]; then
+            echo "release_tag was provided but package_release is 'no'. Nothing to upload." >&2
+            exit 1
+          fi
+
+      - name: Build image pairs
+        env:
+          UKE_VIDEO_OVERLAY: ${{ env.VIDEO_OVERLAY }}
+          UKE_CONTAINER: docker
+        run: |
+          set -Eeuo pipefail
           output="build/ci-$GITHUB_RUN_ID"
           mkdir -p build
           ./ukelinux.sh --profiles "$PROFILES" --parallel "$PARALLEL" --output "$output"
 
       - name: Package release archives
-        if: success() && inputs.package_release == 'yes'
-        env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
+        if: success() && env.PACKAGE_RELEASE == 'yes'
         run: |
           set -Eeuo pipefail
           tag=${RELEASE_TAG:-ci-$GITHUB_RUN_ID}
@@ -131,10 +146,9 @@ jobs:
           retention-days: 14
 
       - name: Publish release
-        if: success() && inputs.release_tag != ''
+        if: success() && env.PACKAGE_RELEASE == 'yes' && env.RELEASE_TAG != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           set -Eeuo pipefail
           tag=$RELEASE_TAG
@@ -150,9 +164,9 @@ jobs:
         run: |
           {
             echo '## Uke image build'
-            echo "- profiles: \`${{ inputs.profiles }}\`"
-            echo "- video overlay: \`${{ inputs.video_overlay }}\`"
-            echo "- parallel: \`${{ inputs.parallel }}\`"
+            echo "- profiles: \`$PROFILES\`"
+            echo "- video overlay: \`$VIDEO_OVERLAY\`"
+            echo "- parallel: \`$PARALLEL\`"
             echo "- result: \`${{ job.status }}\`"
             if [[ -s build/ci-$GITHUB_RUN_ID/status.json ]]; then
               echo '```json'
@@ -163,7 +177,7 @@ jobs:
             for f in build/ci-$GITHUB_RUN_ID/*-pair/fedora_boot.img; do
               printf -- '- %s: %s\n' "$f" "$(du -h "$f" | cut -f1)"
             done
-            if [[ -d build/release-* ]]; then
+            if compgen -G 'build/release-*' >/dev/null; then
               echo '```'
               cat build/release-*/SHA256SUMS 2>/dev/null || true
               echo '```'
