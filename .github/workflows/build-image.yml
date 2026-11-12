@@ -60,8 +60,8 @@ jobs:
             echo "hardware=$(git -C uke-linux-hardware-support rev-parse HEAD)"
           } >> "$GITHUB_OUTPUT"
 
-      # ---- THE FIX for the 9f6ad347... failure ----
-      - name: Patch stale legacy-srpm source_commit
+      # ---- THE FIX ----
+      - name: Patch legacy-srpm commit and Makefile path
         run: |
           set -Eeuo pipefail
           SCRIPT=uke-linux-hardware-support/packaging/fedora44/legacy-srpm.sh
@@ -70,8 +70,12 @@ jobs:
             NEW=$(git -C uke-linux-hardware-support rev-parse HEAD)
             sed -i "s/${STALE}/${NEW}/g" "$SCRIPT"
             echo "Patched ${STALE} → ${NEW}"
-          else
-            echo "No stale SHA present; skipping"
+          fi
+
+          MAKEFILE=uke-linux-hardware-support/uke-core-meta/Makefile
+          if grep -q '\.\./packaging/fedora44/legacy-srpm\.sh' "$MAKEFILE"; then
+            sed -i 's|\.\./packaging/fedora44/legacy-srpm\.sh|/work/uke-linux-hardware-support/packaging/fedora44/legacy-srpm.sh|g' "$MAKEFILE"
+            echo "Patched Makefile to use absolute path for legacy-srpm.sh"
           fi
       # ---- end fix ----
 
