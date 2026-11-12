@@ -11,8 +11,9 @@ for one problem at a time. Include:
 - Device model, RAM/storage variant and stock firmware version, if known.
 - Release tag, exact system and boot filenames, and their SHA-256 values. State
   whether files were changed or packages were updated after installation.
-- Intended root partition label (`linux` or `userdata`) and selected boot slot.
-  Write “unknown” if unsure; no partition changes are needed to report a bug.
+- Intended root partition label (`userdata` for the release images, `linux` for
+  older development images) and selected boot slot. Write “unknown” if unsure;
+  no partition changes are needed to report a bug.
 - The smallest safe steps that show the problem, expected behavior, actual
   behavior and how often it happens. Do not repeat a crash or unsafe charging test
   just to collect evidence.
@@ -20,11 +21,12 @@ for one problem at a time. Include:
   hardware conditions: power source, attached accessories, display mode and
   whether touch input or SSH remained available.
 
-The development installation uses `userdata` as its Linux root. The published
-26 October 2026 singleboot image has passed host checks but has not been tested
-on a tablet. A successful build or checksum check does not establish that the
-exported image boots. See the [downloads](../README.md#downloads-and-building) and linked release
-instructions for its installation and recovery requirements.
+The released images install the Fedora root on `userdata` and the boot image on
+`boot_a`; see the [installation guide](INSTALL.md). Tested hardware and known
+limitations are in the [README](../README.md#hardware-support) and
+[HARDWARE.md](HARDWARE.md). A successful build or checksum check does not
+establish that an image boots, and a boot does not prove a hardware block. Report
+what you observed, on which device, with the exact image and kernel.
 
 ## Useful evidence from a running Fedora session
 
@@ -59,7 +61,30 @@ serial numbers, unit identifiers, MAC addresses, SSIDs, IP addresses, usernames,
 hostnames, home-directory paths and calibration data. Crop personal information
 out of photos. Keep error codes, driver names and relative timestamps intact;
 replace private values with `[redacted]`. Public issues are not a place for raw
-private logs. Report vulnerabilities privately to the maintainer.
+private logs. Do not publish exploit details in an issue: use GitHub's private
+vulnerability reporting on this repository when available, otherwise open a
+minimal issue asking for a private channel.
+
+# Contributing code
+
+The rules for every change are in [AGENTS.md](../AGENTS.md); the environment,
+checks and git flow are in [DEVELOPING.md](DEVELOPING.md). In short:
+
+- The umbrella repository owns documentation, tools, the upstream pin and the
+  submodule pointers. The port code lives in the three component forks.
+- Open documentation, tooling and pin changes against
+  `linuxgamer/uke-fedora`. Open kernel, builder and hardware-support changes
+  against the matching component repository, and move the umbrella gitlink only
+  after the component change is accepted.
+- Run the checks that cover the change and state the exact commands and results
+  in the pull request. A build is not a boot test.
+- Keep component commits out of the umbrella pull request, do not rewrite
+  published tags or release assets, and do not flash or repartition a device as
+  part of a code change.
+- Never commit credentials, private logs, serial numbers, calibration or OEM
+  firmware blobs. See [COPR.md](COPR.md) for the firmware policy.
+- Use the [pull request template](../.github/PULL_REQUEST_TEMPLATE.md); it asks
+  for the checks, the limitations and whether a device or gitlink is involved.
 
 # Hardware integration policy
 

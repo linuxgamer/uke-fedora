@@ -5,6 +5,7 @@
 /reports/*.log
 /projects/
 /Referances/
+/referances/
 /Senemos7/
 /Recovery/
 /Aloha/
@@ -31,7 +32,6 @@ __pycache__/
 /PLAN.md
 /DEVICE-STATUS.md
 /SOURCE-MAP.md
-/AGENTS.md
 /AGENTS.local.md
 /CLAUDE.md
 /GEMINI.md

@@ -40,7 +40,7 @@ the Fedora image path.
 4. **Manifests.** `packaging/families/families.json`, source locks and
    `native-runtime.json` carry `fcNN` values and counts. Regenerate them with the
    project scripts; do not hand-edit lists.
-5. **Docs.** State the release once, in `README.md` and `INSTALL.md`; do not
+5. **Docs.** State the release once, in `README.md` and `docs/INSTALL.md`; do not
    repeat it in every paragraph.
 6. **Rawhide.** Remove `--release rawhide` from the supported path and the
    mentions in our docs. Leave upstream's rawhide data, manifests and the

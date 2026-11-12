@@ -37,9 +37,11 @@ else
 fi
 config=${COPR_CONFIG:-$HOME/.config/copr}
 [[ $mode == dry ]] || [[ -f $config ]] || die "Missing COPR config: $config"
+cli_args=()
+[[ -z ${COPR_CONFIG:-} ]] || cli_args=(--config "$COPR_CONFIG")
 
 chroots=(fedora-44-aarch64 fedora-44-x86_64)
-create=("$cli" create "$project"
+create=("$cli" "${cli_args[@]}" create "$project"
     --description 'Uke Fedora packages for Xiaomi Pad 7 (SM7675)'
     --instructions 'Enable with: dnf copr enable <login>/'"$project"
 )
@@ -47,7 +49,7 @@ for chroot in "${chroots[@]}"; do
     create+=(--chroot "$chroot")
 done
 
-if "$cli" get "$project" >/dev/null 2>&1; then
+if "$cli" "${cli_args[@]}" get "$project" >/dev/null 2>&1; then
     printf 'Project %s already exists; check its chroots with: copr-cli get %s\n' "$project" "$project"
     exit 0
 fi

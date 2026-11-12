@@ -1,32 +1,31 @@
 # Install Fedora 44 on Xiaomi Pad 7
 
-This guide has been tested on **Xiaomi Pad 7**. The release builder produces separate
-TTY, KDE, GNOME, Phosh and Plasma Mobile images. The boot image goes to **`boot_a`** and its root filesystem goes to
+This guide has been tested on **Xiaomi Pad 7**. TTY, KDE, GNOME, Phosh and Plasma Mobile images are available for install. The boot image goes to **`boot_a`** and its root filesystem goes to
 **`userdata`**. Slot B can be used for TWRP. Replacing
 `userdata` erases all Android user data. The bootloader must be unlocked!
 
 ## 1. Prerequisites
 
-These images were built and tested against HyperOS **3.304 Global**. Confirm
-that firmware baseline and unlock the bootloader before installing; other OEM
+These images were built and tested with HyperOS **3.304 Global**. Ensure you have this version and unlock the bootloader before installing, other OEM
 versions have not been validated for this release.
 ### Unlocking the bootloader
 
 1. In HyperOS, enable Developer options, then `OEM unlocking` and USB debugging.
-2. Use Xiaomi's Mi Unlock tool on a Windows host with the same Mi account as the
+2. Apply for bootloader unlock in Xiaomi community app.
+3. Use Xiaomi's Mi Unlock tool on a Windows host with the same Mi account as the
    tablet. Xiaomi may enforce a waiting period (often 168 hours) before the
    unlock is allowed; plan for it.
-3. Unlocking wipes all user data and may affect the warranty. Back up first.
-4. Never re-lock the bootloader while a non-stock `boot` or `vendor_boot` image
+4. Unlocking wipes all user data and may affect the warranty. Back up first.
+5. Never re-lock the bootloader while a non-stock `boot` or `vendor_boot` image
    is flashed.
-5. Do not flash firmware from an older ROM: anti-rollback can brick the tablet.
+6. Do not flash firmware from an older ROM: anti-rollback can brick the tablet.
 
 Official unlock request: <https://en.miui.com/unlock/>
 
 After unlocking, choose any available image you want, there are multiple variants:
 - KDE - Best support
-- GNOME - boots and works on the tested TM tablet.
-- Phosh/Plasma Mobile - experimental.
+- GNOME - boots and works.
+- Phosh/Plasma Mobile - not tested.
 - TTY - bare console; touch keyboard not yet tested on the tablet.
 
 ## 2. Check the tablet in fastboot
@@ -82,17 +81,14 @@ before changing slots or retrying.
 
 ## First boot and return to Android
 
-KDE uses Plasma Setup; its touch-only setup and login have been tested. GNOME
-has also been tested on the TM tablet. Plasma Mobile, Phosh and TTY first boot
-still need on-device testing. Create your own account; the images include no
-preset password.
+All images will launch setup wizards. Create your own account, the images include no preset password.
 
 If Fedora does not boot:
 1. Keep the exact error or a photo of the screen and make a bug report.
 2. Make sure you flashed the correct `fedora_boot.img` and `userdata.img` from
    the same build.
 3. Try debugging from TWRP: extract `twrp_recovery_ab.tar.zst` from the release,
-   boot it with `fastboot boot twrp_recovery_ab.img` and inspect the partitions.
+   boot it with `fastboot --set-active=b` and `fastboot reboot recovery and inspect the partitions`. To boot back into Fedora run `fastboot --set-active=a` and `fastboot reboot`
 
 ### Return to Android
 
