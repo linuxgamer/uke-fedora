@@ -89,24 +89,21 @@ jobs:
           avbtool --help >/dev/null
 
       - name: Resolve inputs with push-safe defaults
-        id: cfg
         run: |
           set -Eeuo pipefail
-          echo "PROFILES=${{ inputs.profiles || 'tty' }}"                        >> "$GITHUB_ENV"
-          echo "VIDEO_OVERLAY=${{ inputs.video_overlay || '0' }}"               >> "$GITHUB_ENV"
-          echo "PARALLEL=${{ inputs.parallel || '1' }}"                         >> "$GITHUB_ENV"
-          echo "PACKAGE_RELEASE=${{ inputs.package_release || 'yes' }}"         >> "$GITHUB_ENV"
-          echo "RELEASE_TAG=${{ inputs.release_tag || '' }}"                    >> "$GITHUB_ENV"
+          echo "PROFILES=${{ inputs.profiles || 'tty' }}"                >> "$GITHUB_ENV"
+          echo "VIDEO_OVERLAY=${{ inputs.video_overlay || '0' }}"       >> "$GITHUB_ENV"
+          echo "PARALLEL=${{ inputs.parallel || '1' }}"                 >> "$GITHUB_ENV"
+          echo "PACKAGE_RELEASE=${{ inputs.package_release || 'yes' }}" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=${{ inputs.release_tag || '' }}"            >> "$GITHUB_ENV"
 
       - name: Validate input combinations
         run: |
           set -Eeuo pipefail
-          # profiles: comma-separated words, dashes allowed
           [[ $PROFILES =~ ^[a-z-]+(,[a-z-]+)*$ ]] \
             || { echo "Invalid profiles list: $PROFILES" >&2; exit 1; }
-          # cannot publish if packaging is disabled
           if [[ $PACKAGE_RELEASE == 'no' && -n $RELEASE_TAG ]]; then
-            echo "release_tag was provided but package_release is 'no'. Nothing to upload." >&2
+            echo "release_tag was provided but package_release is 'no'." >&2
             exit 1
           fi
 
