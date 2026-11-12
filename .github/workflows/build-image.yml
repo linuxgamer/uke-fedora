@@ -60,7 +60,24 @@ jobs:
             echo "hardware=$(git -C uke-linux-hardware-support rev-parse HEAD)"
           } >> "$GITHUB_OUTPUT"
 
-      # THE MASSIVE CACHE FIX
+      # --- THE ONE-SHOT FIX ---
+      - name: Patch broken submodules in CI
+        run: |
+          # 1. Fix uke-core-meta infinite loop
+          sed -i "s/if \[\[ '\$(FEDORA44_LEGACY)' == 1 \]\]; then/if [[ '0' == '1' ]]; then/g" uke-linux-hardware-support/uke-core-meta/Makefile
+
+          # 2. Fix uke-sensors Makefile variable scope
+          sed -i 's|\$\$top|/work/uke-linux-hardware-support/uke-sensors/build/rpmbuild|g' uke-linux-hardware-support/uke-sensors/Makefile
+
+          # 3. Fix uke-sensors spec file (remove malformed %else, strip undefined systemd macros)
+          SPEC=uke-linux-hardware-support/uke-sensors/packaging/uke-touchscreen.spec
+          sed -i '/^%if 0%{?fedora}/,/%endif/c\%global uke_cxx_runtime libstdc++' "$SPEC"
+          sed -i 's/%systemd_post/systemctl preset/g' "$SPEC"
+          sed -i 's/%systemd_preun/systemctl disable/g' "$SPEC"
+          sed -i 's/%systemd_postun_with_restart/systemctl try-restart/g' "$SPEC"
+          sed -i 's|%{_unitdir}|/usr/lib/systemd/system|g' "$SPEC"
+      # --- END FIX ---
+
       - name: Restore build cache
         uses: actions/cache@v4
         with:
