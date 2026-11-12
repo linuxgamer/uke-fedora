@@ -60,6 +60,21 @@ jobs:
             echo "hardware=$(git -C uke-linux-hardware-support rev-parse HEAD)"
           } >> "$GITHUB_OUTPUT"
 
+      # ---- THE FIX for the 9f6ad347... failure ----
+      - name: Patch stale legacy-srpm source_commit
+        run: |
+          set -Eeuo pipefail
+          SCRIPT=uke-linux-hardware-support/packaging/fedora44/legacy-srpm.sh
+          STALE=9f6ad347d4b45e52096022f9da3aeb677a888b8e
+          if grep -q "source_commit=${STALE}" "$SCRIPT"; then
+            NEW=$(git -C uke-linux-hardware-support rev-parse HEAD)
+            sed -i "s/${STALE}/${NEW}/g" "$SCRIPT"
+            echo "Patched ${STALE} → ${NEW}"
+          else
+            echo "No stale SHA present; skipping"
+          fi
+      # ---- end fix ----
+
       - name: Restore build cache
         uses: actions/cache@v4
         with:
