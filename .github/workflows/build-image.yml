@@ -1,6 +1,7 @@
 name: Build images (manual)
 
 on:
+  push:
   workflow_dispatch:
     inputs:
       profiles:
@@ -39,7 +40,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 300
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -100,7 +101,7 @@ jobs:
           [[ $PROFILES =~ ^[a-z,-]+$ ]] || { echo 'Invalid profiles list' >&2; exit 1; }
           output="build/ci-$GITHUB_RUN_ID"
           mkdir -p build
-          ./ukelinux.sh --profiles "$PROFILES" --parallel "$PARALLEL" --cross-kernel --output "$output"
+          ./ukelinux.sh --profiles "$PROFILES" --parallel "$PARALLEL" --output "$output"
 
       - name: Package release archives
         if: success() && inputs.package_release == 'yes'
