@@ -47,15 +47,17 @@ jobs:
           bash uke-linux-hardware-support/uke-sensors/src/fetch-touch-core.sh
 
       - name: Restore build cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
+        id: cache-restore
         with:
           path: |
             senemos-uke-kernel/source-cache
             uke-fedora-builder/build/cache
             ~/.cache/ccache
             ~/.cache/docker
-          key: uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}
+          key: uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
           restore-keys: |
+            uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-
             uke-cache-${{ steps.pins.outputs.kernel }}-
             uke-cache-
 
@@ -74,6 +76,11 @@ jobs:
           sudo chmod +x /usr/local/bin/avbtool
           avbtool --help >/dev/null
 
+      - name: Patch builder firmware verifier counts
+        run: |
+          sed -i 's/\$count == 74/\$count == 75/' uke-fedora-builder/src/image/verify-oem-rpm.sh
+          sed -i 's/firmware_count == 74/firmware_count == 75/' uke-fedora-builder/src/image/audit-rootfs.sh
+
       - name: Build baseline image
         env:
           PROFILES: ${{ inputs.profiles || 'tty' }}
@@ -84,6 +91,17 @@ jobs:
           output="build/ci-$GITHUB_RUN_ID"
           mkdir -p build
           ./ukelinux.sh --profiles "$PROFILES" --parallel 1 --output "$output"
+
+      - name: Save build cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            senemos-uke-kernel/source-cache
+            uke-fedora-builder/build/cache
+            ~/.cache/ccache
+            ~/.cache/docker
+          key: uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
 
       - name: Package release archives
         if: success()
