@@ -82,6 +82,7 @@ jobs:
           sed -i 's/firmware_count == 74/firmware_count == 75/' uke-fedora-builder/src/image/audit-rootfs.sh
           sed -i 's/if command -v podman >\/dev\/null; then container=podman/if [[ -n \${UKE_CONTAINER:-} ]]; then container=\$UKE_CONTAINER; elif command -v podman >\/dev\/null; then container=podman/' uke-fedora-builder/build-rootfs.sh
           sed -i 's|/core-rpm/uke-core-meta\.rpm$|/core-rpm/uke-core-meta.rpm /hardware-rpms/uke-fedora*-oem-data-*.rpm|' uke-fedora-builder/build-rootfs.sh
+          sed -i 's|install -Dm644 "\$here/configs/images/uke-copr\.repo"|sudo &|' uke-fedora-builder/build-rootfs.sh
           sed -i 's/rpmbuild -ba/rpmbuild -ba --nocheck/g' uke-fedora-builder/build-images.sh
           mkdir -p uke-fedora-builder/build/cache
           sudo chmod -R 777 uke-fedora-builder/build/cache ~/.cache 2>/dev/null || true
@@ -91,6 +92,7 @@ jobs:
           PROFILES: ${{ inputs.profiles || 'tty' }}
           UKE_VIDEO_OVERLAY: '0'
           UKE_CONTAINER: docker
+          UKE_COPR: '0'
         run: |
           set -Eeuo pipefail
           output="build/ci-$GITHUB_RUN_ID"
