@@ -8,7 +8,7 @@ on:
       profiles:
         description: 'Comma-separated profiles to build (e.g. tty, kde)'
         required: true
-        default: 'tty'
+        default: 'kde'
         type: string
 
 permissions:
@@ -55,11 +55,10 @@ jobs:
             uke-fedora-builder/build/cache
             ~/.cache/ccache
             ~/.cache/docker
-          key: uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
+          key: uke-cache-v3-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
           restore-keys: |
-            uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-
-            uke-cache-${{ steps.pins.outputs.kernel }}-
-            uke-cache-
+            uke-cache-v3-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-
+            uke-cache-v3-
 
       - name: Free disk space
         run: |
@@ -88,7 +87,7 @@ jobs:
 
       - name: Build baseline image
         env:
-          PROFILES: ${{ inputs.profiles || 'tty' }}
+          PROFILES: ${{ inputs.profiles || 'kde' }}
           UKE_VIDEO_OVERLAY: '0'
           UKE_CONTAINER: docker
           UKE_COPR: '0'
@@ -107,7 +106,7 @@ jobs:
             uke-fedora-builder/build/cache
             ~/.cache/ccache
             ~/.cache/docker
-          key: uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
+          key: uke-cache-v3-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
 
       - name: Package release archives
         if: success()
