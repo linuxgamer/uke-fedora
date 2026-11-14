@@ -89,6 +89,11 @@ jobs:
           sed -i '/install -Dm600 "\/local-blobs\/touch\/\$variant\/\$name" "\$root\/var\/lib\/uke-touch\/\$variant\/\$name"/a \            install -Dm644 "/local-blobs/touch/$variant/$name" "$root/usr/lib/firmware/qcom/uke/touch/$variant/$name"' uke-fedora-builder/build-rootfs.sh
           sed -i '/chmod 0700 "\$root\/var\/lib\/uke-touch\/\$variant"/a \        chmod 0755 "$root/usr/lib/firmware/qcom/uke/touch/$variant"' uke-fedora-builder/build-rootfs.sh
           sed -i '/install -Dm600 \/local-blobs\/touch\/reference\.bin "\$root\/var\/lib\/uke-touch\/reference\.bin"/a \    install -Dm644 /local-blobs/touch/reference.bin "$root/usr/lib/firmware/qcom/uke/touch/reference.bin"' uke-fedora-builder/build-rootfs.sh
+          # Audio: install FourSemi FS19xx amplifier firmware, unmuted ALSA state, and WirePlumber speaker priority
+          sed -i '/if \[\[ \$copr == 1 \]\]; then/i \
+sudo install -Dm644 configs/audio/fs19xx.fsm "$output/root/usr/lib/firmware/qcom/uke/audio/fs19xx.fsm"\
+sudo install -Dm644 configs/audio/asound.state "$output/root/var/lib/alsa/asound.state"\
+sudo install -Dm644 configs/wireplumber/85-uke-speaker-priority.conf "$output/root/usr/share/wireplumber/wireplumber.conf.d/85-uke-speaker-priority.conf"' uke-fedora-builder/build-rootfs.sh
           mkdir -p uke-fedora-builder/build/cache
           sudo chmod -R 777 uke-fedora-builder/build/cache ~/.cache 2>/dev/null || true
 

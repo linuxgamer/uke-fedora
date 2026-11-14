@@ -1,0 +1,1790 @@
+state.POCOPadX1 {
+	control.1 {
+		iface MIXER
+		name 'RX HPH Mode'
+		value CLS_H_NORMAL
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 CLS_H_NORMAL
+			item.1 CLS_H_HIFI
+			item.2 CLS_H_LP
+			item.3 CLS_AB
+			item.4 CLS_H_LOHIFI
+			item.5 CLS_H_ULP
+			item.6 CLS_AB_HIFI
+			item.7 CLS_AB_LP
+			item.8 CLS_AB_LOHIFI
+		}
+	}
+	control.2 {
+		iface MIXER
+		name 'TX0 MODE'
+		value ADC_NORMAL
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_INVALID
+			item.1 ADC_HIFI
+			item.2 ADC_LO_HIF
+			item.3 ADC_NORMAL
+			item.4 ADC_LP
+			item.5 ADC_ULP1
+			item.6 ADC_ULP2
+		}
+	}
+	control.3 {
+		iface MIXER
+		name 'TX1 MODE'
+		value ADC_NORMAL
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_INVALID
+			item.1 ADC_HIFI
+			item.2 ADC_LO_HIF
+			item.3 ADC_NORMAL
+			item.4 ADC_LP
+			item.5 ADC_ULP1
+			item.6 ADC_ULP2
+		}
+	}
+	control.4 {
+		iface MIXER
+		name 'TX2 MODE'
+		value ADC_NORMAL
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_INVALID
+			item.1 ADC_HIFI
+			item.2 ADC_LO_HIF
+			item.3 ADC_NORMAL
+			item.4 ADC_LP
+			item.5 ADC_ULP1
+			item.6 ADC_ULP2
+		}
+	}
+	control.5 {
+		iface MIXER
+		name 'TX3 MODE'
+		value ADC_NORMAL
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_INVALID
+			item.1 ADC_HIFI
+			item.2 ADC_LO_HIF
+			item.3 ADC_NORMAL
+			item.4 ADC_LP
+			item.5 ADC_ULP1
+			item.6 ADC_ULP2
+		}
+	}
+	control.6 {
+		iface MIXER
+		name 'HPHL Impedance'
+		value 0
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - -1'
+		}
+	}
+	control.7 {
+		iface MIXER
+		name 'HPHR Impedance'
+		value 0
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - -1'
+		}
+	}
+	control.8 {
+		iface MIXER
+		name 'HPH Type'
+		value 0
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - -1'
+		}
+	}
+	control.9 {
+		iface MIXER
+		name 'HPHL_COMP Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.10 {
+		iface MIXER
+		name 'HPHR_COMP Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.11 {
+		iface MIXER
+		name 'HPHL Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.12 {
+		iface MIXER
+		name 'HPHR Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.13 {
+		iface MIXER
+		name 'CLSH Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.14 {
+		iface MIXER
+		name 'LO Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.15 {
+		iface MIXER
+		name 'DSD_L Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.16 {
+		iface MIXER
+		name 'DSD_R Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.17 {
+		iface MIXER
+		name 'HPHL Volume'
+		value 20
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 20'
+			dbmin -9999999
+			dbmax 140
+			dbvalue.0 140
+		}
+	}
+	control.18 {
+		iface MIXER
+		name 'HPHR Volume'
+		value 20
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 20'
+			dbmin -9999999
+			dbmax 140
+			dbvalue.0 140
+		}
+	}
+	control.19 {
+		iface MIXER
+		name 'LDOH Enable Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.20 {
+		iface MIXER
+		name 'ADC1 Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.21 {
+		iface MIXER
+		name 'ADC2 Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.22 {
+		iface MIXER
+		name 'ADC3 Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.23 {
+		iface MIXER
+		name 'ADC4 Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.24 {
+		iface MIXER
+		name 'DMIC0 Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.25 {
+		iface MIXER
+		name 'DMIC1 Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.26 {
+		iface MIXER
+		name 'MBHC Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.27 {
+		iface MIXER
+		name 'DMIC2 Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.28 {
+		iface MIXER
+		name 'DMIC3 Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.29 {
+		iface MIXER
+		name 'DMIC4 Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.30 {
+		iface MIXER
+		name 'DMIC5 Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.31 {
+		iface MIXER
+		name 'DMIC6 Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.32 {
+		iface MIXER
+		name 'DMIC7 Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.33 {
+		iface MIXER
+		name 'ADC1 Volume'
+		value 8
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 20'
+			dbmin -9999999
+			dbmax 500
+			dbvalue.0 200
+		}
+	}
+	control.34 {
+		iface MIXER
+		name 'ADC2 Volume'
+		value 8
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 20'
+			dbmin -9999999
+			dbmax 500
+			dbvalue.0 200
+		}
+	}
+	control.35 {
+		iface MIXER
+		name 'ADC3 Volume'
+		value 8
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 20'
+			dbmin -9999999
+			dbmax 500
+			dbvalue.0 200
+		}
+	}
+	control.36 {
+		iface MIXER
+		name 'ADC4 Volume'
+		value 8
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 20'
+			dbmin -9999999
+			dbmax 500
+			dbvalue.0 200
+		}
+	}
+	control.37 {
+		iface MIXER
+		name 'TX_DEC0 Volume'
+		value 108
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 124'
+			dbmin -9999999
+			dbmax 4000
+			dbvalue.0 2400
+		}
+	}
+	control.38 {
+		iface MIXER
+		name 'TX_DEC1 Volume'
+		value 108
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 124'
+			dbmin -9999999
+			dbmax 4000
+			dbvalue.0 2400
+		}
+	}
+	control.39 {
+		iface MIXER
+		name 'TX_DEC2 Volume'
+		value 108
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 124'
+			dbmin -9999999
+			dbmax 4000
+			dbvalue.0 2400
+		}
+	}
+	control.40 {
+		iface MIXER
+		name 'TX_DEC3 Volume'
+		value 108
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 124'
+			dbmin -9999999
+			dbmax 4000
+			dbvalue.0 2400
+		}
+	}
+	control.41 {
+		iface MIXER
+		name 'TX_DEC4 Volume'
+		value 84
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 124'
+			dbmin -9999999
+			dbmax 4000
+			dbvalue.0 0
+		}
+	}
+	control.42 {
+		iface MIXER
+		name 'TX_DEC5 Volume'
+		value 84
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 124'
+			dbmin -9999999
+			dbmax 4000
+			dbvalue.0 0
+		}
+	}
+	control.43 {
+		iface MIXER
+		name 'TX_DEC6 Volume'
+		value 84
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 124'
+			dbmin -9999999
+			dbmax 4000
+			dbvalue.0 0
+		}
+	}
+	control.44 {
+		iface MIXER
+		name 'TX_DEC7 Volume'
+		value 84
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 124'
+			dbmin -9999999
+			dbmax 4000
+			dbvalue.0 0
+		}
+	}
+	control.45 {
+		iface MIXER
+		name 'DEC0 MODE'
+		value ADC_DEFAULT
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_DEFAULT
+			item.1 ADC_LOW_PWR
+			item.2 ADC_HIGH_PERF
+		}
+	}
+	control.46 {
+		iface MIXER
+		name 'DEC1 MODE'
+		value ADC_DEFAULT
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_DEFAULT
+			item.1 ADC_LOW_PWR
+			item.2 ADC_HIGH_PERF
+		}
+	}
+	control.47 {
+		iface MIXER
+		name 'DEC2 MODE'
+		value ADC_DEFAULT
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_DEFAULT
+			item.1 ADC_LOW_PWR
+			item.2 ADC_HIGH_PERF
+		}
+	}
+	control.48 {
+		iface MIXER
+		name 'DEC3 MODE'
+		value ADC_DEFAULT
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_DEFAULT
+			item.1 ADC_LOW_PWR
+			item.2 ADC_HIGH_PERF
+		}
+	}
+	control.49 {
+		iface MIXER
+		name 'DEC4 MODE'
+		value ADC_DEFAULT
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_DEFAULT
+			item.1 ADC_LOW_PWR
+			item.2 ADC_HIGH_PERF
+		}
+	}
+	control.50 {
+		iface MIXER
+		name 'DEC5 MODE'
+		value ADC_DEFAULT
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_DEFAULT
+			item.1 ADC_LOW_PWR
+			item.2 ADC_HIGH_PERF
+		}
+	}
+	control.51 {
+		iface MIXER
+		name 'DEC6 MODE'
+		value ADC_DEFAULT
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_DEFAULT
+			item.1 ADC_LOW_PWR
+			item.2 ADC_HIGH_PERF
+		}
+	}
+	control.52 {
+		iface MIXER
+		name 'DEC7 MODE'
+		value ADC_DEFAULT
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ADC_DEFAULT
+			item.1 ADC_LOW_PWR
+			item.2 ADC_HIGH_PERF
+		}
+	}
+	control.53 {
+		iface MIXER
+		name 'DEC0_BCS Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.54 {
+		iface MIXER
+		name 'TopLeft Digital Volume'
+		value 223
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 223'
+		}
+	}
+	control.55 {
+		iface MIXER
+		name 'TopLeft Speaker Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.56 {
+		iface MIXER
+		name 'TopLeft Speaker Rotation'
+		value '0'
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 '0'
+			item.1 '90'
+			item.2 '180'
+			item.3 '270'
+		}
+	}
+	control.57 {
+		iface MIXER
+		name 'TopRight Digital Volume'
+		value 223
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 223'
+		}
+	}
+	control.58 {
+		iface MIXER
+		name 'TopRight Speaker Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.59 {
+		iface MIXER
+		name 'TopRight Speaker Rotation'
+		value '0'
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 '0'
+			item.1 '90'
+			item.2 '180'
+			item.3 '270'
+		}
+	}
+	control.60 {
+		iface MIXER
+		name 'BottomLeft Digital Volume'
+		value 223
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 223'
+		}
+	}
+	control.61 {
+		iface MIXER
+		name 'BottomLeft Speaker Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.62 {
+		iface MIXER
+		name 'BottomLeft Speaker Rotation'
+		value '0'
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 '0'
+			item.1 '90'
+			item.2 '180'
+			item.3 '270'
+		}
+	}
+	control.63 {
+		iface MIXER
+		name 'BottomRight Digital Volume'
+		value 223
+		comment {
+			access 'read write'
+			type INTEGER
+			count 1
+			range '0 - 223'
+		}
+	}
+	control.64 {
+		iface MIXER
+		name 'BottomRight Speaker Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.65 {
+		iface MIXER
+		name 'BottomRight Speaker Rotation'
+		value '0'
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 '0'
+			item.1 '90'
+			item.2 '180'
+			item.3 '270'
+		}
+	}
+	control.66 {
+		iface CARD
+		name 'DP0 Jack'
+		value false
+		comment {
+			access read
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.67 {
+		iface PCM
+		device 18
+		name 'Playback Channel Map'
+		value.0 0
+		value.1 0
+		value.2 0
+		value.3 0
+		value.4 0
+		value.5 0
+		value.6 0
+		value.7 0
+		comment {
+			access 'read volatile'
+			type INTEGER
+			count 8
+			range '0 - 36'
+		}
+	}
+	control.68 {
+		iface PCM
+		device 18
+		name 'IEC958 Playback Mask'
+		value ffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+		comment {
+			access read
+			type IEC958
+			count 1
+		}
+	}
+	control.69 {
+		iface PCM
+		device 18
+		name 'IEC958 Playback Default'
+		value '0400000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+		comment {
+			access 'read write'
+			type IEC958
+			count 1
+		}
+	}
+	control.70 {
+		iface PCM
+		name ELD
+		value '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+		comment {
+			access 'read volatile'
+			type BYTES
+			count 128
+		}
+	}
+	control.71 {
+		iface MIXER
+		name 'ADC1 MUX'
+		value CH1_AMIC1
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 CH1_AMIC_DISABLE
+			item.1 CH1_AMIC1
+			item.2 CH1_AMIC2
+			item.3 CH1_AMIC3
+			item.4 CH1_AMIC4
+			item.5 CH1_AMIC5
+		}
+	}
+	control.72 {
+		iface MIXER
+		name 'ADC2 MUX'
+		value CH2_AMIC5
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 CH2_AMIC_DISABLE
+			item.1 CH2_AMIC1
+			item.2 CH2_AMIC2
+			item.3 CH2_AMIC3
+			item.4 CH2_AMIC4
+			item.5 CH2_AMIC5
+		}
+	}
+	control.73 {
+		iface MIXER
+		name 'ADC3 MUX'
+		value CH3_AMIC3
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 CH3_AMIC_DISABLE
+			item.1 CH3_AMIC1
+			item.2 CH3_AMIC3
+			item.3 CH3_AMIC4
+			item.4 CH3_AMIC5
+		}
+	}
+	control.74 {
+		iface MIXER
+		name 'ADC4 MUX'
+		value CH4_AMIC4
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 CH4_AMIC_DISABLE
+			item.1 CH4_AMIC1
+			item.2 CH4_AMIC3
+			item.3 CH4_AMIC4
+			item.4 CH4_AMIC5
+		}
+	}
+	control.75 {
+		iface MIXER
+		name 'ADC1_MIXER Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.76 {
+		iface MIXER
+		name 'ADC2_MIXER Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.77 {
+		iface MIXER
+		name 'ADC3_MIXER Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.78 {
+		iface MIXER
+		name 'ADC4_MIXER Switch'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.79 {
+		iface MIXER
+		name 'DMIC1_MIXER Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.80 {
+		iface MIXER
+		name 'DMIC2_MIXER Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.81 {
+		iface MIXER
+		name 'DMIC3_MIXER Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.82 {
+		iface MIXER
+		name 'DMIC4_MIXER Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.83 {
+		iface MIXER
+		name 'DMIC5_MIXER Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.84 {
+		iface MIXER
+		name 'DMIC6_MIXER Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.85 {
+		iface MIXER
+		name 'DMIC7_MIXER Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.86 {
+		iface MIXER
+		name 'DMIC8_MIXER Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.87 {
+		iface MIXER
+		name RDAC3_MUX
+		value RX3
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 RX3
+			item.1 RX1
+		}
+	}
+	control.88 {
+		iface MIXER
+		name 'EAR_RDAC Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.89 {
+		iface MIXER
+		name 'HPHL_RDAC Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.90 {
+		iface MIXER
+		name 'HPHR_RDAC Switch'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.91 {
+		iface MIXER
+		name 'TX_AIF1_CAP Mixer DEC0'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.92 {
+		iface MIXER
+		name 'TX_AIF1_CAP Mixer DEC1'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.93 {
+		iface MIXER
+		name 'TX_AIF1_CAP Mixer DEC2'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.94 {
+		iface MIXER
+		name 'TX_AIF1_CAP Mixer DEC3'
+		value true
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.95 {
+		iface MIXER
+		name 'TX_AIF1_CAP Mixer DEC4'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.96 {
+		iface MIXER
+		name 'TX_AIF1_CAP Mixer DEC5'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.97 {
+		iface MIXER
+		name 'TX_AIF1_CAP Mixer DEC6'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.98 {
+		iface MIXER
+		name 'TX_AIF1_CAP Mixer DEC7'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.99 {
+		iface MIXER
+		name 'TX_AIF2_CAP Mixer DEC0'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.100 {
+		iface MIXER
+		name 'TX_AIF2_CAP Mixer DEC1'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.101 {
+		iface MIXER
+		name 'TX_AIF2_CAP Mixer DEC2'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.102 {
+		iface MIXER
+		name 'TX_AIF2_CAP Mixer DEC3'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.103 {
+		iface MIXER
+		name 'TX_AIF2_CAP Mixer DEC4'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.104 {
+		iface MIXER
+		name 'TX_AIF2_CAP Mixer DEC5'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.105 {
+		iface MIXER
+		name 'TX_AIF2_CAP Mixer DEC6'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.106 {
+		iface MIXER
+		name 'TX_AIF2_CAP Mixer DEC7'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.107 {
+		iface MIXER
+		name 'TX_AIF3_CAP Mixer DEC0'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.108 {
+		iface MIXER
+		name 'TX_AIF3_CAP Mixer DEC1'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.109 {
+		iface MIXER
+		name 'TX_AIF3_CAP Mixer DEC2'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.110 {
+		iface MIXER
+		name 'TX_AIF3_CAP Mixer DEC3'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.111 {
+		iface MIXER
+		name 'TX_AIF3_CAP Mixer DEC4'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.112 {
+		iface MIXER
+		name 'TX_AIF3_CAP Mixer DEC5'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.113 {
+		iface MIXER
+		name 'TX_AIF3_CAP Mixer DEC6'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.114 {
+		iface MIXER
+		name 'TX_AIF3_CAP Mixer DEC7'
+		value false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 1
+		}
+	}
+	control.115 {
+		iface MIXER
+		name 'TX DMIC MUX0'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 DMIC0
+			item.2 DMIC1
+			item.3 DMIC2
+			item.4 DMIC3
+			item.5 DMIC4
+			item.6 DMIC5
+			item.7 DMIC6
+			item.8 DMIC7
+		}
+	}
+	control.116 {
+		iface MIXER
+		name 'TX DMIC MUX1'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 DMIC0
+			item.2 DMIC1
+			item.3 DMIC2
+			item.4 DMIC3
+			item.5 DMIC4
+			item.6 DMIC5
+			item.7 DMIC6
+			item.8 DMIC7
+		}
+	}
+	control.117 {
+		iface MIXER
+		name 'TX DMIC MUX2'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 DMIC0
+			item.2 DMIC1
+			item.3 DMIC2
+			item.4 DMIC3
+			item.5 DMIC4
+			item.6 DMIC5
+			item.7 DMIC6
+			item.8 DMIC7
+		}
+	}
+	control.118 {
+		iface MIXER
+		name 'TX DMIC MUX3'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 DMIC0
+			item.2 DMIC1
+			item.3 DMIC2
+			item.4 DMIC3
+			item.5 DMIC4
+			item.6 DMIC5
+			item.7 DMIC6
+			item.8 DMIC7
+		}
+	}
+	control.119 {
+		iface MIXER
+		name 'TX DMIC MUX4'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 DMIC0
+			item.2 DMIC1
+			item.3 DMIC2
+			item.4 DMIC3
+			item.5 DMIC4
+			item.6 DMIC5
+			item.7 DMIC6
+			item.8 DMIC7
+		}
+	}
+	control.120 {
+		iface MIXER
+		name 'TX DMIC MUX5'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 DMIC0
+			item.2 DMIC1
+			item.3 DMIC2
+			item.4 DMIC3
+			item.5 DMIC4
+			item.6 DMIC5
+			item.7 DMIC6
+			item.8 DMIC7
+		}
+	}
+	control.121 {
+		iface MIXER
+		name 'TX DMIC MUX6'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 DMIC0
+			item.2 DMIC1
+			item.3 DMIC2
+			item.4 DMIC3
+			item.5 DMIC4
+			item.6 DMIC5
+			item.7 DMIC6
+			item.8 DMIC7
+		}
+	}
+	control.122 {
+		iface MIXER
+		name 'TX DMIC MUX7'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 DMIC0
+			item.2 DMIC1
+			item.3 DMIC2
+			item.4 DMIC3
+			item.5 DMIC4
+			item.6 DMIC5
+			item.7 DMIC6
+			item.8 DMIC7
+		}
+	}
+	control.123 {
+		iface MIXER
+		name 'TX DEC0 MUX'
+		value SWR_MIC
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 MSM_DMIC
+			item.1 SWR_MIC
+			item.2 ANC_FB_TUNE1
+		}
+	}
+	control.124 {
+		iface MIXER
+		name 'TX DEC1 MUX'
+		value SWR_MIC
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 MSM_DMIC
+			item.1 SWR_MIC
+			item.2 ANC_FB_TUNE1
+		}
+	}
+	control.125 {
+		iface MIXER
+		name 'TX DEC2 MUX'
+		value SWR_MIC
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 MSM_DMIC
+			item.1 SWR_MIC
+			item.2 ANC_FB_TUNE1
+		}
+	}
+	control.126 {
+		iface MIXER
+		name 'TX DEC3 MUX'
+		value SWR_MIC
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 MSM_DMIC
+			item.1 SWR_MIC
+			item.2 ANC_FB_TUNE1
+		}
+	}
+	control.127 {
+		iface MIXER
+		name 'TX DEC4 MUX'
+		value MSM_DMIC
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 MSM_DMIC
+			item.1 SWR_MIC
+			item.2 ANC_FB_TUNE1
+		}
+	}
+	control.128 {
+		iface MIXER
+		name 'TX DEC5 MUX'
+		value MSM_DMIC
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 MSM_DMIC
+			item.1 SWR_MIC
+			item.2 ANC_FB_TUNE1
+		}
+	}
+	control.129 {
+		iface MIXER
+		name 'TX DEC6 MUX'
+		value MSM_DMIC
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 MSM_DMIC
+			item.1 SWR_MIC
+			item.2 ANC_FB_TUNE1
+		}
+	}
+	control.130 {
+		iface MIXER
+		name 'TX DEC7 MUX'
+		value MSM_DMIC
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 MSM_DMIC
+			item.1 SWR_MIC
+			item.2 ANC_FB_TUNE1
+		}
+	}
+	control.131 {
+		iface MIXER
+		name 'TX SMIC MUX0'
+		value SWR_MIC0
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 SWR_MIC0
+			item.2 SWR_MIC1
+			item.3 SWR_MIC2
+			item.4 SWR_MIC3
+			item.5 SWR_MIC4
+			item.6 SWR_MIC5
+			item.7 SWR_MIC6
+			item.8 SWR_MIC7
+			item.9 SWR_MIC8
+			item.10 SWR_MIC9
+			item.11 SWR_MIC10
+			item.12 SWR_MIC11
+		}
+	}
+	control.132 {
+		iface MIXER
+		name 'TX SMIC MUX1'
+		value SWR_MIC2
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 SWR_MIC0
+			item.2 SWR_MIC1
+			item.3 SWR_MIC2
+			item.4 SWR_MIC3
+			item.5 SWR_MIC4
+			item.6 SWR_MIC5
+			item.7 SWR_MIC6
+			item.8 SWR_MIC7
+			item.9 SWR_MIC8
+			item.10 SWR_MIC9
+			item.11 SWR_MIC10
+			item.12 SWR_MIC11
+		}
+	}
+	control.133 {
+		iface MIXER
+		name 'TX SMIC MUX2'
+		value SWR_MIC3
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 SWR_MIC0
+			item.2 SWR_MIC1
+			item.3 SWR_MIC2
+			item.4 SWR_MIC3
+			item.5 SWR_MIC4
+			item.6 SWR_MIC5
+			item.7 SWR_MIC6
+			item.8 SWR_MIC7
+			item.9 SWR_MIC8
+			item.10 SWR_MIC9
+			item.11 SWR_MIC10
+			item.12 SWR_MIC11
+		}
+	}
+	control.134 {
+		iface MIXER
+		name 'TX SMIC MUX3'
+		value SWR_MIC1
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 SWR_MIC0
+			item.2 SWR_MIC1
+			item.3 SWR_MIC2
+			item.4 SWR_MIC3
+			item.5 SWR_MIC4
+			item.6 SWR_MIC5
+			item.7 SWR_MIC6
+			item.8 SWR_MIC7
+			item.9 SWR_MIC8
+			item.10 SWR_MIC9
+			item.11 SWR_MIC10
+			item.12 SWR_MIC11
+		}
+	}
+	control.135 {
+		iface MIXER
+		name 'TX SMIC MUX4'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 SWR_MIC0
+			item.2 SWR_MIC1
+			item.3 SWR_MIC2
+			item.4 SWR_MIC3
+			item.5 SWR_MIC4
+			item.6 SWR_MIC5
+			item.7 SWR_MIC6
+			item.8 SWR_MIC7
+			item.9 SWR_MIC8
+			item.10 SWR_MIC9
+			item.11 SWR_MIC10
+			item.12 SWR_MIC11
+		}
+	}
+	control.136 {
+		iface MIXER
+		name 'TX SMIC MUX5'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 SWR_MIC0
+			item.2 SWR_MIC1
+			item.3 SWR_MIC2
+			item.4 SWR_MIC3
+			item.5 SWR_MIC4
+			item.6 SWR_MIC5
+			item.7 SWR_MIC6
+			item.8 SWR_MIC7
+			item.9 SWR_MIC8
+			item.10 SWR_MIC9
+			item.11 SWR_MIC10
+			item.12 SWR_MIC11
+		}
+	}
+	control.137 {
+		iface MIXER
+		name 'TX SMIC MUX6'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 SWR_MIC0
+			item.2 SWR_MIC1
+			item.3 SWR_MIC2
+			item.4 SWR_MIC3
+			item.5 SWR_MIC4
+			item.6 SWR_MIC5
+			item.7 SWR_MIC6
+			item.8 SWR_MIC7
+			item.9 SWR_MIC8
+			item.10 SWR_MIC9
+			item.11 SWR_MIC10
+			item.12 SWR_MIC11
+		}
+	}
+	control.138 {
+		iface MIXER
+		name 'TX SMIC MUX7'
+		value ZERO
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 ZERO
+			item.1 SWR_MIC0
+			item.2 SWR_MIC1
+			item.3 SWR_MIC2
+			item.4 SWR_MIC3
+			item.5 SWR_MIC4
+			item.6 SWR_MIC5
+			item.7 SWR_MIC6
+			item.8 SWR_MIC7
+			item.9 SWR_MIC8
+			item.10 SWR_MIC9
+			item.11 SWR_MIC10
+			item.12 SWR_MIC11
+		}
+	}
+	control.139 {
+		iface MIXER
+		name 'MultiMedia3 Mixer TX_CODEC_DMA_TX_3'
+		value.0 true
+		value.1 false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 2
+		}
+	}
+	control.140 {
+		iface MIXER
+		name 'SECONDARY_TDM_RX_0 Audio Mixer MultiMedia2'
+		value.0 true
+		value.1 false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 2
+		}
+	}
+	control.141 {
+		iface MIXER
+		name 'DISPLAY_PORT_RX_0 Audio Mixer MultiMedia1'
+		value.0 true
+		value.1 false
+		comment {
+			access 'read write'
+			type BOOLEAN
+			count 2
+		}
+	}
+}
