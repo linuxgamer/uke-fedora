@@ -85,6 +85,10 @@ jobs:
           # Unify DRM KMS & GPU nodes (eliminate llvmpipe software rasterizer fallback)
           sed -i 's/ msm\.separate_gpu_kms=1//' senemos-uke-kernel/packaging/native/native.config
           sed -i 's/^options msm separate_gpu_kms=1/# options msm separate_gpu_kms=1/' uke-linux-hardware-support/uke-desktop-integration/src/modprobe.d/uke-gpu-options.conf
+          # Touchscreen firmware: deploy to kernel-expected firmware path
+          sed -i '/install -Dm600 "\/local-blobs\/touch\/\$variant\/\$name" "\$root\/var\/lib\/uke-touch\/\$variant\/\$name"/a \            install -Dm644 "/local-blobs/touch/$variant/$name" "$root/usr/lib/firmware/qcom/uke/touch/$variant/$name"' uke-fedora-builder/build-rootfs.sh
+          sed -i '/chmod 0700 "\$root\/var\/lib\/uke-touch\/\$variant"/a \        chmod 0755 "$root/usr/lib/firmware/qcom/uke/touch/$variant"' uke-fedora-builder/build-rootfs.sh
+          sed -i '/install -Dm600 \/local-blobs\/touch\/reference\.bin "\$root\/var\/lib\/uke-touch\/reference\.bin"/a \    install -Dm644 /local-blobs/touch/reference.bin "$root/usr/lib/firmware/qcom/uke/touch/reference.bin"' uke-fedora-builder/build-rootfs.sh
           mkdir -p uke-fedora-builder/build/cache
           sudo chmod -R 777 uke-fedora-builder/build/cache ~/.cache 2>/dev/null || true
 
