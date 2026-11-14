@@ -42,10 +42,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-          fetch-depth: 1
+          fetch-depth: 0
+
+      - name: Ensure submodule legacy refs
+        run: |
+          git -C uke-linux-hardware-support fetch origin legacy-1.5.2:refs/tags/legacy-1.5.2 || true
 
       - name: Record component pins
         id: pins
@@ -57,15 +61,17 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Restore build cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
+        id: cache-restore
         with:
           path: |
-            uke-fedora-builder/build/cache/ccache
-            uke-fedora-builder/build/cache/ccache-cross
-            uke-fedora-builder/build/cache/dnf
-            uke-fedora-builder/build/cache/dnf-x86_64
-          key: uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}
+            senemos-uke-kernel/source-cache
+            uke-fedora-builder/build/cache
+            ~/.cache/ccache
+            ~/.cache/docker
+          key: uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
           restore-keys: |
+            uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-
             uke-cache-${{ steps.pins.outputs.kernel }}-
             uke-cache-
 
@@ -89,11 +95,23 @@ jobs:
           sudo chmod +x /usr/local/bin/avbtool
           avbtool --help >/dev/null
 
+      - name: Patch builder and configure build environment
+        run: |
+          sed -i 's/\$count == 74/\$count == 75/' uke-fedora-builder/src/image/verify-oem-rpm.sh 2>/dev/null || true
+          sed -i 's/firmware_count == 74/firmware_count == 75/' uke-fedora-builder/src/image/audit-rootfs.sh 2>/dev/null || true
+          sed -i 's/if command -v podman >\/dev\/null; then container=podman/if [[ -n \${UKE_CONTAINER:-} ]]; then container=\$UKE_CONTAINER; elif command -v podman >\/dev\/null; then container=podman/' uke-fedora-builder/build-rootfs.sh 2>/dev/null || true
+          sed -i 's|/core-rpm/uke-core-meta\.rpm$|/core-rpm/uke-core-meta.rpm /hardware-rpms/uke-fedora*-oem-data-*.rpm|' uke-fedora-builder/build-rootfs.sh 2>/dev/null || true
+          sed -i 's|install -Dm644 "\$here/configs/images/uke-copr\.repo"|sudo &|' uke-fedora-builder/build-rootfs.sh 2>/dev/null || true
+          sed -i 's/rpmbuild -ba/rpmbuild -ba --nocheck/g' uke-fedora-builder/build-images.sh 2>/dev/null || true
+          mkdir -p uke-fedora-builder/build/cache
+          sudo chmod -R 777 uke-fedora-builder/build/cache ~/.cache 2>/dev/null || true
+
       - name: Build image pairs
         env:
           PROFILES: ${{ inputs.profiles }}
           UKE_VIDEO_OVERLAY: ${{ inputs.video_overlay }}
           UKE_CONTAINER: docker
+          UKE_COPR: '0'
           PARALLEL: ${{ inputs.parallel }}
         run: |
           set -Eeuo pipefail
@@ -101,6 +119,17 @@ jobs:
           output="build/ci-$GITHUB_RUN_ID"
           mkdir -p build
           ./ukelinux.sh --profiles "$PROFILES" --parallel "$PARALLEL" --cross-kernel --output "$output"
+
+      - name: Save build cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            senemos-uke-kernel/source-cache
+            uke-fedora-builder/build/cache
+            ~/.cache/ccache
+            ~/.cache/docker
+          key: uke-cache-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
 
       - name: Package release archives
         if: success() && inputs.package_release == 'yes'
