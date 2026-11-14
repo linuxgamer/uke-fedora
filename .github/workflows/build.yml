@@ -82,6 +82,9 @@ jobs:
           sed -i 's/if command -v podman >\/dev\/null; then container=podman/if [[ -n \${UKE_CONTAINER:-} ]]; then container=\$UKE_CONTAINER; elif command -v podman >\/dev\/null; then container=podman/' uke-fedora-builder/build-rootfs.sh
           sed -i 's|/core-rpm/uke-core-meta\.rpm$|/core-rpm/uke-core-meta.rpm /hardware-rpms/uke-fedora*-oem-data-*.rpm|' uke-fedora-builder/build-rootfs.sh
           sed -i 's|install -Dm644 "\$here/configs/images/uke-copr\.repo"|sudo &|' uke-fedora-builder/build-rootfs.sh
+          # Unify DRM KMS & GPU nodes (eliminate llvmpipe software rasterizer fallback)
+          sed -i 's/ msm\.separate_gpu_kms=1//' senemos-uke-kernel/packaging/native/native.config
+          sed -i 's/^options msm separate_gpu_kms=1/# options msm separate_gpu_kms=1/' uke-linux-hardware-support/uke-desktop-integration/src/modprobe.d/uke-gpu-options.conf
           mkdir -p uke-fedora-builder/build/cache
           sudo chmod -R 777 uke-fedora-builder/build/cache ~/.cache 2>/dev/null || true
 
