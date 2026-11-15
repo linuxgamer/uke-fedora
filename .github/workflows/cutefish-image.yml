@@ -54,7 +54,7 @@ jobs:
         run: |
           set -euo pipefail
           case "$IMAGE_SIZE_MIB" in 8192|16384) ;; *) exit 2;; esac
-          for test in public-root-packages desktop-isolation languages public-stage-routing public-build-contract first-boot-policy cutefish-passive-icons release-layout repository-kernel-identity repository-kernel-plan hosted-desktop-selection; do
+          for test in public-root-packages desktop-isolation languages public-stage-routing public-build-contract first-boot-policy cutefish-passive-icons release-layout repository-kernel-identity repository-kernel-plan hosted-desktop-selection clock-epoch; do
             bash "uke-fedora-builder/tests/$test.sh"
           done
           available=$(df -Pm "$RUNNER_TEMP" | awk 'NR==2 {print $4}')
