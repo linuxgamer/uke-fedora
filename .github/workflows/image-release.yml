@@ -57,6 +57,28 @@ jobs:
           sudo apt-get install -y --no-install-recommends jq zstd
           docker info
           df -h /
+      - name: Check source contracts and budget composition
+        env:
+          IMAGE_SIZE_MIB: ${{ inputs.size_mib }}
+        run: |
+          set -euo pipefail
+          case "$IMAGE_SIZE_MIB" in 8192|16384) ;; *) exit 2;; esac
+          for test in public-root-packages desktop-isolation languages public-stage-routing public-build-contract first-boot-policy cutefish-passive-icons release-layout repository-kernel-identity repository-kernel-plan hosted-desktop-selection; do
+            bash "uke-fedora-builder/tests/$test.sh"
+          done
+          available=$(df -Pm "$RUNNER_TEMP" | awk 'NR==2 {print $4}')
+          peak=$((IMAGE_SIZE_MIB * 3 + 10240))
+          reserve=8192
+          printf 'available_mib=%s peak_growth_mib=%s reserve_mib=%s\n' "$available" "$peak" "$reserve" | tee -a "$GITHUB_STEP_SUMMARY"
+          df -i "$RUNNER_TEMP"
+          inodes=$(df -Pi "$RUNNER_TEMP" | awk 'NR==2 {print $4}')
+          case "$inodes" in ''|*[!0-9]*) exit 2;; esac
+          test "$inodes" -ge 1000000
+          docker_root=$(docker info --format '{{.DockerRootDir}}')
+          df -h "$RUNNER_TEMP" "$docker_root" /tmp
+          test "$(df -P "$RUNNER_TEMP" | awk 'NR==2 {print $1}')" = "$(df -P "$docker_root" | awk 'NR==2 {print $1}')"
+          free -h
+          test "$available" -ge "$((peak + reserve))"
       - name: Compose and validate signed-package EXT4 singleboot image
         id: image
         env:
