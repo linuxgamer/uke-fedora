@@ -1,5 +1,17 @@
 # Development changes
 
+## 15 November 2026
+
+- Add experimental Cutefish and original Fedora KDE Mobile image profiles on
+  the existing signed unstable kernel and EXT4/sparse image chain. Cutefish uses
+  split upstream RPMs, its display manager and credentials-free first-account
+  setup. KDE Mobile follows the verified November 14 Fedora compose groups.
+- Add a native ARM64 Cutefish source/capacity preflight and an explicit image
+  composition phase. Test artifacts are separate from publication; physical
+  account/login acceptance is required before a Cutefish release.
+- Preserve existing KDE/GNOME release assets and the cumulative kernel queue.
+  Native package, image and physical results are recorded separately.
+
 ## 1 November 2026
 
 This update combines the maintainer's latest hardware confirmation with

@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       desktop:
-        description: Original Fedora graphical session
+        description: Graphical session; Cutefish uses separately signed upstream RPMs
         type: choice
-        options: [kde, gnome]
+        options: [kde, gnome, cutefish, plasma-mobile]
         default: kde
       login_shell:
         description: Login shell for new accounts
@@ -60,6 +60,7 @@ jobs:
       - name: Compose and validate signed-package EXT4 singleboot image
         id: image
         env:
+          IMAGE_CHANNEL: unstable
           IMAGE_DESKTOP: ${{ inputs.desktop }}
           IMAGE_SHELL: ${{ inputs.login_shell }}
           IMAGE_SIZE_MIB: ${{ inputs.size_mib }}

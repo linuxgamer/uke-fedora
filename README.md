@@ -48,7 +48,9 @@ without replacing the currently reviewed Fedora submodule pins. See the
 
 The current [Senemos 2026-11-02 R4 (TESTING) prerelease](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-021126-r4)
 provides **GNOME** and **KDE Plasma** for Fedora Rawhide AArch64 on Xiaomi Pad 7
-and POCO Pad X1. Cutefish and NextKDE support is suspended. The kernel release is
+and POCO Pad X1. Cutefish and KDE Mobile have separate experimental image
+workflows; they are not part of that published release. NextKDE is suspended.
+The kernel release in the published R4 assets is
 **7.3.1-1010**, supplied by COPR package **7.3.1-1010.1.fc46**. Download one
 desktop image and the matching shared boot image.
 
@@ -239,12 +241,18 @@ The menu includes desktop, filesystem, boot-layout, and package-channel options.
 
 Open [EXT4 singleboot image and release](https://github.com/MCC45TR/uke-linux/actions/workflows/image-release.yml)
 and select **Run workflow** on `Fedora`. Choose KDE Plasma, GNOME, Cutefish
-or NextKDE, a login shell, and an initial 16 GiB or 8 GiB filesystem
-(16 GiB is the default). `latest` selects the testing kernel for that run;
+or Plasma Mobile, a login shell, and an initial 16 GiB or 8 GiB filesystem
+(16 GiB is the default). The workflow selects the unstable channel;
+`latest` resolves the current unstable kernel once for that run;
 an exact `7.3.x-N.fc46` tuple can also be supplied.
 
 The native ARM64 workflow composes and validates the image from signed
-packages. Optional publication creates an image-only pre-release; manifests
+packages. The [Cutefish workflow](https://github.com/MCC45TR/uke-linux/actions/workflows/cutefish-image.yml)
+first checks source contracts and host capacity; `compose` produces test artifacts
+without publishing. Cutefish requires physical first-account and login acceptance
+before a release. Plasma Mobile follows the original Fedora November 14 compose
+mobile groups, with Uke's signed unstable kernel and existing account setup.
+Optional publication creates an image-only pre-release; manifests
 and build receipts are retained in Actions for 90 days. Host validation
 does not establish physical tablet boot, first-account setup, charging or
 recovery acceptance.

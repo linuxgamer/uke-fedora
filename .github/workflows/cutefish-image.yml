@@ -1,112 +1,108 @@
-name: Append Cutefish to verified desktop prerelease (manual)
+name: Cutefish unstable test image (manual)
+run-name: Cutefish unstable · ${{ inputs.phase }} · COPR ${{ inputs.kernel_rpm }}
 on:
   workflow_dispatch:
     inputs:
-      core_run_id:
-        description: Completed original series containing the successful immutable common core
+      phase:
+        description: Check source contracts and host capacity, or compose a test image
+        type: choice
+        options: [preflight, compose]
+        default: preflight
+      size_mib:
+        description: Initial EXT4 filesystem capacity in MiB
+        type: choice
+        options: ['16384', '8192']
+        default: '16384'
+      kernel_rpm:
+        description: COPR kernel version-release (latest or exact 7.3.x-N.fc46)
         type: string
-        default: '41306508082'
-      release_id:
-        description: Existing published compatible prerelease numeric ID
+        default: latest
+      revision:
+        description: Daily numeric image revision (0 produces r0; increment for different image contents)
         type: string
-        default: '430631439'
+        default: '0'
 permissions:
   contents: read
-  actions: read
 concurrency:
   group: ext4-singleboot-image
   cancel-in-progress: false
 jobs:
-  core:
-    if: ${{ false }} # Suspended; historical r1 assets remain available.
-    runs-on: ubuntu-latest
+  compose:
+    if: github.ref == 'refs/heads/Fedora'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 360
     outputs:
-      producer_builder: ${{ steps.core.outputs.producer_builder }}
-      producer_workspace: ${{ steps.core.outputs.producer_workspace }}
-      producer_run_id: ${{ steps.core.outputs.producer_run_id }}
-      core_sha256: ${{ steps.core.outputs.core_sha256 }}
+      tag: ${{ steps.image.outputs.tag }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           submodules: recursive
           persist-credentials: false
-      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq zstd unzip
-      - name: Verify and reuse the frozen core without rebuilding
-        id: core
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CORE_RUN_ID: ${{ inputs.core_run_id }}
-          IMAGE_KERNEL_RPM: 7.3.1-115.fc46
-          IMAGE_SIZE_MIB: '8192'
+      - name: Prepare disposable native ARM64 image host
         run: |
           set -euo pipefail
-          bash uke-fedora-builder/scripts/reuse-verified-core.sh
-          expected=91e2cee535cb73220de1391ab337e374cb518ff3cbcdcfdcd7ca83136ef2941b
-          actual=$(sed -n 's/^core_sha256=//p' "$GITHUB_OUTPUT")
-          test "$actual" = "$expected"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+          test "$(uname -m)" = aarch64
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /usr/local/share/boost
+          docker image prune --all --force
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends jq zstd zip unzip e2fsprogs
+          docker info
+          df -h /
+      - name: Check source contracts and budget composition
+        env:
+          IMAGE_SIZE_MIB: ${{ inputs.size_mib }}
+        run: |
+          set -euo pipefail
+          case "$IMAGE_SIZE_MIB" in 8192|16384) ;; *) exit 2;; esac
+          for test in public-root-packages desktop-isolation languages public-stage-routing public-build-contract first-boot-policy cutefish-passive-icons release-layout; do
+            bash "uke-fedora-builder/tests/$test.sh"
+          done
+          available=$(df -Pm "$RUNNER_TEMP" | awk 'NR==2 {print $4}')
+          peak=$((IMAGE_SIZE_MIB * 3 + 10240))
+          reserve=8192
+          printf 'available_mib=%s peak_growth_mib=%s reserve_mib=%s\n' "$available" "$peak" "$reserve" | tee -a "$GITHUB_STEP_SUMMARY"
+          df -i "$RUNNER_TEMP"
+          inodes=$(df -Pi "$RUNNER_TEMP" | awk 'NR==2 {print $4}')
+          case "$inodes" in ''|*[!0-9]*) exit 2;; esac
+          test "$inodes" -ge 1000000
+          docker_root=$(docker info --format '{{.DockerRootDir}}')
+          df -h "$RUNNER_TEMP" "$docker_root" /tmp
+          test "$(df -P "$RUNNER_TEMP" | awk 'NR==2 {print $1}')" = "$(df -P "$docker_root" | awk 'NR==2 {print $1}')"
+          free -h
+          test "$available" -ge "$((peak + reserve))"
+      - name: Compose and validate signed-package EXT4 singleboot image
+        if: inputs.phase == 'compose'
+        id: image
+        env:
+          IMAGE_CHANNEL: unstable
+          IMAGE_DESKTOP: cutefish
+          IMAGE_SHELL: bash
+          IMAGE_SIZE_MIB: ${{ inputs.size_mib }}
+          IMAGE_KERNEL_RPM: ${{ inputs.kernel_rpm }}
+          IMAGE_REVISION: ${{ inputs.revision }}
+        run: bash uke-fedora-builder/scripts/hosted-image.sh
+      - name: Retain validated image and receipts
+        if: inputs.phase == 'compose'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: shared-core-internal
-          path: ${{ steps.core.outputs.core_archive }}
+          name: ext4-singleboot-release
+          path: ${{ steps.image.outputs.release_dir }}/
           compression-level: 0
           retention-days: 7
           if-no-files-found: error
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - name: Retain image manifests and build records
+        if: inputs.phase == 'compose'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: shared-core-receipts
-          path: |
-            ${{ steps.core.outputs.core_receipts }}/core-origin.json
-            ${{ steps.core.outputs.core_receipts }}/core-installed-rpms.tsv
-            ${{ steps.core.outputs.core_receipts }}/request.json
+          name: image-receipts-cutefish-r${{ inputs.revision }}
+          path: ${{ steps.image.outputs.release_dir }}/receipts/
           retention-days: 90
           if-no-files-found: error
-  cutefish:
-    needs: core
-    uses: ./.github/workflows/desktop-image-stage.yml
-    permissions:
-      contents: read
-      actions: read
-    with:
-      desktop: cutefish
-      core_sha256: ${{ needs.core.outputs.core_sha256 }}
-      core_producer: ${{ needs.core.outputs.producer_builder }}
-      core_workspace: ${{ needs.core.outputs.producer_workspace }}
-      core_run_id: ${{ needs.core.outputs.producer_run_id }}
-      build_date: '011126'
-      kernel_rpm: 7.3.1-115.fc46
-      size_mib: '8192'
-      revision: '1'
-  publish:
-    needs: [core, cutefish]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: read
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Retain failed-stage diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          submodules: recursive
-          persist-credentials: false
-      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq zstd
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: desktop-delivery-cutefish
-          path: delivery/cutefish
-      - name: Append only Cutefish after comparing the published boot and cohort
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          SOURCE_COMMIT: ${{ github.sha }}
-          UKE_RELEASE_ID: ${{ inputs.release_id }}
-          UKE_REQUIRE_EXISTING_RELEASE: '1'
-          UKE_EXPECTED_CORE_SHA: ${{ needs.core.outputs.core_sha256 }}
-        run: |
-          set -euo pipefail
-          bash uke-fedora-builder/scripts/publish-image-release.sh delivery/cutefish | tee -a "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: cutefish-publication-receipts
-          path: delivery/cutefish/receipts/
-          retention-days: 90
-          if-no-files-found: error
+          name: ext4-singleboot-diagnostics
+          path: ${{ runner.temp }}/uke-build/*/*.log
+          retention-days: 7
+          if-no-files-found: ignore

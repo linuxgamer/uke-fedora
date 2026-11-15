@@ -75,6 +75,7 @@ jobs:
           IMAGE_CORE_SHA: ${{ inputs.core_sha256 }}
           REUSE_DESKTOP_RUN_ID: ${{ inputs.reuse_run_id }}
           GH_TOKEN: ${{ github.token }}
+          IMAGE_CHANNEL: unstable
           IMAGE_DESKTOP: ${{ inputs.desktop }}
           IMAGE_BUILD_DATE: ${{ inputs.build_date }}
           IMAGE_KERNEL_RPM: ${{ inputs.kernel_rpm }}
