@@ -34,8 +34,8 @@ def main():
 
     # QEMU/libvirt/OVMF for running ARM64 guests.
     replace_once(f"{builder}/build-rootfs.sh",
-                 "                              powerdevil firefox kate plasma-discover ark kcalc gdm); display=sddm ;;",
-                 "                              powerdevil firefox kate plasma-discover ark kcalc gdm\n"
+                 "                              powerdevil firefox kate plasma-discover ark kcalc); display=sddm ;;",
+                 "                              powerdevil firefox kate plasma-discover ark kcalc\n"
                  "                              qemu-system-aarch64 qemu-img libvirt virt-install edk2-aarch64); display=sddm ;;",
                  writes)
 
