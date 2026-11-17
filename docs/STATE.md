@@ -136,6 +136,7 @@ the worktree head with the recorded gitlink before moving a pointer.
 - Build speed: kernel SRPM reuse, locked status file, `--parallel N`, CI caches.
 
 ## Blockers
+- **Ext4 rootfs expansion blocked by error flag** (fixed 2026-11-17). The ext4 superblock error flag prevented online resize. Fixed on‑device via `echo u > /proc/sysrq-trigger` (emergency remount‑ro), `e2fsck -fy`, `resize2fs`. Documented in [INSTALL.md](INSTALL.md#emergency-rootfs-expansion-ext4).
 
 - **Kernel COPR build needs a rebuild.** The `%prep` failure is fixed and the
   native preparation passes locally, but the fixed SRPM has not been uploaded;
