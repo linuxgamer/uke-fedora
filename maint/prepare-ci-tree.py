@@ -165,6 +165,15 @@ def main():
         writes)
 
     # root/fedora on every image, including the TTY consoles.
+    replace_once(
+        f"{builder}/build-rootfs.sh",
+        '            systemctl --root="$root" enable "$display.service"\n',
+        '            if [[ $profile == kde ]]; then\n'
+        '                systemctl --root="$root" enable gdm.service\n'
+        '            else\n'
+        '                systemctl --root="$root" enable "$display.service"\n'
+        '            fi\n',
+        writes)
     replace_once(f"{builder}/src/public/stage.sh",
                  'chroot "$root" /usr/sbin/usermod -L root\n',
                  'printf \'root:fedora\\n\' | chroot "$root" /usr/sbin/chpasswd\n'
