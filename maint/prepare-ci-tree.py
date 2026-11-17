@@ -129,8 +129,13 @@ def main():
     # KDE image uses GDM with a pre-created uke/fedora wheel account.
     replace_once(
         f"{builder}/build-rootfs.sh",
-        "                              powerdevil firefox kate plasma-discover ark kcalc); display=sddm ;;",
-        "                              powerdevil firefox kate plasma-discover ark kcalc gdm); display=sddm ;;",
+        '                install noopenh264 "${common[@]}" "${desktop[@]}"\n',
+        '                install noopenh264 "${common[@]}" "${desktop[@]}"\n'
+        '            if [[ $profile == kde ]]; then\n'
+        '                rm -f "$root/etc/systemd/system/display-manager.service"\n'
+        '                dnf_install_with_download_retry -y --use-host-config --installroot="$root" \\\n'
+        '                    --releasever=44 --setopt=install_weak_deps=False gdm\n'
+        '            fi\n',
         writes)
     replace_once(
         f"{builder}/src/public/desktop-setup.sh",

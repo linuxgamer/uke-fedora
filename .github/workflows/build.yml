@@ -80,6 +80,7 @@ jobs:
           mkdir -p uke-fedora-builder/build/cache
           python3 maint/prepare-ci-tree.py
           python3 maint/prepare-ci-fallback.py
+          python3 maint/prepare-ci-kvm.py
           bash senemos-uke-kernel/tools/refresh-source-pins.sh
           sudo chmod -R 777 uke-fedora-builder/build/cache ~/.cache 2>/dev/null || true
 
