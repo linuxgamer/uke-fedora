@@ -15,7 +15,7 @@ rebased component forks; patches are exported for review only. See
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
-| `senemos-uke-kernel` | `main` | `57d7fbb3` (gitlink and worktree) | video series active; native `%prep` fixed; `referances/` removed and its last path strings scrubbed from manifests |
+| `senemos-uke-kernel` | `main` | `3163e55` (gitlink and worktree) | video series active; native `%prep` fixed; Nanosic WN8030 HID keyboard with an independent ABL overlay; `referances/` removed and its last path strings scrubbed from manifests |
 | `uke-fedora-builder` | `main` | `3662473` (gitlink and worktree) | apps, ru locale, COPR repo; internal source cache renamed to `source-cache/` |
 | `uke-linux-hardware-support` | `main` | `1d20cc3` (gitlink and worktree) | firmware payload with uke-firmware provides; top-level docs removed, internal caches renamed |
 
@@ -25,18 +25,31 @@ the worktree head with the recorded gitlink before moving a pointer.
 ## Pogo keyboard on `main` (2026-11-18)
 
 `main` is `origin/main` (`2d22cc0`) plus two commits. The first moves only the
-kernel gitlink, from `57d7fbb3` to `a75432e` (`pogo-keyboard-main`, also based on
-`57d7fbb3`). The kernel side adds the pipa Nanosic 803 input driver, a separate
-`sm7675-uke-pogo-keyboard.dtso` (1 MHz QUPv3 SE3, applied after the USB and
-optional video overlays) and the matching staging, config, spec and manifest
-updates. The fork's `fix/focus-keyboard` HID driver, auth daemon and
-`MCU_Upgrade.bin` are not part of this work; this driver never calls
-`request_firmware()`.
+kernel gitlink, from `57d7fbb3` to `3163e55`, which is `saksham-991`'s kernel
+`main` (`2e2a114`, 32 commits on `57d7fbb3`) plus one commit of ours.
 
-`make check-pins` and `tests/mainline-package-contract.sh` pass on the kernel
-branch, the input patch applies to the 7.3.1 tree and the overlay compiles with
-`dtc`. The kernel was not compiled, the image was not built and nothing was
-tested on the tablet.
+The kernel side is the fork's mature WN8030 HID driver (`src/hid/hid-nanosic-wn8030.c`):
+keyboard, consumer and touchpad HID reports, LED class devices for the mic-mute
+and keyboard backlight, the `/dev/nanosic_hinge` tablet-mode interface with its
+UAPI header, the `nanosic,wn8030-uke` variant and the auth token handshake. The
+driver loads `nanosic/MCU_Upgrade.bin` at probe time and fails without it, so
+the umbrella carries the 83,436-byte `configs/nanosic/MCU_Upgrade.bin` and the
+CI overlay installs it to `/usr/lib/firmware/nanosic/`.
+
+Our commit on top keeps the keyboard out of the optional display overlay: the
+fragments moved from `src/input/sm7675-uke-focus-keyboard.dtsi`, which the O82
+display overlay included, into a standalone `src/input/sm7675-uke-focus-keyboard.dtso`
+applied by `uke-abl.c` as a fourth overlay after the USB one. The fragments
+target the OEM nodes by path instead of the `qupv3_se3_i2c` label; only
+`tlmm`, `gpi_dma0`, `L22B` and `L23B` are needed from `__symbols__`, and all
+four are present on the device. The bus runs at 400 kHz, the IRQ is pin 116 on
+the rising edge, reset is 127, status 128, sleep 98, `vddio` is L23B and
+`dvdd` L22B.
+
+`make check-pins` passes, the overlay compiles with `dtc`, applies to a
+synthetic base carrying those four symbols, and the CI overlay anchors match
+the new pin. The kernel was not compiled, the image was not built and nothing
+was tested on the tablet.
 
 ## CI rootfs overlay: locale, login and PAM (2026-11-18)
 
@@ -73,7 +86,7 @@ Password authentication in the previous image could not work as intended:
    rootfs is finalized and stops the build if either file is missing.
 
 The overlay patterns were validated with `--check` against builder `3662473`,
-kernel `a75432e` and hardware `cf48c20`; nothing was built or installed.
+kernel `3163e55` and hardware `cf48c20`; nothing was built or installed.
 
 ## Baseline CI image build success (2026-11-14)
 
