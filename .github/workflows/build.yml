@@ -8,7 +8,7 @@ on:
       profiles:
         description: 'Comma-separated profiles to build (e.g. tty, kde)'
         required: true
-        default: 'kde,gnome'
+        default: 'kde'
         type: string
 
 permissions:
@@ -85,7 +85,7 @@ jobs:
 
       - name: Build baseline image
         env:
-          PROFILES: ${{ inputs.profiles || 'kde,gnome' }}
+          PROFILES: ${{ inputs.profiles || 'kde' }}
           UKE_VIDEO_OVERLAY: '1'
           UKE_CONTAINER: docker
           UKE_COPR: '0'
@@ -124,7 +124,7 @@ jobs:
           gh release create "$tag" build/release-$tag/*.tar.zst build/release-$tag/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" \
             --title "Uke Fedora $tag" \
-            --notes "Automated build. Profiles: ${{ inputs.profiles || 'kde,gnome' }}. Assets are direct-download archives."
+            --notes "Automated KDE build. Assets are direct-download archives."
 
       - name: Upload bootable image artifacts
         if: always()
@@ -148,7 +148,7 @@ jobs:
         run: |
           {
             echo "## Uke Baseline Image Build"
-            echo "- Profiles: \`${{ inputs.profiles || 'kde,gnome' }}\`"
+            echo "- Profiles: \`${{ inputs.profiles || 'kde' }}\`"
             echo "- Result: \`${{ job.status }}\`"
             if compgen -G 'build/release-*' >/dev/null; then
               echo '```'

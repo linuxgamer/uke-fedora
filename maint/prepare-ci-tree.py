@@ -126,6 +126,39 @@ def main():
         "\tcp -a tests \"$$assets/tests\"\n",
         writes)
 
+    # KDE image uses GDM with a pre-created uke/fedora wheel account.
+    replace_once(
+        f"{builder}/build-rootfs.sh",
+        "                              powerdevil firefox kate plasma-discover ark kcalc); display=sddm ;;",
+        "                              powerdevil firefox kate plasma-discover ark kcalc gdm); display=sddm ;;",
+        writes)
+    replace_once(
+        f"{builder}/src/public/desktop-setup.sh",
+        '''            systemctl --root="$root" enable plasma-setup.service plasmalogin.service
+''',
+        '''            if [[ $desktop == kde ]]; then
+                for unit in sddm.service plasmalogin.service plasma-setup.service; do
+                    systemctl --root="$root" disable "$unit" 2>/dev/null || true
+                    systemctl --root="$root" mask "$unit" 2>/dev/null || true
+                done
+                mkdir -p "$root/etc/gdm" "$root/var/lib/AccountsService/users"
+                if ! grep -q '^uke:' "$root/etc/passwd"; then
+                    chroot "$root" /usr/sbin/useradd --create-home --groups wheel --shell /usr/bin/bash uke
+                fi
+                printf 'uke:fedora\n' | chroot "$root" /usr/sbin/chpasswd
+                printf 'root:fedora\n' | chroot "$root" /usr/sbin/chpasswd
+                chroot "$root" /usr/sbin/usermod -U root || true
+                printf '[User]\nSession=plasma\nXSession=plasma\nSystemAccount=false\n' > "$root/var/lib/AccountsService/users/uke"
+                chmod 600 "$root/var/lib/AccountsService/users/uke"
+                printf '[daemon]\nInitialSetupEnable=false\nAutomaticLoginEnable=false\nTimedLoginEnable=false\n' > "$root/etc/gdm/custom.conf"
+                systemctl --root="$root" enable gdm.service
+                systemctl --root="$root" set-default graphical.target
+            else
+                systemctl --root="$root" enable plasma-setup.service plasmalogin.service
+            fi
+''',
+        writes)
+
     # root/fedora on every image, including the TTY consoles.
     replace_once(f"{builder}/src/public/stage.sh",
                  'chroot "$root" /usr/sbin/usermod -L root\n',
