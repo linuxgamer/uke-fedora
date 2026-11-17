@@ -1,6 +1,6 @@
 [submodule "senemos-uke-kernel"]
 	path = senemos-uke-kernel
-	url = https://github.com/linuxgamer/senemos-uke-kernel-mainline.git
+	url = https://github.com/saksham-991/senemos-uke-kernel-mainline.git
 [submodule "uke-fedora-builder"]
 	path = uke-fedora-builder
 	url = https://github.com/linuxgamer/uke-fedora-builder.git

@@ -43,7 +43,7 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 | Built-in speakers and microphones | 🟢 Working | Both Playback and Recording works for all 4 speakers. |
 | Cameras | 🔴 Not working | Neither camera has a verified working capture. |
 | Stylus | 🔴 Not working | Pen input, pressure and tilt are unavailable. |
-| Magnetic keyboard | ⚪ WIP| Pogo keyboard and touchpad support will be added soon. |
+| Magnetic keyboard | ⚪ WIP| Nanosic 803 driver candidate on branch `keyboard-main`; not compiled or tested on the tablet. |
 
 🟢 Working · 🟡 Partial · 🔴 Not working · ⚪ Not verified
 
