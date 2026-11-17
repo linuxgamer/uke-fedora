@@ -38,6 +38,43 @@ branch, the input patch applies to the 7.3.1 tree and the overlay compiles with
 `dtc`. The kernel was not compiled, the image was not built and nothing was
 tested on the tablet.
 
+## CI rootfs overlay: locale, login and PAM (2026-11-18)
+
+`maint/prepare-ci-tree.py` now ships Simplified Chinese and the stock login
+stack:
+
+- `glibc-langpack-zh` and `langpacks-zh_CN` replace `glibc-langpack-ru` and
+  `langpacks-ru`; `/etc/locale.conf` is `zh_CN.UTF-8` and
+  `google-noto-sans-cjk-fonts` is installed. Fedora has no `noto-fonts-cjk`
+  package: the Noto CJK family is split, and the sans face is the one the
+  desktop needs.
+- The GDM overlay is gone. KDE keeps its own `sddm.service` with
+  `plasma-setup.service`, so the first user comes from the Plasma first-run
+  setup, exactly as upstream. No account, password or SSH credential is
+  shipped, `root` stays locked and `first-boot-policy` keeps its
+  `Requires=uke-root-capacity.service uke-swap-ready.service` ordering.
+
+Password authentication in the previous image could not work as intended:
+
+1. The demo `uke:fedora` account was created only in
+   `src/public/desktop-setup.sh`, and only `src/public/stage.sh` sources that
+   file; `build-rootfs.sh` does not. The account the overlay promised therefore
+   never reached the image. The remaining account path was the
+   `plasma-setup.service` wizard, which runs `Before=display-manager.service`,
+   and `build-rootfs.sh` still refuses to finish unless `root` stays locked, so
+   there was no fallback account.
+2. That wizard sets the password through `chpasswd`, and every password prompt
+   reads `/etc/pam.d/system-auth` and `/etc/pam.d/password-auth`. Both are ghost
+   files owned by `authselect-libs`: only its posttrans creates them, and that
+   posttrans hides its own errors. Nothing in the builder verified them, so a
+   failed `authselect select` would leave a desktop that starts but rejects every
+   password. The overlay now runs
+   `authselect select local with-silent-lastlog --force --nobackup` before the
+   rootfs is finalized and stops the build if either file is missing.
+
+The overlay patterns were validated with `--check` against builder `3662473`,
+kernel `a75432e` and hardware `cf48c20`; nothing was built or installed.
+
 ## Baseline CI image build success (2026-11-14)
 
 - Workflow run 43519285547 succeeded in 12m33s on GitHub Actions ARM64 runner (`ubuntu-24.04-arm`).
@@ -147,7 +184,7 @@ tested on the tablet.
 - Images get an optional COPR repo (`UKE_COPR=0` disables it), excluding kernel
   and OEM packages.
 - Desktop profiles install Firefox, a text editor, the store, an archive manager
-  and a calculator, plus `ru_RU.UTF-8`.
+  and a calculator, plus `zh_CN.UTF-8` and Noto Sans CJK.
 - Release packaging and issue templates exist; screenshots are in the README.
 - Build speed: kernel SRPM reuse, locked status file, `--parallel N`, CI caches.
 

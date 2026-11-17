@@ -126,100 +126,44 @@ def main():
         "\tcp -a tests \"$$assets/tests\"\n",
         writes)
 
-    # KDE image uses GDM with a pre-created uke/fedora wheel account.
+    # Simplified Chinese replaces the upstream Russian default. glibc-langpack-zh
+    # carries the zh_CN locales and langpacks-zh_CN the desktop translations;
+    # google-noto-sans-cjk-fonts supplies the Han glyph coverage the Plasma
+    # packages do not pull in on their own.
     replace_once(
         f"{builder}/build-rootfs.sh",
-        '                install noopenh264 "${common[@]}" "${desktop[@]}"\n',
-        '                install noopenh264 "${common[@]}" "${desktop[@]}"\n'
-        '            if [[ $profile == kde ]]; then\n'
-        '                rm -f "$root/etc/systemd/system/display-manager.service"\n'
-        '                dnf_install_with_download_retry -y --use-host-config --installroot="$root" \\\n'
-        '                    --releasever=44 --setopt=install_weak_deps=False install gdm\n'
-        '            fi\n',
+        "                    polkit udisks2 xorg-x11-server-Xwayland glibc-langpack-ru langpacks-ru)\n",
+        "                    polkit udisks2 xorg-x11-server-Xwayland glibc-langpack-zh langpacks-zh_CN\n"
+        "                    google-noto-sans-cjk-fonts)\n",
         writes)
-    replace_once(
-        f"{builder}/src/public/desktop-setup.sh",
-        '''            systemctl --root="$root" enable plasma-setup.service plasmalogin.service
-''',
-        '''            if [[ $desktop == kde ]]; then
-                for unit in sddm.service plasmalogin.service plasma-setup.service; do
-                    systemctl --root="$root" disable "$unit" 2>/dev/null || true
-                    systemctl --root="$root" mask "$unit" 2>/dev/null || true
-                done
-                mkdir -p "$root/etc/gdm" "$root/var/lib/AccountsService/users"
-                if ! grep -q '^uke:' "$root/etc/passwd"; then
-                    chroot "$root" /usr/sbin/useradd --create-home --groups wheel --shell /usr/bin/bash uke
-                fi
-                printf 'uke:fedora\n' | chroot "$root" /usr/sbin/chpasswd
-                printf 'root:fedora\n' | chroot "$root" /usr/sbin/chpasswd
-                chroot "$root" /usr/sbin/usermod -U root || true
-                printf '[User]\nSession=plasma\nXSession=plasma\nSystemAccount=false\n' > "$root/var/lib/AccountsService/users/uke"
-                chmod 600 "$root/var/lib/AccountsService/users/uke"
-                printf '[daemon]\nInitialSetupEnable=false\nAutomaticLoginEnable=false\nTimedLoginEnable=false\n' > "$root/etc/gdm/custom.conf"
-                systemctl --root="$root" enable gdm.service
-                systemctl --root="$root" set-default graphical.target
-            else
-                systemctl --root="$root" enable plasma-setup.service plasmalogin.service
-            fi
-''',
-        writes)
-
-    # root/fedora on every image, including the TTY consoles.
     replace_once(
         f"{builder}/build-rootfs.sh",
-        '            systemctl --root="$root" enable "$display.service"\n',
-        '            if [[ $profile == kde ]]; then\n'
-        '                systemctl --root="$root" enable gdm.service\n'
-        '            else\n'
-        '                systemctl --root="$root" enable "$display.service"\n'
-        '            fi\n',
+        "printf 'LANG=ru_RU.UTF-8\\nLC_TIME=ru_RU.UTF-8\\n' > \"$root/etc/locale.conf\"",
+        "printf 'LANG=zh_CN.UTF-8\\nLC_TIME=zh_CN.UTF-8\\n' > \"$root/etc/locale.conf\"",
         writes)
-    replace_once(f"{builder}/src/public/stage.sh",
-                 'chroot "$root" /usr/sbin/usermod -L root\n',
-                 'printf \'root:fedora\\n\' | chroot "$root" /usr/sbin/chpasswd\n'
-                 'chroot "$root" /usr/sbin/usermod -U root || true\n', writes)
 
-    # Pre-created uke/fedora account and working GDM for the GNOME image.
+    # authselect owns /etc/pam.d/system-auth and /etc/pam.d/password-auth as
+    # ghost files: only its posttrans creates them, and that script discards its
+    # own errors. An image built without them still reaches the display manager
+    # and the desktop, but every password prompt fails, because sddm, sudo and
+    # the console all include those files. Re-apply the stock Fedora profile and
+    # fail the build if the PAM stack is still absent.
     replace_once(
-        f"{builder}/src/public/desktop-setup.sh",
-        '''        gnome)
-            rpm --root "$root" -q gdm gnome-initial-setup gnome-shell >/dev/null
-            mkdir -p "$root/etc/gdm"
-            printf '[daemon]\\nInitialSetupEnable=true\\n' > "$root/etc/gdm/custom.conf"
-            systemctl --root="$root" enable gdm.service
-            printf '{"account_setup":"gnome-initial-setup","credentials_included":false}\\n' > "$receipt";;
-''',
-        '''        gnome)
-            rpm --root "$root" -q gdm gnome-initial-setup gnome-shell >/dev/null
-            mkdir -p "$root/etc/gdm" "$root/var/lib/AccountsService/users"
-            if ! grep -q '^uke:' "$root/etc/passwd"; then
-                chroot "$root" /usr/sbin/useradd --create-home --groups wheel --shell /usr/bin/bash uke
-            fi
-            printf 'uke:fedora\\n' | chroot "$root" /usr/sbin/chpasswd
-            printf 'root:fedora\\n' | chroot "$root" /usr/sbin/chpasswd
-            chroot "$root" /usr/sbin/usermod -U root || true
-            printf '[User]\\nSession=gnome\\nXSession=gnome\\nSystemAccount=false\\n' > "$root/var/lib/AccountsService/users/uke"
-            chmod 600 "$root/var/lib/AccountsService/users/uke"
-            printf '[daemon]\\nInitialSetupEnable=false\\nAutomaticLoginEnable=false\\nTimedLoginEnable=false\\n' > "$root/etc/gdm/custom.conf"
-            systemctl --root="$root" enable gdm.service
-            systemctl --root="$root" set-default graphical.target
-            printf '{"account_setup":"precreated-uke","credentials_included":true,"public_test_account":"uke","password_change_required":false,"autologin_enabled":false}\\n' > "$receipt";;
-''',
-        writes)
-    replace_once(f"{builder}/src/public/desktop-setup.sh",
-                 "awk -F: '$3>=1000 && $3<65534 {exit 1}'",
-                 "awk -F: '$3>=1000 && $3<65534 && $1!=\"uke\" {exit 1}'", writes)
-
-    # GDM must still come up when the storage gate fails; keep the ordering but
-    # do not make the display manager a hard dependency.
-    replace_once(
-        f"{builder}/src/public/first-boot-policy.sh",
-        "printf '[Unit]\\nRequires=uke-root-capacity.service uke-swap-ready.service\\n"
-        "After=uke-root-capacity.service uke-swap-ready.service\\n'",
-        "printf '[Unit]\\nWants=uke-root-capacity.service uke-swap-ready.service\\n"
-        "After=uke-root-capacity.service uke-swap-ready.service\\n'",
+        f"{builder}/build-rootfs.sh",
+        "    phase_done profile-packages-and-configuration\n",
+        '    chroot "$root" /usr/bin/authselect select local with-silent-lastlog --force --nobackup\n'
+        '    for pam in system-auth password-auth; do\n'
+        '        [[ -s $root/etc/pam.d/$pam ]] || die "PAM stack is missing: /etc/pam.d/$pam"\n'
+        "    done\n"
+        "    phase_done profile-packages-and-configuration\n",
         writes)
 
+    # The KDE image keeps the stock SDDM and Plasma first-run setup: no
+    # pre-created account, root stays locked, and first-boot-policy keeps
+    # its Requires= ordering. The earlier GDM overlay created the demo
+    # account in src/public/desktop-setup.sh, which only the public COPR
+    # stage sources; build-rootfs.sh never ran it, so the CI image shipped
+    # no password-capable account at all.
     print("CI overlay applied" if writes else "CI overlay patterns validated")
 
 
