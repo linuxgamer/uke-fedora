@@ -116,6 +116,15 @@ def main():
         "    RANDOMIZE_BASE STACKPROTECTOR_STRONG STRICT_KERNEL_RWX STRICT_MODULE_RWX; do\n",
         writes)
 
+    # The SRPM profile stages tests from git HEAD, so copy the patched contract
+    # from the worktree instead of the archived commit.
+    replace_once(
+        f"{kernel}/Makefile",
+        "\tgit archive HEAD src patches manifests/video-linux73-candidate-20261025.json tests | tar -xf - -C \"$$assets\"\n",
+        "\tgit archive HEAD src patches manifests/video-linux73-candidate-20261025.json | tar -xf - -C \"$$assets\"\n"
+        "\tcp -a tests \"$$assets/tests\"\n",
+        writes)
+
     # root/fedora on every image, including the TTY consoles.
     replace_once(f"{builder}/src/public/stage.sh",
                  'chroot "$root" /usr/sbin/usermod -L root\n',
