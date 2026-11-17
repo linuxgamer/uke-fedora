@@ -113,6 +113,18 @@ jobs:
           ./uke-fedora-builder/tools/package-release.sh --tag "$tag" \
             --output "build/release-$tag" build/ci-$GITHUB_RUN_ID/*-pair
 
+      - name: Publish release with direct download links
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -Eeuo pipefail
+          tag="ci-$GITHUB_RUN_ID"
+          gh release create "$tag" build/release-$tag/*.tar.zst build/release-$tag/SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Uke Fedora $tag" \
+            --notes "Automated build. Profiles: ${{ inputs.profiles || 'kde,gnome' }}. Assets are direct-download archives."
+
       - name: Upload bootable image artifacts
         if: always()
         uses: actions/upload-artifact@v4
