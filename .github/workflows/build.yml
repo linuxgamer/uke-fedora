@@ -79,13 +79,14 @@ jobs:
         run: |
           mkdir -p uke-fedora-builder/build/cache
           python3 maint/prepare-ci-tree.py
+          python3 maint/prepare-ci-fallback.py
           bash senemos-uke-kernel/tools/refresh-source-pins.sh
           sudo chmod -R 777 uke-fedora-builder/build/cache ~/.cache 2>/dev/null || true
 
       - name: Build baseline image
         env:
           PROFILES: ${{ inputs.profiles || 'kde,gnome' }}
-          UKE_VIDEO_OVERLAY: '0'
+          UKE_VIDEO_OVERLAY: '1'
           UKE_CONTAINER: docker
           UKE_COPR: '0'
         run: |
