@@ -51,6 +51,11 @@ synthetic base carrying those four symbols, and the CI overlay anchors match
 the new pin. The kernel was not compiled, the image was not built and nothing
 was tested on the tablet.
 
+The kernel submodule URL now points at the `Dustymind` fork of the kernel
+repository, because `3163e55` exists only there once it is pushed.
+`actions/checkout` fetches submodules recursively, so a run started before that
+push fails at checkout with `not our ref` rather than during the build.
+
 ## CI rootfs overlay: locale, login and PAM (2026-11-18)
 
 `maint/prepare-ci-tree.py` now ships Simplified Chinese and the stock login
