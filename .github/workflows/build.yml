@@ -69,7 +69,7 @@ jobs:
       - name: Install host tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends jq zstd g++ python3 e2fsprogs curl ca-certificates
+          sudo apt-get install -y --no-install-recommends jq zstd g++ python3 python3-cryptography python3-pip e2fsprogs curl ca-certificates
           curl -fsSL 'https://android.googlesource.com/platform/external/avb/+/refs/heads/main/avbtool.py?format=TEXT' \
             | base64 -d | sudo tee /usr/local/bin/avbtool >/dev/null
           sudo chmod +x /usr/local/bin/avbtool
@@ -79,6 +79,7 @@ jobs:
         run: |
           mkdir -p uke-fedora-builder/build/cache
           python3 maint/prepare-ci-tree.py
+          bash senemos-uke-kernel/tools/refresh-source-pins.sh
           sudo chmod -R 777 uke-fedora-builder/build/cache ~/.cache 2>/dev/null || true
 
       - name: Build baseline image
