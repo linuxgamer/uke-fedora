@@ -53,7 +53,7 @@ def main():
         "uke-fedora-builder/build-images.sh",
         "  uke-linux-hardware-support/uke-boot/build/srpm/rpmbuild\n",
         "  uke-linux-hardware-support/uke-boot/build/srpm/rpmbuild\n"
-        "  uke-linux-hardware-support/uke-video/build/srpm/rpmbuild\n",
+        "  uke-linux-hardware-support/uke-video/build/srpm\n",
         writes)
     replace_once(
         "uke-fedora-builder/build-images.sh",
@@ -65,7 +65,7 @@ def main():
         "uke-fedora-builder/build-images.sh",
         'cp "$workspace"/uke-linux-hardware-support/xiaomi-uke-firmware/build/fedora${release}-image-data/rpmbuild/RPMS/noarch/uke-fedora${release}-oem-data-3.0.304.0-2.fc${release}.noarch.rpm "$hardware_rpms/"\n',
         'cp "$workspace"/uke-linux-hardware-support/xiaomi-uke-firmware/build/fedora${release}-image-data/rpmbuild/RPMS/noarch/uke-fedora${release}-oem-data-3.0.304.0-2.fc${release}.noarch.rpm "$hardware_rpms/"\n'
-        'cp "$workspace"/uke-linux-hardware-support/uke-video/build/srpm/rpmbuild/RPMS/aarch64/uke-vaapi-v4l2-1.0.0-*.fc${release}.aarch64.rpm "$hardware_rpms/"\n',
+        'cp "$workspace"/uke-linux-hardware-support/uke-video/build/srpm/RPMS/aarch64/uke-vaapi-v4l2-1.0.0-*.fc${release}.aarch64.rpm "$hardware_rpms/"\n',
         writes)
     replace_once(
         "uke-fedora-builder/build-rootfs.sh",
