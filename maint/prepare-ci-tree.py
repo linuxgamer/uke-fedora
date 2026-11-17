@@ -134,7 +134,7 @@ def main():
         '            if [[ $profile == kde ]]; then\n'
         '                rm -f "$root/etc/systemd/system/display-manager.service"\n'
         '                dnf_install_with_download_retry -y --use-host-config --installroot="$root" \\\n'
-        '                    --releasever=44 --setopt=install_weak_deps=False gdm\n'
+        '                    --releasever=44 --setopt=install_weak_deps=False install gdm\n'
         '            fi\n',
         writes)
     replace_once(
