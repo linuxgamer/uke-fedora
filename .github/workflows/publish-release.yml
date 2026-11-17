@@ -1,0 +1,35 @@
+name: Publish run images as release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Build run id containing uke-bootable-images artifact
+        required: true
+      tag:
+        description: Release tag to create
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download artifacts from the build run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download "${{ inputs.run_id }}" --repo "$GITHUB_REPOSITORY" \
+            --name "uke-bootable-images-${{ inputs.run_id }}" --dir assets
+          find assets -maxdepth 3 -type f | sort
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ inputs.tag }}" assets/release-*/*.tar.zst assets/release-*/SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Uke Fedora ${{ inputs.tag }}" \
+            --notes "Direct-download images for build run ${{ inputs.run_id }}."
