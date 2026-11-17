@@ -121,7 +121,8 @@ def main():
     replace_once(
         f"{kernel}/Makefile",
         "\tgit archive HEAD src patches manifests/video-linux73-candidate-20261025.json tests | tar -xf - -C \"$$assets\"\n",
-        "\tgit archive HEAD src patches manifests/video-linux73-candidate-20261025.json | tar -xf - -C \"$$assets\"\n"
+        "\tgit archive HEAD src patches manifests/video-linux73-candidate-20261025.json tests | tar -xf - -C \"$$assets\"\n"
+        "\trm -rf \"$$assets/tests\"\n"
         "\tcp -a tests \"$$assets/tests\"\n",
         writes)
 
