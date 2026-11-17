@@ -8,7 +8,7 @@ on:
       profiles:
         description: 'Comma-separated profiles to build (e.g. tty, kde)'
         required: true
-        default: 'kde'
+        default: 'kde,gnome'
         type: string
 
 permissions:
@@ -75,31 +75,15 @@ jobs:
           sudo chmod +x /usr/local/bin/avbtool
           avbtool --help >/dev/null
 
-      - name: Patch builder and configure build environment
+      - name: Apply CI overlay to pinned components
         run: |
-          sed -i 's/\$count == 74/\$count == 75/' uke-fedora-builder/src/image/verify-oem-rpm.sh
-          sed -i 's/firmware_count == 74/firmware_count == 75/' uke-fedora-builder/src/image/audit-rootfs.sh
-          sed -i 's/if command -v podman >\/dev\/null; then container=podman/if [[ -n \${UKE_CONTAINER:-} ]]; then container=\$UKE_CONTAINER; elif command -v podman >\/dev\/null; then container=podman/' uke-fedora-builder/build-rootfs.sh
-          sed -i 's|/core-rpm/uke-core-meta\.rpm$|/core-rpm/uke-core-meta.rpm /hardware-rpms/uke-fedora*-oem-data-*.rpm|' uke-fedora-builder/build-rootfs.sh
-          sed -i 's|install -Dm644 "\$here/configs/images/uke-copr\.repo"|sudo &|' uke-fedora-builder/build-rootfs.sh
-          # Unify DRM KMS & GPU nodes (eliminate llvmpipe software rasterizer fallback)
-          sed -i 's/ msm\.separate_gpu_kms=1//' senemos-uke-kernel/packaging/native/native.config
-          sed -i 's/^options msm separate_gpu_kms=1/# options msm separate_gpu_kms=1/' uke-linux-hardware-support/uke-desktop-integration/src/modprobe.d/uke-gpu-options.conf
-          # Touchscreen firmware: deploy to kernel-expected firmware path
-          sed -i '/install -Dm600 "\/local-blobs\/touch\/\$variant\/\$name" "\$root\/var\/lib\/uke-touch\/\$variant\/\$name"/a \            install -Dm644 "/local-blobs/touch/$variant/$name" "$root/usr/lib/firmware/qcom/uke/touch/$variant/$name"' uke-fedora-builder/build-rootfs.sh
-          sed -i '/chmod 0700 "\$root\/var\/lib\/uke-touch\/\$variant"/a \        chmod 0755 "$root/usr/lib/firmware/qcom/uke/touch/$variant"' uke-fedora-builder/build-rootfs.sh
-          sed -i '/install -Dm600 \/local-blobs\/touch\/reference\.bin "\$root\/var\/lib\/uke-touch\/reference\.bin"/a \    install -Dm644 /local-blobs/touch/reference.bin "$root/usr/lib/firmware/qcom/uke/touch/reference.bin"' uke-fedora-builder/build-rootfs.sh
-          # Audio: install FourSemi FS19xx amplifier firmware, unmuted ALSA state, and WirePlumber speaker priority
-          sed -i '/if \[\[ \$copr == 1 \]\]; then/i \
-sudo install -Dm644 "$here/../configs/audio/fs19xx.fsm" "$output/root/usr/lib/firmware/qcom/uke/audio/fs19xx.fsm"\
-sudo install -Dm644 "$here/../configs/audio/asound.state" "$output/root/var/lib/alsa/asound.state"\
-sudo install -Dm644 "$here/../configs/wireplumber/85-uke-speaker-priority.conf" "$output/root/usr/share/wireplumber/wireplumber.conf.d/85-uke-speaker-priority.conf"' uke-fedora-builder/build-rootfs.sh
           mkdir -p uke-fedora-builder/build/cache
+          python3 maint/prepare-ci-tree.py
           sudo chmod -R 777 uke-fedora-builder/build/cache ~/.cache 2>/dev/null || true
 
       - name: Build baseline image
         env:
-          PROFILES: ${{ inputs.profiles || 'kde' }}
+          PROFILES: ${{ inputs.profiles || 'kde,gnome' }}
           UKE_VIDEO_OVERLAY: '0'
           UKE_CONTAINER: docker
           UKE_COPR: '0'
@@ -150,7 +134,7 @@ sudo install -Dm644 "$here/../configs/wireplumber/85-uke-speaker-priority.conf" 
         run: |
           {
             echo "## Uke Baseline Image Build"
-            echo "- Profiles: \`${{ inputs.profiles || 'tty' }}\`"
+            echo "- Profiles: \`${{ inputs.profiles || 'kde,gnome' }}\`"
             echo "- Result: \`${{ job.status }}\`"
             if compgen -G 'build/release-*' >/dev/null; then
               echo '```'
