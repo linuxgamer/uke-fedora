@@ -41,6 +41,13 @@ def main():
         "if [[ $copr == 1 ]]; then\n",
         writes)
 
+    # The VA-API stage is an extra build stage beyond the stock count.
+    replace_once(
+        "uke-fedora-builder/build-images.sh",
+        "build_total=$((12 + 2 * ${#build_profiles[@]}))",
+        "build_total=$((13 + 2 * ${#build_profiles[@]}))",
+        writes)
+
     # Build and install the stateful Iris VA-API backend so browsers actually
     # pick the hardware decoder instead of software decoding.
     replace_once(
