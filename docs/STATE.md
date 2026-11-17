@@ -1,6 +1,6 @@
 # State
 
-Updated: 2026-11-18 (keyboard branch on the 7.3.1 main pin). Verify
+Updated: 2026-11-18 (keyboard merged into `main` on the 7.3.1 pin). Verify
 with commands before relying on it; update this file at the end of every
 session. Long history and decisions live in the private notes; this file records
 only facts.
@@ -22,15 +22,15 @@ rebased component forks; patches are exported for review only. See
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
 
-## Pogo keyboard branch (2026-11-18)
+## Pogo keyboard on `main` (2026-11-18)
 
-Branch `keyboard-main` on top of `origin/main` (`2d22cc0`) moves only the kernel
-gitlink, from `57d7fbb3` to `a75432e` (`pogo-keyboard-main`, also based on
+`main` is `origin/main` (`2d22cc0`) plus two commits. The first moves only the
+kernel gitlink, from `57d7fbb3` to `a75432e` (`pogo-keyboard-main`, also based on
 `57d7fbb3`). The kernel side adds the pipa Nanosic 803 input driver, a separate
 `sm7675-uke-pogo-keyboard.dtso` (1 MHz QUPv3 SE3, applied after the USB and
 optional video overlays) and the matching staging, config, spec and manifest
 updates. The fork's `fix/focus-keyboard` HID driver, auth daemon and
-`MCU_Upgrade.bin` are not part of this branch; this driver never calls
+`MCU_Upgrade.bin` are not part of this work; this driver never calls
 `request_firmware()`.
 
 `make check-pins` and `tests/mainline-package-contract.sh` pass on the kernel

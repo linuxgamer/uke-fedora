@@ -29,7 +29,7 @@ firmware bring-up before it can be tested.
 | Microphones | broken | — | — |
 | Cameras | broken | — | no capture path |
 | Stylus | broken | — | no pen input |
-| Pogo keyboard | untested | — | Nanosic 803 input driver plus a dedicated QUPv3 SE3 ABL overlay on branch `keyboard-main` (kernel `a75432e`); no firmware payload. Not compiled or boot-tested |
+| Pogo keyboard | untested | — | Nanosic 803 input driver plus a dedicated QUPv3 SE3 ABL overlay on `main` (kernel `a75432e`); no firmware payload. Not compiled or boot-tested |
 | Sensors (IMU, compass, proximity, cover) | partial | varying support | per-sensor verification missing |
 | USB-C OTG | partial | mouse via adapter | other accessories untested |
 | USB CDC ACM | partial | manual on/off works | off by default |
