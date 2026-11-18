@@ -8,6 +8,12 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 > [!WARNING]
 > This is not ready for daily use. Installing to `userdata` overwrites Android user data. Back up any data you have!
 
+## Demo
+
+https://github.com/user-attachments/assets/aaa5c2a5-fe86-4cba-84c5-56b9adcc9963
+
+10-second on-device capture from the Xiaomi Pad 7 running KDE Plasma on the Fedora 44 Uke image.
+
 ## Start here
 
 - **Installing the port:** read the [installation guide](docs/INSTALL.md) and the
@@ -28,7 +34,7 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 | Display | 🟡 Partial | Native TM display works; a brief grey screen appears during boot. CSOT is untested on this port. |
 | Refresh rate |  🟢 Working  | Manual Refresh rate switching works and is reliable, (KDE verified), VRR is disabled. |
 | Touchscreen |  🟢 Working | Works,10 Point MultiTouch is working. |
-| Graphics (GPU) | 🟡 Working, needs more testing | OpenGL works (~10K Glmark2), Vulkan is experimental (~7K Vkmark). |
+| Graphics (GPU) | 🟡 Working, needs more testing | OpenGL: glmark2 ≈ 5–6K. Vulkan: vkmark ≈ 8K (KDE Plasma Wayland). |
 | CPU and storage | 🟢 Working | All CPU cores are available, internal storage works. |
 | Wi-Fi | 🟢 Working | Connects to networks and supports normal data transfers. |
 | Bluetooth |  🟢 Working  | Bluetooth devices work, Tested Keyboard, Mouse and headphones. |
