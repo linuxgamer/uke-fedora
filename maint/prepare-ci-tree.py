@@ -22,6 +22,19 @@ def replace_once(rel, old, new, writes):
         path.write_text(text.replace(old, new, 1))
 
 
+def replace_or_skip(rel, old, new, writes, already):
+    path = ROOT / rel
+    text = path.read_text()
+    count = text.count(old)
+    if count == 1:
+        if writes:
+            path.write_text(text.replace(old, new, 1))
+        return
+    if count == 0 and any(marker in text for marker in already):
+        return
+    raise SystemExit(f"{rel}: expected one match or an already-applied marker, found {count}: {old[:70]!r}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="validate patterns without writing")
@@ -103,12 +116,15 @@ def main():
     # Allow locally built modules to load on the installed system. Signing stays
     # enabled, but neither forced signatures nor forced integrity lockdown block
     # insmod of unsigned test modules.
-    replace_once(f"{kernel}/packaging/native/native.config",
-                 "CONFIG_MODULE_SIG_FORCE=y", "# CONFIG_MODULE_SIG_FORCE is not set", writes)
+    replace_or_skip(f"{kernel}/packaging/native/native.config",
+                    "CONFIG_MODULE_SIG_FORCE=y", "# CONFIG_MODULE_SIG_FORCE is not set",
+                    writes,
+                    ("# CONFIG_MODULE_SIG_FORCE is not set",
+                     "# CONFIG_MODULE_SIG is not set"))
     replace_once(f"{kernel}/packaging/native/native.config",
                  "CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY=y",
                  "# CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY is not set", writes)
-    replace_once(
+    replace_or_skip(
         f"{kernel}/tests/kernel-hardening-config-contract.sh",
         "for symbol in MODULE_SIG MODULE_SIG_FORCE MODULE_SIG_ALL MODULE_SIG_SHA256 \\\n"
         "    MODULE_SIG_KEY_TYPE_RSA SYSTEM_TRUSTED_KEYRING SECURITY_DMESG_RESTRICT \\\n"
@@ -120,7 +136,8 @@ def main():
         "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY \\\n"
         "    SECURITY_YAMA SECURITY_SELINUX FORTIFY_SOURCE HARDENED_USERCOPY \\\n"
         "    RANDOMIZE_BASE STACKPROTECTOR_STRONG STRICT_KERNEL_RWX STRICT_MODULE_RWX; do\n",
-        writes)
+        writes,
+        ("grep -Fxq '# CONFIG_MODULE_SIG_FORCE is not set'",))
 
     # The SRPM profile stages tests from git HEAD, so copy the patched contract
     # from the worktree instead of the archived commit.
