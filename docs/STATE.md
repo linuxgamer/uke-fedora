@@ -15,7 +15,7 @@ rebased component forks; patches are exported for review only. See
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
-| `senemos-uke-kernel` | `main` | `181d8ef` (gitlink and worktree) | release `7.3.1-107`; video series active; native `%prep` fixed; Nanosic WN8030 HID keyboard with an independent ABL overlay; upstream reset pulse and resume keepalive merged; `referances/` removed and its last path strings scrubbed from manifests |
+| `senemos-uke-kernel` | `main` | `fadf7f8` (gitlink and worktree) | release `7.3.1-107`; video series active; native `%prep` fixed; Nanosic WN8030 HID keyboard with an independent ABL overlay; upstream reset pulse and resume keepalive merged; `referances/` removed and its last path strings scrubbed from manifests |
 | `uke-fedora-builder` | `main` | `3662473` (gitlink and worktree) | apps, ru locale, COPR repo; internal source cache renamed to `source-cache/` |
 | `uke-linux-hardware-support` | `main` | `cf48c20` (gitlink and worktree) | firmware payload with uke-firmware provides; top-level docs removed, internal caches renamed |
 
@@ -99,6 +99,14 @@ RPM by that NEVRA and a lagging lock fails the rootfs stage only after the
 whole kernel has compiled. The changelog entry records the four changes in
 this release: the standalone keyboard overlay, the native ABL patch re-anchor,
 and the two upstream Nanosic fixes.
+
+The release number is mirrored a second time inside the kernel tree:
+`manifests/llcc-source-candidate-20261020.json` carries a `kernel_release` field
+and `make validate` compares it with the ABI that `rpmspec` reports for the
+spec. Bumping only the spec broke that assertion, and CI run `44248952150`
+failed there after 1m25s with `make validate` error 1, before the first of the
+17 stages. `fadf7f8` moves the manifest to `7.3.1-107`; any future bump has to
+touch both places.
 
 ## CI rootfs overlay: locale, login and PAM (2026-11-18)
 
