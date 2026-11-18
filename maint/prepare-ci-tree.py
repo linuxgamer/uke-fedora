@@ -311,12 +311,14 @@ def main():
         "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr\n",
         "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr /usr/bin/ln\n", writes)
 
-    # The WLAN supply patch makes the custom RPMH driver claim smpb2, which
-    # leaves UFS permanently deferred. The TTY image does not need WLAN.
-    replace_once(
-        f"{kernel}/patches/7.3.0/series",
-        "0015-uke-wlan-supplies-and-dma.patch\n",
-        "", writes)
+    # Keep the WLAN patch in the validated series, but drop its RPMH
+    # allow-list hunk: those WLAN rails leave UFS waiting on smpb2 forever.
+    regulator_patch = ROOT / f"{kernel}/patches/7.3.0/0015-uke-wlan-supplies-and-dma.patch"
+    patch_text = regulator_patch.read_text()
+    start = patch_text.index("diff --git a/drivers/regulator/qcom-rpmh-regulator-uke.c")
+    end = patch_text.index("diff --git a/drivers/net/wireless/ath/ath11k/ahb.c", start)
+    if writes:
+        regulator_patch.write_text(patch_text[:start] + patch_text[end:])
 
     # codeberg.org no longer resolves for the runners; the Ubuntu pool
     # carries the exact same 0.4.4 tarball (same sha256).
