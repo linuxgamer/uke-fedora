@@ -78,6 +78,42 @@ def main():
                  '    install -Dm644 "$here/configs/images/uke-copr.repo"',
                  '    sudo install -Dm644 "$here/configs/images/uke-copr.repo"', writes)
 
+    # Flatpak, PackageKit and the Discover backends are required for desktop
+    # app installation; the VA-API policy is installed by the image workflow.
+    replace_once(
+        f"{builder}/build-rootfs.sh",
+        "common=(NetworkManager-wifi bluez dbus-daemon mesa-dri-drivers pipewire wireplumber upower",
+        "common=(NetworkManager-wifi bluez dbus-daemon mesa-dri-drivers pipewire wireplumber "
+        "flatpak flatpak-session-helper PackageKit upower",
+        writes)
+    replace_once(
+        f"{builder}/build-rootfs.sh",
+        "                kde) desktop=(plasma-desktop plasma-workspace kwin sddm sddm-breeze plasma-setup\n"
+        "                              sddm-wayland-plasma konsole dolphin plasma-nm bluedevil\n"
+        "                              plasma-keyboard plasma-systemsettings kscreen plasma-pa\n"
+        "                              powerdevil firefox kate plasma-discover ark kcalc); display=sddm ;;",
+        "                kde) desktop=(plasma-desktop plasma-workspace kwin sddm sddm-breeze plasma-setup\n"
+        "                              sddm-wayland-plasma konsole dolphin plasma-nm bluedevil\n"
+        "                              plasma-keyboard plasma-systemsettings kscreen plasma-pa\n"
+        "                              powerdevil firefox kate plasma-discover plasma-discover-flatpak "
+        "plasma-discover-packagekit ark kcalc); display=sddm ;;",
+        writes)
+    replace_once(
+        f"{builder}/build-rootfs.sh",
+        "            if [[ $profile != tty ]]; then\n",
+        "            dnf_install_with_download_retry -y --use-host-config "
+        "--setopt=system_cachedir=$dnf_cache --setopt=keepcache=True "
+        "--installroot=\"$root\" --releasever=44 --setopt=install_weak_deps=False "
+        "--allowerasing install "
+        "https://download1.rpmfusion.org/free/fedora/releases/44/Everything/aarch64/os/Packages/l/"
+        "libavcodec-freeworld-8.0.1-6.fc44.aarch64.rpm\n"
+        "            chroot \"$root\" flatpak remote-add --system --if-not-exists flathub "
+        "https://flathub.org/repo/flathub.flatpakrepo || die 'Failed to add Flathub remote'\n"
+        "            install -Dm644 \"$here/../configs/vlc/vlcrc\" \"$root/etc/skel/.config/vlc/vlcrc\"\n"
+        "            install -Dm644 \"$here/../configs/vlc/vlcrc\" \"$root/etc/vlc/vlcrc\"\n"
+        "            if [[ $profile != tty ]]; then\n",
+        writes)
+
     # Touch firmware must also exist at the path the kernel requests.
     replace_once(
         f"{builder}/build-rootfs.sh",
