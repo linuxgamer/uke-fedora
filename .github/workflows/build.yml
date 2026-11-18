@@ -3,6 +3,14 @@ name: Build Baseline Bootable Image
 on:
   push:
     branches: [main]
+    # Documentation and policy edits cannot change an image, so keep them off
+    # the 50-minute runner. Anything that reaches scripts, configs, manifests
+    # or the submodule pointers still builds.
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'LICENSE'
+      - '.gitignore'
   workflow_dispatch:
     inputs:
       profiles:

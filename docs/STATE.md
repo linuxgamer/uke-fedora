@@ -1,9 +1,9 @@
 # State
 
-Updated: 2026-11-18 (keyboard merged into `main` on the 7.3.1 pin). Verify
-with commands before relying on it; update this file at the end of every
-session. Long history and decisions live in the private notes; this file records
-only facts.
+Updated: 2026-11-19 (first boot to a root shell on the tablet; the Pogo
+keyboard works). Verify with commands before relying on it; update this file at
+the end of every session. Long history and decisions live in the private notes;
+this file records only facts.
 
 ## Upstream and forks
 
@@ -14,13 +14,98 @@ rebased component forks; patches are exported for review only. See
 
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
-| umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
-| `senemos-uke-kernel` | `main` | `fadf7f8` (gitlink and worktree) | release `7.3.1-107`; video series active; native `%prep` fixed; Nanosic WN8030 HID keyboard with an independent ABL overlay; upstream reset pulse and resume keepalive merged; `referances/` removed and its last path strings scrubbed from manifests |
-| `uke-fedora-builder` | `main` | `3662473` (gitlink and worktree) | apps, ru locale, COPR repo; internal source cache renamed to `source-cache/` |
-| `uke-linux-hardware-support` | `main` | `cd43287` (gitlink and worktree) | firmware payload with uke-firmware provides; top-level docs removed, internal caches renamed; libssc fetched from the Debian mirror instead of Codeberg |
+| umbrella | `main` | this handoff commit | docs; Flatpak VA-API override; kernel and hardware gitlinks moved |
+| `senemos-uke-kernel` | `main` | `291d2d5` (gitlink and worktree) | release `7.3.1-107`; video series active; native `%prep` fixed; WN8030 keyboard boots from the initramfs; RPMH regulator driver registers again; keyboard bus admitted by the ABL scope pass |
+| `uke-fedora-builder` | `main` | `3662473` (gitlink) | apps, ru locale, COPR repo; internal source cache renamed to `source-cache/` |
+| `uke-linux-hardware-support` | `main` | `00c9420` (gitlink and worktree) | firmware payload with uke-firmware provides; libssc fetched from Codeberg again |
 
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
+
+## First boot and working keyboard (2026-11-19)
+
+The tablet boots to a root shell from CI run `44359576130` (kernel
+`7.3.1-107`, `boot_a` flashed, existing `userdata` kept) and the Pogo keyboard
+works: `a8c000.i2c` probes, `5-004c` exists as an i2c client, the WN8030 driver
+loads its MCU firmware, and `systemd-backlight@leds:nanosic::kbd_backlight`
+starts.
+
+Three defects had to be fixed, and two of them had nothing to do with the
+keyboard itself.
+
+**The RPMH regulator driver never registered.** `patches/7.3.0/0002` declares its
+new-file hunk as `@@ -0,0 +1,2124 @@` but carries 2126 added lines. `git apply`
+honours the declared count and silently dropped the last two:
+
+```c
+arch_initcall(rpmh_regulator_init);
+module_exit(rpmh_regulator_exit);
+```
+
+`drivers/regulator/qcom-rpmh-regulator-uke.c` then compiled to a `.o` holding
+only modinfo - three symbols, 1400 bytes - with `of_match_table`, `probe` and the
+whole RPMH voter path discarded. No DT node matching `qcom,rpmh-vrm-regulator`,
+`qcom,rpmh-arc-regulator` or `qcom,rpmh-xob-regulator` ever bound, so every
+`rpmh-regulator-*` supplier stayed in EPROBE_DEFER. That left `1d84000.ufshc`
+and `1d80000.ufsphy_mem` unbound, no block partition appeared and
+`uke-root-guard` fell into `emergency.target`. Fixed by correcting the hunk
+count to `+1,2126`; the compiler now emits 92 symbols including
+`rpmh_regulator_match_table` (kernel `a0eeaba`, manifest re-pin `8453c90`).
+
+**The ABL scope pass disabled the keyboard bus.** `uke_scope_qup_buses()`
+disables every child of the QUP nodes that its admitted list does not name, and
+the `qupv3_0` entry held only `i2c@a80000`, `spi@a90000` and `spi@a84000`. The
+keyboard sits on `i2c@a8c000` (QUP0 SE3), which the keyboard overlay enables a
+few lines earlier:
+
+```
+988   fdt_overlay_apply(output, keyboard_overlay);   -> i2c@a8c000 = okay
+1044  uke_scope_qup_buses(output);                   -> i2c@a8c000 = disabled
+```
+
+So the overlay's own enable was undone before OF scanned the tree. No platform
+device was created, `geni_i2c` had nothing to bind, no i2c client existed for
+`nanosic@4c`, and `dmesg` carried no nanosic line at all - not even a firmware
+error. Fixed by adding `i2c@a8c000` to the `qupv3_0` entry and widening the
+table from `[][4]` to `[][5]` to keep room for the NULL terminator (kernel
+`291d2d5`).
+
+**The shipped MCU firmware was the wrong device's.** `configs/nanosic/MCU_Upgrade.bin`
+parses as pid `0x1294`, version `XM_P81_V206-0828`, 83,436 bytes - the P81 image
+used by the Xiaomi Pad 6S Pro 12.4. This tablet is O81/uke (`2410CRP4CC`), and
+the OEM `nanosic_driver.ko` for it is built around pid `0x1260`, which is what
+the stock ROM's `odm/firmware/MCU_Upgrade.bin` declares (`XM_O81_V207-0822`,
+82,740 bytes). Replaced with the O81 blob (umbrella `c1b1d45`).
+
+The firmware is now also built into the Image rather than only being installed
+into the rootfs: `CONFIG_EXTRA_FIRMWARE="nanosic/MCU_Upgrade.bin"` with the
+relative `CONFIG_EXTRA_FIRMWARE_DIR="firmware"`. The firmware loader consults
+built-in firmware before any filesystem path, so the keyboard comes up in the
+initramfs and does not depend on the rootfs carrying the file. Verified on a
+clean 7.3.1 tree: the Image holds the whole 82,740-byte blob, its `0x7FC0`
+`NANO IC` header and the `XM_O81_V207-0822` version string (kernel `4a37b10`).
+
+`tests/abl-dt-contract.sh` already asserted that `i2c@a8c000` ends up `okay`,
+but nothing invokes that script, so the regression stayed invisible. Wiring it
+into the preparation path is tracked in the backlog.
+
+On-device state after the fix:
+
+```
+/sys/bus/platform/devices/a8c000.i2c                     present
+/sys/bus/i2c/devices/5-004c                              present
+systemd-backlight@leds:nanosic::kbd_backlight            starts
+devicetree/.../i2c@a8c000/status                         okay
+```
+
+`/sys/class/regulator/*/name` shows `pmxr2230_l22` and `pmxr2230_l23`, the
+`dvdd`/`vddio` rail pair the overlay names as L22B/L23B, and `pm_v8_s8_level`,
+`pmxr2230_l4`, `pmxr2230_l12`, `pmxr2230_l17` - every supplier the earlier boot
+photo showed deferred.
+
+Flashing this build needs `boot_a` only: the fix is all `=y` code and keeps the
+`7.3.1-107` release, so the module vermagic is unchanged and the existing
+`userdata` stays valid.
 
 ## Pogo keyboard on `main` (2026-11-18)
 
@@ -174,6 +259,15 @@ whole release back. The artifact was complete (7.54 GiB).
 
 Checked with a 3 GiB archive: two parts, matching reassembly digest, `sha256sum
 -c` clean, and the parts branch copies untouched. No build, no publish.
+
+## libssc source moved off Codeberg, then back (2026-11-19)
+
+The Debian mirror switch below was a workaround for a Codeberg DNS outage. That
+outage cleared, so `uke-sensors/Makefile` fetches
+`https://codeberg.org/DylanVanAssche/libssc/archive/v0.4.4.tar.gz` again. The
+pinned sha256 (`716d6bd6...621587`) is unchanged, so the built package stays
+byte-identical, and the URL was re-checked: Codeberg answers 200 and the
+downloaded archive hashes to the pin.
 
 ## libssc source moved off Codeberg (2026-11-18)
 
@@ -339,6 +433,12 @@ and the kernel RPM re-use path (`kernel-rpm-cache.sh` needs the multi-GB
   2 GiB asset limit no longer aborts publishing; issue templates exist and
   screenshots are in the README.
 - Build speed: kernel SRPM reuse, locked status file, `--parallel N`, CI caches.
+- The tablet boots from CI run `44359576130` to a root shell, and the Pogo
+  keyboard works. See "First boot and working keyboard" above.
+- RPMH regulator suppliers register, so UFS, PHY and the keyboard rails bind
+  instead of deferring.
+- Flatpak apps can reach the host V4L2 VA-API driver through a global override;
+  see `.github/workflows/build.yml` and `configs/flatpak/global`.
 
 ## Blockers
 - **Ext4 rootfs expansion blocked by error flag** (fixed 2026-11-17). The ext4 superblock error flag prevented online resize. Fixed on‑device via `echo u > /proc/sysrq-trigger` (emergency remount‑ro), `e2fsck -fy`, `resize2fs`. Documented in [INSTALL.md](INSTALL.md#emergency-rootfs-expansion-ext4).
@@ -360,6 +460,13 @@ and the kernel RPM re-use path (`kernel-rpm-cache.sh` needs the multi-GB
 
 ## Next action
 
-Rotate the COPR token (B2), then upload the fixed kernel SRPM and confirm a green
-COPR build (B1), then run the first image build (B3/B4). All three are in the
-backlog.
+The boot and keyboard milestone is reached, so the open work is now the remaining
+hardware and the guards that should have caught the defects above.
+
+The ABL regression guard is the cheapest one: `tests/abl-dt-contract.sh` already
+asserts the `i2c@a8c000` outcome, but no script runs it, which is why the scope
+pass could disable the keyboard bus unnoticed. Wire it into
+`prepare-abl-source.sh` or `make validate` next.
+
+After that, rotate the COPR token (B2), upload the fixed kernel SRPM and confirm
+a green COPR build (B1). All of these are in the backlog.
