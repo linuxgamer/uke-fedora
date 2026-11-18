@@ -1,6 +1,5 @@
 # Uke Fedora
 
-[![Build images](https://github.com/linuxgamer/uke-fedora/actions/workflows/build-image.yml/badge.svg)](https://github.com/linuxgamer/uke-fedora/actions/workflows/build-image.yml)
 
 Fedora Linux port made for **Xiaomi Pad 7** and **POCO Pad X1**, based on [MCC45TR's port](https://github.com/MCC45TR/uke-linux).
 
