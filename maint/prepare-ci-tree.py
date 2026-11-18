@@ -252,6 +252,86 @@ def main():
         "After=uke-root-capacity.service uke-swap-ready.service\\n'",
         writes)
 
+    # The new kernel's embedded initramfs must not depend on a single udev
+    # partition-name link that can appear late (or not at all after flashing).
+    replace_once(
+        f"{kernel}/src/boot/dracut/root-guard.sh",
+        "selected=/dev/disk/by-partlabel/$partlabel\nread -r uptime _ < /proc/uptime\n",
+        "selected=/dev/disk/by-partlabel/$partlabel\n"
+        "if [ ! -e \"$selected\" ]; then\n"
+        "    modprobe ufs_qcom 2>/dev/null || true\n"
+        "    modprobe phy_qcom_qmp_ufs 2>/dev/null || true\n"
+        "    udevadm trigger --action=add --subsystem-match=block 2>/dev/null || true\n"
+        "    udevadm settle --timeout=20 || true\n"
+        "fi\n"
+        "read -r uptime _ < /proc/uptime\n", writes)
+    replace_once(
+        f"{kernel}/src/boot/dracut/root-guard.sh",
+        "    if [ \"$count\" -gt 1 ]; then\n"
+        "        echo 'UKE_ROOT_REJECTED: multiple selected partitions' >&2; exit 1\n"
+        "    fi\n"
+        "    if [ \"$count\" -eq 1 ] && [ -b \"$candidate\" ] && [ -e \"$selected\" ]; then\n",
+        "    if [ \"$count\" -eq 0 ]; then\n"
+        "        for metadata in /sys/class/block/*/uevent; do\n"
+        "            [ -r \"$metadata\" ] && [ -r \"${metadata%/uevent}/partition\" ] || continue\n"
+        "            device=''\n"
+        "            while IFS='=' read -r key value; do\n"
+        "                [ \"$key\" = DEVNAME ] && device=$value\n"
+        "            done < \"$metadata\"\n"
+        "            [ -n \"$device\" ] || continue\n"
+        "            fallback=/dev/$device\n"
+        "            [ -b \"$fallback\" ] || continue\n"
+        "            [ \"$(blkid -p -s LABEL -o value \"$fallback\" 2>/dev/null || :)\" = UKE_LINUX ] || continue\n"
+        "            case \"$(readlink -f \"${metadata%/uevent}\")\" in\n"
+        "                */virtual/block/*) continue;;\n"
+        "                */1d84000.ufshc/*/block/*) :;;\n"
+        "                *) continue;;\n"
+        "            esac\n"
+        "            count=$((count + 1))\n"
+        "            candidate=$fallback\n"
+        "        done\n"
+        "    fi\n"
+        "    if [ \"$count\" -gt 1 ]; then\n"
+        "        echo 'UKE_ROOT_REJECTED: multiple selected partitions' >&2; exit 1\n"
+        "    fi\n"
+        "    if [ \"$count\" -eq 1 ] && [ -b \"$candidate\" ]; then\n"
+        "        if [ ! -e \"$selected\" ]; then\n"
+        "            mkdir -p /dev/disk/by-partlabel\n"
+        "            ln -sf \"$candidate\" \"$selected\" || true\n"
+        "        fi\n",
+        writes)
+    replace_once(
+        f"{kernel}/src/boot/dracut/module-setup.sh",
+        "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr\n",
+        "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr /usr/bin/ln\n", writes)
+
+    # TTY image: root shell on tty1-4 at boot and a pre-created uke/fedora
+    # wheel+sudo account. No first-boot account wizard.
+    replace_once(
+        f"{builder}/build-rootfs.sh",
+        "            systemctl --root=\"$root\" enable uke-create-user.service\n"
+        "            systemctl --root=\"$root\" set-default multi-user.target\n"
+        "            systemctl --root=\"$root\" enable getty@tty1.service\n",
+        "            systemctl --root=\"$root\" disable uke-create-user.service 2>/dev/null || true\n"
+        "            rm -f \"$root/etc/systemd/system/multi-user.target.wants/uke-create-user.service\"\n"
+        "            if ! grep -q '^uke:' \"$root/etc/passwd\"; then\n"
+        "                chroot \"$root\" /usr/sbin/useradd --create-home --groups wheel --shell /usr/bin/bash uke\n"
+        "            fi\n"
+        "            printf 'uke:fedora\\n' | chroot \"$root\" /usr/sbin/chpasswd\n"
+        "            install -d -m0750 \"$root/etc/sudoers.d\"\n"
+        "            printf 'uke ALL=(ALL:ALL) ALL\\n' > \"$root/etc/sudoers.d/uke\"\n"
+        "            chmod 0440 \"$root/etc/sudoers.d/uke\"\n"
+        "            for tty in 1 2 3 4; do\n"
+        "                install -d -m0755 \"$root/etc/systemd/system/getty@tty$tty.service.d\"\n"
+        "                printf '[Service]\\nExecStart=\\nExecStart=-/sbin/agetty --autologin root --noclear %%I $TERM\\n' > \"$root/etc/systemd/system/getty@tty$tty.service.d/autologin.conf\"\n"
+        "                systemctl --root=\"$root\" enable \"getty@tty$tty.service\"\n"
+        "            done\n"
+        "            for tty in tty1 tty2 tty3 tty4; do\n"
+        "                grep -qx \"$tty\" \"$root/etc/securetty\" 2>/dev/null || printf '%s\\n' \"$tty\" >> \"$root/etc/securetty\"\n"
+        "            done\n"
+        "            systemctl --root=\"$root\" set-default multi-user.target\n",
+        writes)
+
     print("CI overlay applied" if writes else "CI overlay patterns validated")
 
 
