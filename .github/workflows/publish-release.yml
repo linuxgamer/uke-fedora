@@ -18,6 +18,11 @@ jobs:
   publish:
     runs-on: ubuntu-24.04
     steps:
+      - name: Check out the release tooling
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools
+
       - name: Download artifacts from the build run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -25,11 +30,26 @@ jobs:
           gh run download "${{ inputs.run_id }}" --repo "$GITHUB_REPOSITORY" \
             --name "uke-bootable-images-${{ inputs.run_id }}" --dir assets
           find assets -maxdepth 3 -type f | sort
+
+      - name: Split archives that exceed the release asset limit
+        run: |
+          set -Eeuo pipefail
+          # Runs packed after the splitter landed already ship parts; copy those
+          # as they are so their checksums keep covering every asset.
+          part=$(find assets -name '*.tar.zst.part-00' -print -quit)
+          if [[ -n $part ]]; then
+            cp -a "$(dirname "$part")" publish
+          else
+            archive=$(find assets -name '*.tar.zst' -print -quit)
+            [[ -n $archive ]] || { echo 'No release archive in the artifact' >&2; exit 1; }
+            ./tools/split-release-assets.sh --input "$(dirname "$archive")" --output publish
+          fi
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ inputs.tag }}" assets/release-*/*.tar.zst assets/release-*/SHA256SUMS \
+          gh release create "${{ inputs.tag }}" publish/* \
             --repo "$GITHUB_REPOSITORY" \
             --title "Uke Fedora ${{ inputs.tag }}" \
-            --notes "Direct-download images for build run ${{ inputs.run_id }}."
+            --notes-file publish/README.txt

@@ -16,12 +16,18 @@ database. Read the log for skipped or reused stages before trusting a cache hit.
 
 ## 2. Package
 
-Use the release packager instead of hand-picking files from a pair directory:
+Use the release packager instead of hand-picking files from a pair directory.
+It compresses with `tar --zstd`, so the level comes from the environment:
 
 ```sh
-./uke-fedora-builder/tools/package-release.sh --tag <tag> --output build/release-<tag> \
+ZSTD_CLEVEL=19 ZSTD_NBTHREADS=4 \
+  ./uke-fedora-builder/tools/package-release.sh --tag <tag> --output build/release-<tag> \
     --twrp <twrp_recovery_ab.tar.zst> build/<name>/*-pair
 ```
+
+Level 19 is about a quarter smaller than the level-3 default on the KDE rootfs,
+at the cost of a slower pass; `ZSTD_NBTHREADS=0` means one thread, not all of
+them.
 
 Each archive contains exactly the shipped files and a checksum file:
 
@@ -35,13 +41,30 @@ the build-internal pair checksums: they name `Image`, `boot.config` and other
 files that are not in the archive.
 
 The packager writes an outer `SHA256SUMS` covering the archives and the TWRP
-asset, and prints the result. Publish:
+asset, and prints the result. Turn that directory into release assets, because
+GitHub rejects any single asset of 2 GiB or more:
 
-- `fedora-44-uke-<tag>-kde.tar.zst`
-- `fedora-44-uke-<tag>-gnome.tar.zst`
+```sh
+./tools/split-release-assets.sh --input build/release-<tag> --output build/publish-<tag>
+```
+
+The splitter moves the archives, breaks anything above 1900 MiB into
+`<name>.part-00`, `<name>.part-01`, ... and checks that the parts join back to
+the original bytes before deleting the whole file. It writes its own
+`SHA256SUMS` (over the emitted assets) and a `README.txt` whose text is also
+used as the release notes. Publish the contents of `build/publish-<tag>`:
+
+- `fedora-44-uke-<tag>-kde.tar.zst` or its `.part-NN` pieces
+- `fedora-44-uke-<tag>-gnome.tar.zst` or its `.part-NN` pieces
 - `fedora-44-uke-<tag>-tty.tar.zst` if a TTY image is released
-- `SHA256SUMS`
 - `twrp_recovery_ab.tar.zst`
+- `SHA256SUMS` and `README.txt`
+
+A split archive is reassembled with `cat <name>.part-* > <name>`, then checked
+against the digest printed in `README.txt`; `sha256sum -c SHA256SUMS` only
+covers the parts as downloaded. The `.github/workflows/build.yml` and
+`publish-release.yml` workflows run the same commands, so a hand-made release
+and a CI release have identical layouts.
 
 Mark the GitHub release as a pre-release while the image is still alpha. The
 release notes must say so in the first line; do not present an alpha image as a

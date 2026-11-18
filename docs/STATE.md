@@ -93,6 +93,35 @@ Password authentication in the previous image could not work as intended:
 The overlay patterns were validated with `--check` against builder `3662473`,
 kernel `3163e55` and hardware `cf48c20`; nothing was built or installed.
 
+## Release assets: compression and splitting (2026-11-18)
+
+Run `44192935337` built all 17 stages in 52m58s and failed only in `Publish
+release`: GitHub rejects a single release asset of 2 GiB or more, the KDE
+archive is about 2.4 GiB, `gh release create` returned HTTP 422 and rolled the
+whole release back. The artifact was complete (7.54 GiB).
+
+- The packaging step now runs with `ZSTD_CLEVEL=19` and `ZSTD_NBTHREADS=4`, which
+  the `tar --zstd` child honours. Measured on 1.2 GiB of PE binaries: 359 MB at
+  level 3, 269 MB at level 19. `ZSTD_NBTHREADS=0` means one thread, not all.
+  `--long=27` would need a patch to `package-release.sh` in the builder; it is
+  not used.
+- `tools/split-release-assets.sh` turns a packaging directory into release
+  assets: archives of 1900 MiB or more become `<name>.part-NN`, the parts are
+  proven to reassemble to the original digest, and it writes `SHA256SUMS` over
+  the emitted files plus a `README.txt` that doubles as the release notes. It
+  consumes the input archives, because the arm64 runner has no room for a second
+  copy.
+- Both workflows publish the split layout: `build.yml` via `build/publish-<tag>`,
+  `publish-release.yml` by downloading the artifact and splitting it, or copying
+  it unchanged when the run already shipped parts. The publish step is
+  `continue-on-error` and the job summary reports the release outcome separately
+  from the build result.
+- The artifact path moved to `build/publish-*`, so a failed release still leaves
+  downloadable assets.
+
+Checked with a 3 GiB archive: two parts, matching reassembly digest, `sha256sum
+-c` clean, and the parts branch copies untouched. No build, no publish.
+
 ## Baseline CI image build success (2026-11-14)
 
 - Workflow run 43519285547 succeeded in 12m33s on GitHub Actions ARM64 runner (`ubuntu-24.04-arm`).
@@ -203,7 +232,9 @@ kernel `3163e55` and hardware `cf48c20`; nothing was built or installed.
   and OEM packages.
 - Desktop profiles install Firefox, a text editor, the store, an archive manager
   and a calculator, plus `zh_CN.UTF-8` and Noto Sans CJK.
-- Release packaging and issue templates exist; screenshots are in the README.
+- Release packaging splits archives above 1900 MiB into parts, so the GitHub
+  2 GiB asset limit no longer aborts publishing; issue templates exist and
+  screenshots are in the README.
 - Build speed: kernel SRPM reuse, locked status file, `--parallel N`, CI caches.
 
 ## Blockers

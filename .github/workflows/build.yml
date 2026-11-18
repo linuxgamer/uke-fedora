@@ -109,23 +109,33 @@ jobs:
 
       - name: Package release archives
         if: success()
+        env:
+          # zstd reads these for the tar --zstd child. Level 19 takes about a
+          # quarter off the level-3 default on a 4.4 GiB rootfs; four threads
+          # (0 would mean one) keep the extra pass inside the job budget.
+          ZSTD_CLEVEL: '19'
+          ZSTD_NBTHREADS: '4'
         run: |
           set -Eeuo pipefail
           tag="ci-$GITHUB_RUN_ID"
           ./uke-fedora-builder/tools/package-release.sh --tag "$tag" \
             --output "build/release-$tag" build/ci-$GITHUB_RUN_ID/*-pair
+          ./tools/split-release-assets.sh \
+            --input "build/release-$tag" --output "build/publish-$tag"
 
       - name: Publish release with direct download links
+        id: publish
         if: success()
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -Eeuo pipefail
           tag="ci-$GITHUB_RUN_ID"
-          gh release create "$tag" build/release-$tag/*.tar.zst build/release-$tag/SHA256SUMS \
+          gh release create "$tag" build/publish-$tag/* \
             --repo "$GITHUB_REPOSITORY" \
             --title "Uke Fedora $tag" \
-            --notes "Automated KDE build. Assets are direct-download archives."
+            --notes-file "build/publish-$tag/README.txt"
 
       - name: Upload bootable image artifacts
         if: always()
@@ -138,8 +148,7 @@ jobs:
             build/ci-*/*-pair/SHA256SUMS
             build/ci-*/status.json
             build/ci-*/build.log
-            build/release-*/*.tar.zst
-            build/release-*/SHA256SUMS
+            build/publish-*/*
           if-no-files-found: warn
           compression-level: 0
           retention-days: 14
@@ -151,9 +160,12 @@ jobs:
             echo "## Uke Baseline Image Build"
             echo "- Profiles: \`${{ inputs.profiles || 'kde' }}\`"
             echo "- Result: \`${{ job.status }}\`"
-            if compgen -G 'build/release-*' >/dev/null; then
+            echo "- Release: \`${{ steps.publish.outcome || 'skipped' }}\`"
+            if compgen -G 'build/publish-*' >/dev/null; then
+              echo
+              echo '### Assets'
               echo '```'
-              cat build/release-*/SHA256SUMS 2>/dev/null || true
+              cat build/publish-*/SHA256SUMS 2>/dev/null || true
               echo '```'
             fi
           } >> "$GITHUB_STEP_SUMMARY"

@@ -27,6 +27,7 @@ Status: `todo`, `in progress`, `blocked`, `done`.
 | B17 | P2 | Newcomer labels and first tasks | todo | Add `good first issue` and `help wanted` labels and label 3–5 self-contained tasks (docs CI, builder check runner, component `AGENTS.md` paths, tooling nits), then link them from [DEVELOPING.md](DEVELOPING.md#where-to-start). |
 | B18 | P2 | Security reporting channel | todo | `docs/CONTRIBUTING.md` points at GitHub private vulnerability reporting "when available". Enable it for the repository or add a `SECURITY.md` with a real private channel; the upstream `SECURITY.md` is not carried. |
 | B19 | P3 | Small tooling nits | todo | `tools/export-patches.sh --help` prints `mkdir` usage; root `.gitignore` still ignores `/tests`, `/scripts`, `/manifests`, a trap for repo-level tooling; consider installation hints in `tools/check-dev-env.sh` for the Fedora-era toolchain. |
+| B20 | P2 | Release assets above the GitHub 2 GiB limit | done | Run `44192935337` built all 17 stages and failed only in `gh release create` (HTTP 422, the KDE archive is about 2.4 GiB). Packaging now compresses at zstd level 19 with four threads, `tools/split-release-assets.sh` splits archives above 1900 MiB and proves they reassemble, and both workflows publish the split layout. Checked with a 3 GiB archive; no real run has used it yet. |
 
 ## Next
 
