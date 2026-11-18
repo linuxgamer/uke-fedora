@@ -22,6 +22,12 @@ def replace_once(rel, old, new, writes):
         path.write_text(text.replace(old, new, 1))
 
 
+def write_file(rel, content, writes):
+    path = ROOT / rel
+    if writes:
+        path.write_text(content)
+
+
 def replace_or_skip(rel, old, new, writes, already):
     path = ROOT / rel
     text = path.read_text()
@@ -305,22 +311,16 @@ def main():
         "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr\n",
         "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr /usr/bin/ln\n", writes)
 
-    # TTY image: root shell on tty1-4 at boot and a pre-created uke/fedora
-    # wheel+sudo account. No first-boot account wizard.
+    # TTY image: root gets an autologin shell on tty1-4. The account is
+    # created by the existing first-boot unit after the image audit, so the
+    # frozen rootfs still contains no ordinary user.
     replace_once(
         f"{builder}/build-rootfs.sh",
         "            systemctl --root=\"$root\" enable uke-create-user.service\n"
         "            systemctl --root=\"$root\" set-default multi-user.target\n"
         "            systemctl --root=\"$root\" enable getty@tty1.service\n",
-        "            systemctl --root=\"$root\" disable uke-create-user.service 2>/dev/null || true\n"
-        "            rm -f \"$root/etc/systemd/system/multi-user.target.wants/uke-create-user.service\"\n"
-        "            if ! grep -q '^uke:' \"$root/etc/passwd\"; then\n"
-        "                chroot \"$root\" /usr/sbin/useradd --create-home --groups wheel --shell /usr/bin/bash uke\n"
-        "            fi\n"
-        "            printf 'uke:fedora\\n' | chroot \"$root\" /usr/sbin/chpasswd\n"
-        "            install -d -m0750 \"$root/etc/sudoers.d\"\n"
-        "            printf 'uke ALL=(ALL:ALL) ALL\\n' > \"$root/etc/sudoers.d/uke\"\n"
-        "            chmod 0440 \"$root/etc/sudoers.d/uke\"\n"
+        "            systemctl --root=\"$root\" enable uke-create-user.service\n"
+        "            systemctl --root=\"$root\" set-default multi-user.target\n"
         "            for tty in 1 2 3 4; do\n"
         "                install -d -m0755 \"$root/etc/systemd/system/getty@tty$tty.service.d\"\n"
         "                printf '[Service]\\nExecStart=\\nExecStart=-/sbin/agetty --autologin root --noclear %%I $TERM\\n' > \"$root/etc/systemd/system/getty@tty$tty.service.d/autologin.conf\"\n"
@@ -328,8 +328,29 @@ def main():
         "            done\n"
         "            for tty in tty1 tty2 tty3 tty4; do\n"
         "                grep -qx \"$tty\" \"$root/etc/securetty\" 2>/dev/null || printf '%s\\n' \"$tty\" >> \"$root/etc/securetty\"\n"
-        "            done\n"
-        "            systemctl --root=\"$root\" set-default multi-user.target\n",
+        "            done\n",
+        writes)
+
+    # Replace the interactive tty1 wizard with the fixed account requested for
+    # this headless TTY image. It still runs after the frozen-root audit.
+    write_file(
+        f"{builder}/configs/firstboot/uke-create-user",
+        r"""#!/usr/bin/bash
+set -Eeuo pipefail
+umask 077
+state_dir=/var/lib/uke-firstboot
+marker=$state_dir/user-created
+[[ ! -e $marker ]] || exit 0
+install -d -m 0700 "$state_dir"
+if ! getent passwd uke >/dev/null; then
+    useradd --create-home --groups wheel --shell /usr/bin/bash uke
+fi
+printf 'uke:fedora\n' | chpasswd
+install -d -m 0750 /etc/sudoers.d
+printf 'uke ALL=(ALL:ALL) ALL\n' > /etc/sudoers.d/uke
+chmod 0440 /etc/sudoers.d/uke
+touch "$marker"
+""",
         writes)
 
     print("CI overlay applied" if writes else "CI overlay patterns validated")
