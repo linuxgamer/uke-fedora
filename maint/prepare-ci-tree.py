@@ -78,6 +78,17 @@ def main():
                  '    install -Dm644 "$here/configs/images/uke-copr.repo"',
                  '    sudo install -Dm644 "$here/configs/images/uke-copr.repo"', writes)
 
+    # The source-RPM stage invokes git in every mounted submodule. The builder
+    # only whitelists the kernel, so hardware/helper repositories trip Git's
+    # ownership guard inside the container.
+    replace_once(
+        f"{builder}/build-images.sh",
+        "git config --global --add safe.directory /work/senemos-uke-kernel\n",
+        "git config --global --add safe.directory /work/senemos-uke-kernel\n"
+        "git config --global --add safe.directory /work/uke-linux-hardware-support\n"
+        "git config --global --add safe.directory /work/uke-fedora-builder\n",
+        writes)
+
     # Flatpak, PackageKit and the Discover backends are required for desktop
     # app installation; the VA-API policy is installed by the image workflow.
     replace_once(
