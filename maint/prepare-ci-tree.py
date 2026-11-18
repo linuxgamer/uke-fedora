@@ -125,39 +125,6 @@ def main():
     replace_once(f"{hardware}/uke-desktop-integration/src/modprobe.d/uke-gpu-options.conf",
                  "options msm separate_gpu_kms=1", "# options msm separate_gpu_kms=1", writes)
 
-    # Allow locally built modules to load on the installed system. Signing stays
-    # enabled, but neither forced signatures nor forced integrity lockdown block
-    # insmod of unsigned test modules.
-    replace_or_skip(f"{kernel}/packaging/native/native.config",
-                    "CONFIG_MODULE_SIG_FORCE=y", "# CONFIG_MODULE_SIG_FORCE is not set",
-                    writes,
-                    ("# CONFIG_MODULE_SIG_FORCE is not set",
-                     "# CONFIG_MODULE_SIG is not set"))
-    replace_once(f"{kernel}/packaging/native/native.config",
-                 "CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY=y",
-                 "# CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY is not set", writes)
-    # The resolved-config test still requires integrity lockdown, which the
-    # line above deliberately clears so unsigned local modules can be loaded.
-    replace_once(
-        f"{kernel}/tests/kernel-hardening-config-contract.sh",
-        "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY LOCK_DOWN_KERNEL_FORCE_INTEGRITY \\\n",
-        "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY \\\n",
-        writes)
-    replace_or_skip(
-        f"{kernel}/tests/kernel-hardening-config-contract.sh",
-        "for symbol in MODULE_SIG MODULE_SIG_FORCE MODULE_SIG_ALL MODULE_SIG_SHA256 \\\n"
-        "    MODULE_SIG_KEY_TYPE_RSA SYSTEM_TRUSTED_KEYRING SECURITY_DMESG_RESTRICT \\\n"
-        "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY LOCK_DOWN_KERNEL_FORCE_INTEGRITY \\\n"
-        "    SECURITY_YAMA SECURITY_SELINUX FORTIFY_SOURCE HARDENED_USERCOPY \\\n"
-        "    RANDOMIZE_BASE STACKPROTECTOR_STRONG STRICT_KERNEL_RWX STRICT_MODULE_RWX; do\n",
-        "for symbol in MODULE_SIG MODULE_SIG_ALL MODULE_SIG_SHA256 \\\n"
-        "    MODULE_SIG_KEY_TYPE_RSA SYSTEM_TRUSTED_KEYRING SECURITY_DMESG_RESTRICT \\\n"
-        "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY \\\n"
-        "    SECURITY_YAMA SECURITY_SELINUX FORTIFY_SOURCE HARDENED_USERCOPY \\\n"
-        "    RANDOMIZE_BASE STACKPROTECTOR_STRONG STRICT_KERNEL_RWX STRICT_MODULE_RWX; do\n",
-        writes,
-        ("grep -Fxq '# CONFIG_MODULE_SIG_FORCE is not set'",))
-
     # The SRPM profile stages tests from git HEAD, so copy the patched contract
     # from the worktree instead of the archived commit.
     replace_once(
