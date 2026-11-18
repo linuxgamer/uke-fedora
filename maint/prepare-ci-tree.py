@@ -126,6 +126,13 @@ def main():
     replace_once(f"{kernel}/packaging/native/native.config",
                  "CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY=y",
                  "# CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY is not set", writes)
+    # The resolved-config test still requires integrity lockdown, which the
+    # line above deliberately clears so unsigned local modules can be loaded.
+    replace_once(
+        f"{kernel}/tests/kernel-hardening-config-contract.sh",
+        "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY LOCK_DOWN_KERNEL_FORCE_INTEGRITY \\\n",
+        "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY \\\n",
+        writes)
     replace_or_skip(
         f"{kernel}/tests/kernel-hardening-config-contract.sh",
         "for symbol in MODULE_SIG MODULE_SIG_FORCE MODULE_SIG_ALL MODULE_SIG_SHA256 \\\n"
