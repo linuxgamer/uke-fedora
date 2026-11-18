@@ -85,6 +85,12 @@ def main():
         '"$output/root/var/lib/alsa/asound.state"\n'
         'sudo install -Dm644 "$here/../configs/wireplumber/85-uke-speaker-priority.conf" '
         '"$output/root/usr/share/wireplumber/wireplumber.conf.d/85-uke-speaker-priority.conf"\n'
+        'sudo install -Dm644 "$here/../configs/nanosic/MCU_Upgrade.bin" '
+        '"$output/root/usr/lib/firmware/nanosic/MCU_Upgrade.bin"\n'
+        'sudo install -Dm755 "$here/../configs/nanosic/nanosic-authd.py" '
+        '"$output/root/usr/local/sbin/nanosic-authd"\n'
+        'sudo install -Dm644 "$here/../configs/nanosic/nanosic-authd.service" '
+        '"$output/root/usr/lib/systemd/system/nanosic-authd.service"\n'
         "if [[ $copr == 1 ]]; then\n",
         writes)
 
