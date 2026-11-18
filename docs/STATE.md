@@ -17,7 +17,7 @@ rebased component forks; patches are exported for review only. See
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
 | `senemos-uke-kernel` | `main` | `fadf7f8` (gitlink and worktree) | release `7.3.1-107`; video series active; native `%prep` fixed; Nanosic WN8030 HID keyboard with an independent ABL overlay; upstream reset pulse and resume keepalive merged; `referances/` removed and its last path strings scrubbed from manifests |
 | `uke-fedora-builder` | `main` | `3662473` (gitlink and worktree) | apps, ru locale, COPR repo; internal source cache renamed to `source-cache/` |
-| `uke-linux-hardware-support` | `main` | `cf48c20` (gitlink and worktree) | firmware payload with uke-firmware provides; top-level docs removed, internal caches renamed |
+| `uke-linux-hardware-support` | `main` | `cd43287` (gitlink and worktree) | firmware payload with uke-firmware provides; top-level docs removed, internal caches renamed; libssc fetched from the Debian mirror instead of Codeberg |
 
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
@@ -174,6 +174,31 @@ whole release back. The artifact was complete (7.54 GiB).
 
 Checked with a 3 GiB archive: two parts, matching reassembly digest, `sha256sum
 -c` clean, and the parts branch copies untouched. No build, no publish.
+
+## libssc source moved off Codeberg (2026-11-18)
+
+Run `44253183775` failed at `Prepare source RPMs` with `make: *** [Makefile:14:
+srpm] Error 6`; the log shows `curl: (6) Could not resolve host:
+codeberg.org` retried three times. `uke-sensors` fetched libssc 0.4.4 from there
+and nothing else in the image build depends on that host, so one DNS failure
+blocks every image.
+
+Hardware `cd43287` points the same fetch at the Debian pool:
+
+```
+https://deb.debian.org/debian/pool/main/libs/libssc/libssc_0.4.4.orig.tar.gz
+155242 B, sha256 716d6bd6…, unpacks to libssc/
+```
+
+The bytes are identical, so `hash=` in the Makefile is unchanged and the
+`%autosetup -n libssc` name still matches. Verified end to end with an empty
+`source-cache/libssc`: the fetch, the digest check and `rpmbuild -bs` all pass,
+and the SRPM payload digests match a build from the Codeberg copy. `make
+validate` and `uke-sensors/tests/source-contract.sh` pass. No image build.
+
+`packaging/ubuntu/upstreams.tsv` still names the Codeberg URL: that is the
+separate Ubuntu source route, and `packaging/ubuntu/tests/main-data-recipes.sh`
+asserts the URL inside the generated copyright file.
 
 ## CI wall-clock reductions (2026-11-18)
 
