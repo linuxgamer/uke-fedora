@@ -8,6 +8,7 @@ feature.
 """
 import argparse
 import pathlib
+import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -45,6 +46,24 @@ def replace_or_skip(rel, old, new, writes, already):
     raise SystemExit(f"{rel}: expected one match or an already-applied marker, found {count}: {old[:70]!r}")
 
 
+def sync_kernel_release(builder, kernel, writes):
+    """Copy the kernel spec release into the builder's package lock."""
+    spec = ROOT / kernel / "packaging/senemos-uke-linux-kernel-mainline.spec"
+    match = re.search(r"^%global senemos_build_release ([0-9]+)$",
+                      spec.read_text(), re.MULTILINE)
+    if match is None:
+        raise SystemExit(f"{spec.name}: no senemos_build_release line")
+    release = match.group(1)
+    lock = ROOT / builder / "configs/package-lock.json"
+    text = lock.read_text()
+    updated, count = re.subn(r'("kernel_release":\s*")[0-9]+(")',
+                             rf"\g<1>{release}\g<2>", text)
+    if count != 1:
+        raise SystemExit(f"{lock.name}: expected one kernel_release, found {count}")
+    if writes and updated != text:
+        lock.write_text(updated)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="validate patterns without writing")
@@ -54,6 +73,8 @@ def main():
     builder = "uke-fedora-builder"
     kernel = "senemos-uke-kernel"
     hardware = "uke-linux-hardware-support"
+
+    sync_kernel_release(builder, kernel, writes)
 
     # OEM firmware count grows with the uke-oem-data RPM.
     replace_once(f"{builder}/src/image/verify-oem-rpm.sh",
