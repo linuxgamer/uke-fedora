@@ -311,6 +311,25 @@ def main():
         "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr\n",
         "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr /usr/bin/ln\n", writes)
 
+    # The keyboard-only regulator fix must not claim the WLAN/UFS PMIC
+    # resources in the custom RPMH driver: smpb2 then never probes and UFS
+    # waits for it forever. Keep only ldob22/ldob23 (keyboard rails).
+    replace_once(
+        f"{kernel}/patches/7.3.0/0015-uke-wlan-supplies-and-dma.patch",
+        "@@ -1991,18 +1991,25 @@\n",
+        "@@ -1991,18 +1991,18 @@\n", writes)
+    replace_once(
+        f"{kernel}/patches/7.3.0/0015-uke-wlan-supplies-and-dma.patch",
+        "+\t    strcmp(aggr_vreg->resource_name, \"ldob23\") &&\n"
+        "+\t    strcmp(aggr_vreg->resource_name, \"smpb2\") &&\n"
+        "+\t    strcmp(aggr_vreg->resource_name, \"smpb1\") &&\n"
+        "+\t    strcmp(aggr_vreg->resource_name, \"smpb3\") &&\n"
+        "+\t    strcmp(aggr_vreg->resource_name, \"ldod1\") &&\n"
+        "+\t    strcmp(aggr_vreg->resource_name, \"ldob5\") &&\n"
+        "+\t    strcmp(aggr_vreg->resource_name, \"ldob12\") &&\n"
+        "+\t    strcmp(aggr_vreg->resource_name, \"ldod3\"))\n",
+        "+\t    strcmp(aggr_vreg->resource_name, \"ldob23\"))\n", writes)
+
     # codeberg.org no longer resolves for the runners; the Ubuntu pool
     # carries the exact same 0.4.4 tarball (same sha256).
     replace_once(
