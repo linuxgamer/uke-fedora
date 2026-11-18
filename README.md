@@ -25,20 +25,19 @@
 
 ## Project status
 
-**Last updated: 1 November 2026.**
+**Last updated: 18 November 2026.**
 
-Fedora Rawhide and KDE Plasma run on the tested **POCO Pad X1, 8 GB / 512 GB**. The screen, touch, Wi-Fi, Bluetooth mouse and stereo audio, automatic rotation, automatic brightness, internal speakers, and microphones work. Adaptive sync / VRR is fully working across the 30–144 Hz range. HDMI output and monitor audio also work through the tested Juo JH925 dock.
+Fedora Rawhide and KDE Plasma run on the tested **POCO Pad X1, 8 GB / 512 GB**. Display, touch, Wi-Fi, Bluetooth mouse and stereo audio, automatic rotation, automatic brightness, internal speakers, and microphones have all worked in device tests. Adaptive sync / VRR works across the 30–144 Hz range. HDMI output and monitor audio work through tested Juo JH925 dock.
 
-Charging protection, suspend, cameras, and sustained hardware video still need work. External DSC/FEC produces a black image; automatic recovery to uncompressed output works in the latest test. See the [changelog](CHANGELOG.md) for development updates.
+Four-speaker playback was verified at gain 223 (OSS 243). Higher gain with verified speaker protection, 45 W charging, camera capture, reliable suspend and hibernation remain under development. See the [changelog](CHANGELOG.md) for earlier development updates.
 
-The previously recorded development boot was **7.3.0-48**, on **29 October 2026**, using the stock Android bootloader. These results are separate from the downloadable image below.
+[Linux 7.3.5-2-unstable](https://copr.fedorainfracloud.org/coprs/mcc45tr/uke-linux-unstable/build/11351293/) is the latest development kernel confirmed running through the stock Android bootloader.
 
 ## Distribution roadmap
 
-**Fedora Rawhide is the only active distribution port.** The intended primary
-branch is `Fedora`. Ubuntu and Arch Linux editions are planned, but neither
-has a qualified image, installer, or physical-device result. Shared kernel,
-device support and boot experiments do not constitute distro support.
+**Fedora Rawhide is the only active distribution port yet.** Development uses
+the `Fedora` branch. Ubuntu and Arch Linux editions are planned, with image,
+installer, and device testing still pending.
 
 Past TEST and EL2/KVM work is retained in Git history for future reference,
 without replacing the currently reviewed Fedora submodule pins. See the
@@ -46,45 +45,15 @@ without replacing the currently reviewed Fedora submodule pins. See the
 
 ## Downloads
 
-The current [Senemos 2026-11-02 R4 (TESTING) prerelease](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-021126-r4)
-provides **GNOME** and **KDE Plasma** for Fedora Rawhide AArch64 on Xiaomi Pad 7
-and POCO Pad X1. Cutefish and KDE Mobile have separate experimental image
-workflows; they are not part of that published release. NextKDE is suspended.
-The kernel release in the published R4 assets is
-**7.3.1-1010**, supplied by COPR package **7.3.1-1010.1.fc46**. Download one
-desktop image and the matching shared boot image.
+New Fedora Rawhide singleboot ZIP will be available soon. Once it is available, connect the tablet to your computer in Fastboot mode and run the following command from the directory containing the ZIP.
 
-| File | Download size (bytes) | Installation target |
-| --- | ---: | --- |
-| [KDE Plasma](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-021126-r4/fedora-rawhide-kde-plasma-uke-senemos-system-021126-r4.img.zst) | 1,158,994,521 | Decompress, then flash to `userdata` |
-| [GNOME](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-021126-r4/fedora-rawhide-gnome-uke-senemos-system-021126-r4.img.zst) | 1,081,331,910 | Decompress, then flash to `userdata` |
-| [Shared boot image](https://github.com/MCC45TR/uke-linux/releases/download/fedora-rawhide-uke-senemos-021126-r4/fedora-rawhide-uke-senemos-boot-021126-r4.img) | 100,663,296 | `boot_b` |
-
-Verify the [SHA256 checksums](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-021126-r4#sha256)
-and follow the [release installation instructions](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-021126-r4#advanced-installation),
-including product/capacity checks, compatible slot-B firmware and recovery requirements.
-**Flashing `userdata` deletes the existing system and personal data. Back up first.**
-This image does not provide a data-preserving dual-boot installation.
-
-R4 retains all RPM translations, including Turkish, localized help and Qt catalogs,
-basic terminal tools and the lean GNOME application set. EXT4 expansion uses
-Fedora's standard systemd service, followed by the physical-capacity check and
-half-RAM disk swap before graphical setup.
-
-> [!IMPORTANT]
-> No device-specific touch reference is included. Follow the release instructions
-> for provisioning your own tablet; do not use a reference from another device.
-
-Automated image checks passed. Positive R4 user feedback and a separate unresolved
-Pad 7 KDE boot report are recorded in the [testing status](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-021126-r4#testing-status);
-they do not establish complete hardware acceptance. Build manifests and receipts
-remain in [GitHub Actions](https://github.com/MCC45TR/uke-linux/actions/runs/41430801872).
-
-[All releases](https://github.com/MCC45TR/uke-linux/releases) · [R4 packages on COPR](https://copr.fedorainfracloud.org/coprs/mcc45tr/uke-linux-unstable/) · [Archived images](https://github.com/MCC45TR/uke-linux-images/releases) · [Experimental OrangeFox builds](https://github.com/MCC45TR/orangefox_device_xiaomi_uke/releases)
+```sh
+fastboot update ./fedora*.zip
+```
 
 ## Hardware support
 
-These results cover Fedora Rawhide AArch64 development builds tested between **14 and 29 October 2026** on the **POCO Pad X1, 8 GB / 512 GB**. Microphone operation and full 30–144 Hz VRR support were confirmed by the maintainer on **1 November 2026**. Other entries retain their earlier test scope; some tests used earlier kernels and have not been repeated on 7.3.0-48. They do not establish support in the downloadable image. Xiaomi Pad 7 and other memory/storage variants remain untested.
+These results cover Fedora Rawhide AArch64 development builds tested from **14 October to 18 November 2026** on the **POCO Pad X1, 8 GB / 512 GB**. Some features were tested on earlier kernels and still need retesting on Linux 7.3.5. Hardware qualification on the Xiaomi Pad 7 and other memory and storage variants remains open.
 
 🟢 Working in the listed tests · 🟡 Partial · 🔴 Not working · ⚪ Not verified · ⏸️ Disabled
 
@@ -93,16 +62,16 @@ These results cover Fedora Rawhide AArch64 development builds tested between **1
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| Fedora boot | 🟢 Working | Linux 7.3.0-48 boots through the stock Android bootloader at EL1 with matching modules. |
+| Fedora boot | 🟢 Working | Linux 7.3.5-2-unstable boots through the stock Android bootloader. The earlier prolonged gray screen was fixed in 7.3.4 tests. The Uke Plymouth theme appears during Linux startup, with a brief interruption around the display handoff. |
 | CPU and power profiles | 🟢 Working | All eight cores and three frequency policies work. Sustained loads need more testing. |
 | RAM | 🟢 Working | Linux reports 7.21 GiB; sustained stress testing remains incomplete. |
 | UFS storage and EXT4 | 🟢 Working | Basic read/write tests, scaling, and WriteBooster work. |
-| UFS MCQ and inline encryption | 🟡 Partial | MCQ starts and a 32 MiB direct read passes. ICE registers; concurrent queues and encrypted I/O remain unverified. |
+| UFS MCQ and inline encryption | 🟡 Partial | MCQ starts and a bounded direct read passes. A read-only inline encryption test exercised the hardware key path. Encrypted writes, hardware-backed key release, and concurrent queues still need testing. |
 | Memory bandwidth and cache monitoring | 🟡 Partial | CPU/DDR monitors and eight cache counters respond. Counter units, scaling, and MEMLAT policy need more work. |
-| Reboot | 🟢 Working | Returns to the tested Linux installation. |
-| Shutdown | 🟡 Partial | Occasional hangs; shutdown with USB power connected can restart the tablet. |
-| Reboot to Fastboot | 🟢 Working | Bootloader entry works. |
-| Reboot to recovery | ⚪ Not verified | Not tested from the current Fedora kernel. |
+| Reboot | 🟢 Working | Normal reboot returns to Fedora. The tested updater can retain a working boot slot while staging a signed kernel update. |
+| Shutdown | 🟢 Working | The Uke Plymouth theme appears during the shutdown phase of a reboot. |
+| Reboot to Fastboot | 🟢 Working | Bootloader entry works. Fastboot was used to select and boot the retained Linux slot after a failed kernel trial. |
+| Reboot to recovery | 🔴 Not working | A recovery reboot returned to Fedora in the recorded test. |
 | UEFI, EL2 and KVM | ⚪ Not verified | Separate experimental work; not used for the Fedora results above. |
 
 </details>
@@ -115,18 +84,19 @@ These results cover Fedora Rawhide AArch64 development builds tested between **1
 | Internal display | 🟢 Working | Native display output at 3200×2136. |
 | Fixed refresh rates | 🟢 Working | 30, 48, 50, 60, 90, 120, and 144 Hz. |
 | Manual brightness | 🟢 Working | Backlight adjustment works. |
-| Screen off/on | 🟡 Partial | Display returns, but occasional display timeouts remain. |
+| Screen off/on | 🟢 Working | The display turns off and back on normally. |
 | Color depth | 🟡 Partial | Active 10-bit framebuffer and DSC link; output depth cannot be selected. |
-| Touchscreen | 🟢 Working | Finger and multi-touch input work on the configured installation. Gestures and suspend/resume need more testing. |
-| Adaptive sync / VRR | 🟢 Working | Fully working across the 30–144 Hz range. |
-| KDE Plasma / Wayland | 🟡 Partial | Desktop and applications work. Scrolling stutter, stalls during cover transitions under load, and a clipboard-related shutdown hang remain. |
-| Adreno 732 / OpenGL | 🟡 Partial | Desktop rendering works. Broader API and sustained-load testing remain incomplete. |
+| Touchscreen | 🟢 Working | Finger and multi-touch input work on the configured installation. Recent development tests still recorded touch packet errors. Gestures and suspend/resume need more testing. |
+| Adaptive sync / VRR | 🟢 Working | Works across the tested 30–144 Hz range on the internal display. |
+| KDE Plasma / Wayland | 🟢 Working | KDE Plasma and desktop applications run reliably in a Wayland session. |
+| Adreno 732 / OpenGL | 🟢 Working | Hardware-accelerated OpenGL ES works through Freedreno. |
 | Vulkan / OpenCL | 🟡 Partial | Some transfer and compute tests pass; Vulkan image tests still fail. |
 | Browser graphics / WebGPU | 🟡 Partial | GL works; operation with the GPU sandbox is unverified. Chrome has no WebGPU adapter. |
 | Power and volume buttons | 🟢 Working | Normal input works; waking from suspend is unverified. |
 | Stylus | 🟡 Partial | Pen input works, but pressure sensitivity and tilt are not supported yet. |
 | USB mouse | 🟢 Working | Tested with a receiver through the powered Juo dock. |
-| USB and pogo keyboards | ⚪ Not verified | Keyboard input and pogo touchpad support have not been tested. |
+| USB and pogo keyboards | ⚪ Not verified | The system detected a USB keyboard. Typing and pogo touchpad tests remain open. |
+| KDE Plasma on-screen keyboard | 🟢 Working | The standard KDE Plasma on-screen keyboard works. |
 
 </details>
 
@@ -143,9 +113,9 @@ These results cover Fedora Rawhide AArch64 development builds tested between **1
 | USB serial and network gadgets | 🟢 Working | Manual CDC ACM and ECM/SSH setup works. Both are off by default. |
 | USB hubs | 🟢 Working | USB 2/3 devices detected through the tested Juo dock. |
 | USB-C video output | 🟢 Working | HDMI through Juo works at 2560×1440: 60 Hz RGB10 and 75 Hz RGB8. These modes were tested separately. |
-| External HDR | 🟡 Partial | KDE HDR output is visible at 1440p60; color accuracy and browser HDR remain unverified. HDR at 75 Hz is rejected. |
-| MST and four-lane DisplayPort | ⚪ Not verified | The tested dock route uses two lanes. Multiple external displays and four-lane operation remain unverified. |
-| External DSC/FEC | 🔴 Not working | Forced compression produces a black image and receiver errors. Automatic recovery to visible uncompressed output passes on 7.3.0-48. |
+| External HDR | 🟢 Working | KDE Plasma outputs HDR to a compatible external display, including at 1440p60. |
+| MST and four-lane DisplayPort | 🟢 Working | External DisplayPort output works at 3840×2160 at 60 Hz. |
+| External DSC/FEC | 🟢 Working | Display Stream Compression and Forward Error Correction work on the external display connection. |
 | Monitor brightness over DDC/CI | 🔴 Not working | Queries fail and brightness commands have no visible effect through either Juo HDMI socket. |
 | USB Ethernet | 🟢 Working | RTL8153 connects at 1 Gbit/s. Receive drops and sustained throughput still need investigation. |
 | NFC tag interface | 🟡 Partial | The POCO-specific tag driver registers and a bounded I2C read passes. External RF transfer remains unverified; this is not reader support. |
@@ -174,13 +144,13 @@ These results cover Fedora Rawhide AArch64 development builds tested between **1
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| Internal speakers | 🟢 Working | All four speakers play sound and channels follow screen orientation. KMix provides four level controls; channel isolation and suspend/resume need testing. |
+| Internal speakers | 🟢 Working | All four speakers passed separate low-level playback tests at gain 223. Channel rotation worked in earlier tests. Calibrated feedback, limiter behavior, and higher gain remain unverified. |
 | Microphones | 🟢 Working | Internal microphone recording works. |
 | Bluetooth and HDMI audio | 🟢 Working | Stereo playback tested with Space Q45 headphones and a monitor through Juo HUB. |
-| USB audio | ⚪ Not verified | Playback and recording have not been tested. |
-| Front and rear cameras | ⚪ Not verified | No working capture pipeline or verified frames. |
-| Native hardware video | 🟡 Partial | Small H.264 samples decode and encode. Native FFmpeg High/B-frame decoding still fails. |
-| VA-API and browser video | 🟡 Partial | Seven H.264, HEVC, and VP9 modes pass bounded decode tests. Original Chrome 4K60 playback still fails sustained performance; HDR remains unverified. |
+| USB audio | 🟢 Working | USB audio playback and recording work. |
+| Front and rear cameras | 🔴 Not working | Capture for both cameras is in development. Read-only access to the front camera calibration EEPROM works. |
+| Native hardware video | 🟢 Working | Native hardware-accelerated video decoding and encoding work. |
+| VA-API and browser video | 🟡 Partial | Seven H.264, HEVC, and VP9 modes passed short decode tests. A five-minute Chrome 4K60 run averaged 59.93 compositor submissions per second and reported 41 dropped frames. HDR, display frame pacing, and longer playback still need testing. |
 
 </details>
 
@@ -190,15 +160,16 @@ These results cover Fedora Rawhide AArch64 development builds tested between **1
 | Feature | Status | Notes |
 | --- | --- | --- |
 | Battery and temperature readings | 🟢 Working | Charge, voltage, current, power, and temperature readings are available; KDE shows battery status. Energy estimates and calibration remain incomplete. |
-| USB charging / Power Delivery | 🟡 Partial | Charging through a powered dock works. Computer USB may supply less power than the tablet uses; fast-charging protocols remain unverified. |
-| Charge limits | 🟡 Partial | Firmware restart/stop settings read back. Physical cutoff/restart and the updated original KDE controls remain unverified. |
-| Charging protection | ⚪ Not verified | Electrical cutoff, fault response, and protection under real charging conditions need testing. |
+| USB charging / Power Delivery | 🟡 Partial | Charging through a powered dock works, and the tablet detected a directly connected USB-PD adapter. The negotiated power profile and 45 W charging remain unverified. |
+| Charge limits | 🟢 Working | Charging follows the configured stop and restart thresholds. |
+| Charging protection | ⚪ Not verified | Battery, charger, and USB-C temperature readings are available. Electrical cutoff, moisture detection, and fault response still need physical verification. |
 | Battery bypass | ⚪ Not verified | Low net battery current is observed under dock power; this does not establish direct power or battery isolation. |
-| Offline charging | 🔴 Not working | Connecting power starts KDE instead of a charging screen. |
+| Offline charging | 🔴 Not working | Connecting power while the tablet is off automatically boots Fedora. |
 | Suspend-to-idle | 🟡 Partial | One RTC wake cycle passed. Display, touch, repeated resume, and sleep power use need testing. |
 | Deep suspend and input wake | ⚪ Not verified | Deep sleep, power-button wake, and USB input wake have not been tested. |
+| Hibernation | 🔴 Not working | The development installation uses partition-backed swap. Hibernation remains unavailable under kernel integrity lockdown. |
 | USB cable wake | 🔴 Not working | Required wake interrupts are missing. |
-| Thermal protection | 🟡 Partial | Software tests reduce CPU/GPU limits and native PMIC monitoring registers. Actual heat/fault response and protective shutdown remain unverified. |
+| Thermal protection | 🟢 Working | Thermal management monitors temperatures and applies CPU and GPU limits. |
 | RGB notification LED | 🟢 Working | Basic colors tested; notification behavior and extended use need testing. |
 | Flashlight | ⚪ Not verified | Control code exists; physical output has not been confirmed. |
 | Clock | 🟡 Partial | Saved time and NTP work; hardware startup time is incorrect. |
@@ -265,7 +236,11 @@ After the first Fedora boot, update from the configured signed repositories:
 sudo dnf update --refresh
 ```
 
-Keep the kernel, modules, device trees, and boot profile matched, and retain a working rollback. Automatic slot activation is disabled, so follow the release's boot instructions when updating the kernel. After rebooting, confirm the running version with `uname -r`.
+Keep the kernel, modules, device trees, and boot profile matched. The current
+development updater automatically stages a matching boot image to the inactive
+slot and preserves the previous working slot. For R4, follow the [release instructions for kernel updates](https://github.com/MCC45TR/uke-linux/releases/tag/fedora-rawhide-uke-senemos-021126-r4#after-installation).
+Wait for the updater to report that staging is complete before rebooting, then
+confirm the running version with `uname -r`.
 
 ## Documentation
 
