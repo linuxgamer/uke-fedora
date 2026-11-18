@@ -135,10 +135,6 @@ def main():
         "            if [[ $profile != tty ]]; then\n",
         "            dnf_install_with_download_retry -y --use-host-config "
         "--setopt=system_cachedir=$dnf_cache --setopt=keepcache=True "
-        "--installroot=\"$root\" --releasever=44 --setopt=install_weak_deps=False "
-        "install --allowerasing "
-        "https://download1.rpmfusion.org/free/fedora/releases/44/Everything/aarch64/os/Packages/l/"
-        "libavcodec-freeworld-8.0.1-6.fc44.aarch64.rpm\n"
         "            chroot \"$root\" flatpak remote-add --system --if-not-exists flathub "
         "https://flathub.org/repo/flathub.flatpakrepo || die 'Failed to add Flathub remote'\n"
         "            install -Dm644 \"$here/../configs/vlc/vlcrc\" \"$root/etc/skel/.config/vlc/vlcrc\"\n"
