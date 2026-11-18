@@ -89,6 +89,11 @@ jobs:
           sudo chmod +x /usr/local/bin/avbtool
           avbtool --help >/dev/null
 
+      - name: Configure Flatpak and Discover
+        run: |
+          set -Eeuo pipefail
+          python3 tools/prepare-flatpak-discover.py
+
       - name: Build image pairs
         env:
           PROFILES: ${{ inputs.profiles }}
