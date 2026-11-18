@@ -22,6 +22,19 @@ def replace_once(rel, old, new, writes):
         path.write_text(text.replace(old, new, 1))
 
 
+def replace_or_skip(rel, old, new, writes, already):
+    path = ROOT / rel
+    text = path.read_text()
+    count = text.count(old)
+    if count == 1:
+        if writes:
+            path.write_text(text.replace(old, new, 1))
+        return
+    if count == 0 and any(marker in text for marker in already):
+        return
+    raise SystemExit(f"{rel}: expected one match or an already-applied marker, found {count}: {old[:70]!r}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="validate patterns without writing")
@@ -89,6 +102,12 @@ def main():
         '"$output/root/usr/share/wireplumber/wireplumber.conf.d/85-uke-speaker-priority.conf"\n'
         'sudo install -Dm644 "$here/../configs/nanosic/MCU_Upgrade.bin" '
         '"$output/root/usr/lib/firmware/nanosic/MCU_Upgrade.bin"\n'
+        'sudo install -Dm755 "$here/../configs/nanosic/nanosic-authd.py" '
+        '"$output/root/usr/local/sbin/nanosic-authd"\n'
+        'sudo install -Dm644 "$here/../configs/nanosic/nanosic-authd.service" '
+        '"$output/root/usr/lib/systemd/system/nanosic-authd.service"\n'
+        'printf "%s\\n" hid-nanosic-wn8030 | '
+        'sudo tee "$output/root/etc/modules-load.d/nanosic.conf" >/dev/null\n'
         "if [[ $copr == 1 ]]; then\n",
         writes)
 
@@ -98,18 +117,38 @@ def main():
     replace_once(f"{hardware}/uke-desktop-integration/src/modprobe.d/uke-gpu-options.conf",
                  "options msm separate_gpu_kms=1", "# options msm separate_gpu_kms=1", writes)
 
-    # Locally built modules have to load on the installed system. The pinned
-    # tree already builds without module signing, but forced integrity lockdown
-    # would still reject every unsigned module, so turn that off and relax the
-    # contract that asserts it stays on.
+    # Allow locally built modules to load on the installed system. Signing stays
+    # enabled, but neither forced signatures nor forced integrity lockdown block
+    # insmod of unsigned test modules.
+    replace_or_skip(f"{kernel}/packaging/native/native.config",
+                    "CONFIG_MODULE_SIG_FORCE=y", "# CONFIG_MODULE_SIG_FORCE is not set",
+                    writes,
+                    ("# CONFIG_MODULE_SIG_FORCE is not set",
+                     "# CONFIG_MODULE_SIG is not set"))
     replace_once(f"{kernel}/packaging/native/native.config",
                  "CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY=y",
                  "# CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY is not set", writes)
+    # The resolved-config test still requires integrity lockdown, which the
+    # line above deliberately clears so unsigned local modules can be loaded.
     replace_once(
         f"{kernel}/tests/kernel-hardening-config-contract.sh",
         "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY LOCK_DOWN_KERNEL_FORCE_INTEGRITY \\\n",
         "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY \\\n",
         writes)
+    replace_or_skip(
+        f"{kernel}/tests/kernel-hardening-config-contract.sh",
+        "for symbol in MODULE_SIG MODULE_SIG_FORCE MODULE_SIG_ALL MODULE_SIG_SHA256 \\\n"
+        "    MODULE_SIG_KEY_TYPE_RSA SYSTEM_TRUSTED_KEYRING SECURITY_DMESG_RESTRICT \\\n"
+        "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY LOCK_DOWN_KERNEL_FORCE_INTEGRITY \\\n"
+        "    SECURITY_YAMA SECURITY_SELINUX FORTIFY_SOURCE HARDENED_USERCOPY \\\n"
+        "    RANDOMIZE_BASE STACKPROTECTOR_STRONG STRICT_KERNEL_RWX STRICT_MODULE_RWX; do\n",
+        "for symbol in MODULE_SIG MODULE_SIG_ALL MODULE_SIG_SHA256 \\\n"
+        "    MODULE_SIG_KEY_TYPE_RSA SYSTEM_TRUSTED_KEYRING SECURITY_DMESG_RESTRICT \\\n"
+        "    SECURITY_LOCKDOWN_LSM SECURITY_LOCKDOWN_LSM_EARLY \\\n"
+        "    SECURITY_YAMA SECURITY_SELINUX FORTIFY_SOURCE HARDENED_USERCOPY \\\n"
+        "    RANDOMIZE_BASE STACKPROTECTOR_STRONG STRICT_KERNEL_RWX STRICT_MODULE_RWX; do\n",
+        writes,
+        ("grep -Fxq '# CONFIG_MODULE_SIG_FORCE is not set'",))
 
     # The SRPM profile stages tests from git HEAD, so copy the patched contract
     # from the worktree instead of the archived commit.
