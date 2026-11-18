@@ -135,7 +135,28 @@ def main():
         "\tcp -a tests \"$$assets/tests\"\n",
         writes)
 
-    # KDE image uses GDM with a pre-created uke/fedora wheel account.
+    # Desktop defaults: English UI, full Noto coverage for special characters,
+    # and power-profiles-daemon so Plasma exposes the power profile switcher.
+    replace_once(
+        f"{builder}/build-rootfs.sh",
+        '                    polkit udisks2 xorg-x11-server-Xwayland glibc-langpack-ru langpacks-ru)\n',
+        '                    polkit udisks2 xorg-x11-server-Xwayland glibc-langpack-en langpacks-en\n'
+        '                    default-fonts-core-sans default-fonts-core-mono default-fonts-core-serif\n'
+        '                    google-noto-sans-fonts google-noto-sans-mono-fonts google-noto-serif-fonts\n'
+        '                    google-noto-sans-symbols-fonts google-noto-sans-symbols-2-fonts\n'
+        '                    google-noto-sans-math-fonts google-noto-color-emoji-fonts\n'
+        '                    google-noto-emoji-fonts google-noto-sans-cjk-vf-fonts\n'
+        '                    power-profiles-daemon)\n',
+        writes)
+    replace_once(
+        f"{builder}/build-rootfs.sh",
+        "                printf 'LANG=ru_RU.UTF-8\\nLC_TIME=ru_RU.UTF-8\\n' > \"$root/etc/locale.conf\"\n",
+        "                printf 'LANG=en_US.UTF-8\\nLC_TIME=en_US.UTF-8\\n' > \"$root/etc/locale.conf\"\n"
+        "                printf 'KEYMAP=us\\n' > \"$root/etc/vconsole.conf\"\n",
+        writes)
+
+    # KDE image uses GDM with a pre-created saksham/fedora wheel account and
+    # autologin so the device boots straight into the owner's desktop.
     replace_once(
         f"{builder}/build-rootfs.sh",
         '                install noopenh264 "${common[@]}" "${desktop[@]}"\n',
@@ -155,16 +176,22 @@ def main():
                     systemctl --root="$root" disable "$unit" 2>/dev/null || true
                     systemctl --root="$root" mask "$unit" 2>/dev/null || true
                 done
-                mkdir -p "$root/etc/gdm" "$root/var/lib/AccountsService/users"
-                if ! grep -q '^uke:' "$root/etc/passwd"; then
-                    chroot "$root" /usr/sbin/useradd --create-home --groups wheel --shell /usr/bin/bash uke
+                mkdir -p "$root/etc/gdm" "$root/var/lib/AccountsService/users" "$root/etc/sudoers.d"
+                if ! grep -q '^saksham:' "$root/etc/passwd"; then
+                    chroot "$root" /usr/sbin/useradd --create-home --groups wheel --shell /usr/bin/bash saksham
                 fi
-                printf 'uke:fedora\n' | chroot "$root" /usr/sbin/chpasswd
+                printf 'saksham:fedora\n' | chroot "$root" /usr/sbin/chpasswd
                 printf 'root:fedora\n' | chroot "$root" /usr/sbin/chpasswd
                 chroot "$root" /usr/sbin/usermod -U root || true
-                printf '[User]\nSession=plasma\nXSession=plasma\nSystemAccount=false\n' > "$root/var/lib/AccountsService/users/uke"
-                chmod 600 "$root/var/lib/AccountsService/users/uke"
-                printf '[daemon]\nInitialSetupEnable=false\nAutomaticLoginEnable=false\nTimedLoginEnable=false\n' > "$root/etc/gdm/custom.conf"
+                printf 'saksham ALL=(ALL:ALL) ALL\n' > "$root/etc/sudoers.d/90-saksham"
+                chmod 0440 "$root/etc/sudoers.d/90-saksham"
+                install -d -m700 "$root/home/saksham/.config"
+                printf '[Formats]\nLANG=en_US.UTF-8\n\n[Translations]\nLANGUAGE=en_US:en\n' > "$root/home/saksham/.config/plasma-localerc"
+                printf 'en_US\n' > "$root/home/saksham/.config/user-dirs.locale"
+                chroot "$root" /usr/bin/chown -R saksham:saksham /home/saksham
+                printf '[User]\nSession=plasma\nXSession=plasma\nSystemAccount=false\nLanguage=en_US.UTF-8\n' > "$root/var/lib/AccountsService/users/saksham"
+                chmod 600 "$root/var/lib/AccountsService/users/saksham"
+                printf '[daemon]\nInitialSetupEnable=false\nAutomaticLoginEnable=true\nAutomaticLogin=saksham\nDefaultSession=plasma\nTimedLoginEnable=false\n' > "$root/etc/gdm/custom.conf"
                 systemctl --root="$root" enable gdm.service
                 systemctl --root="$root" set-default graphical.target
             else
@@ -177,6 +204,7 @@ def main():
     replace_once(
         f"{builder}/build-rootfs.sh",
         '            systemctl --root="$root" enable "$display.service"\n',
+        '            systemctl --root="$root" enable power-profiles-daemon.service\n'
         '            if [[ $profile == kde ]]; then\n'
         '                systemctl --root="$root" enable gdm.service\n'
         '            else\n'
@@ -188,7 +216,7 @@ def main():
                  'printf \'root:fedora\\n\' | chroot "$root" /usr/sbin/chpasswd\n'
                  'chroot "$root" /usr/sbin/usermod -U root || true\n', writes)
 
-    # Pre-created uke/fedora account and working GDM for the GNOME image.
+    # Pre-created saksham/fedora account and working GDM for the GNOME image.
     replace_once(
         f"{builder}/src/public/desktop-setup.sh",
         '''        gnome)
@@ -200,24 +228,30 @@ def main():
 ''',
         '''        gnome)
             rpm --root "$root" -q gdm gnome-initial-setup gnome-shell >/dev/null
-            mkdir -p "$root/etc/gdm" "$root/var/lib/AccountsService/users"
-            if ! grep -q '^uke:' "$root/etc/passwd"; then
-                chroot "$root" /usr/sbin/useradd --create-home --groups wheel --shell /usr/bin/bash uke
+            mkdir -p "$root/etc/gdm" "$root/var/lib/AccountsService/users" "$root/etc/sudoers.d"
+            if ! grep -q '^saksham:' "$root/etc/passwd"; then
+                chroot "$root" /usr/sbin/useradd --create-home --groups wheel --shell /usr/bin/bash saksham
             fi
-            printf 'uke:fedora\\n' | chroot "$root" /usr/sbin/chpasswd
+            printf 'saksham:fedora\\n' | chroot "$root" /usr/sbin/chpasswd
             printf 'root:fedora\\n' | chroot "$root" /usr/sbin/chpasswd
             chroot "$root" /usr/sbin/usermod -U root || true
-            printf '[User]\\nSession=gnome\\nXSession=gnome\\nSystemAccount=false\\n' > "$root/var/lib/AccountsService/users/uke"
-            chmod 600 "$root/var/lib/AccountsService/users/uke"
-            printf '[daemon]\\nInitialSetupEnable=false\\nAutomaticLoginEnable=false\\nTimedLoginEnable=false\\n' > "$root/etc/gdm/custom.conf"
+            printf 'saksham ALL=(ALL:ALL) ALL\\n' > "$root/etc/sudoers.d/90-saksham"
+            chmod 0440 "$root/etc/sudoers.d/90-saksham"
+            install -d -m700 "$root/home/saksham/.config"
+            printf '[Formats]\\nLANG=en_US.UTF-8\\n\\n[Translations]\\nLANGUAGE=en_US:en\\n' > "$root/home/saksham/.config/plasma-localerc"
+            printf 'en_US\\n' > "$root/home/saksham/.config/user-dirs.locale"
+            chroot "$root" /usr/bin/chown -R saksham:saksham /home/saksham
+            printf '[User]\\nSession=gnome\\nXSession=gnome\\nSystemAccount=false\\nLanguage=en_US.UTF-8\\n' > "$root/var/lib/AccountsService/users/saksham"
+            chmod 600 "$root/var/lib/AccountsService/users/saksham"
+            printf '[daemon]\\nInitialSetupEnable=false\\nAutomaticLoginEnable=true\\nAutomaticLogin=saksham\\nDefaultSession=gnome\\nTimedLoginEnable=false\\n' > "$root/etc/gdm/custom.conf"
             systemctl --root="$root" enable gdm.service
             systemctl --root="$root" set-default graphical.target
-            printf '{"account_setup":"precreated-uke","credentials_included":true,"public_test_account":"uke","password_change_required":false,"autologin_enabled":false}\\n' > "$receipt";;
+            printf '{"account_setup":"precreated-saksham","credentials_included":true,"public_test_account":"saksham","password_change_required":false,"autologin_enabled":true}\\n' > "$receipt";;
 ''',
         writes)
     replace_once(f"{builder}/src/public/desktop-setup.sh",
                  "awk -F: '$3>=1000 && $3<65534 {exit 1}'",
-                 "awk -F: '$3>=1000 && $3<65534 && $1!=\"uke\" {exit 1}'", writes)
+                 "awk -F: '$3>=1000 && $3<65534 && $1!=\"saksham\" {exit 1}'", writes)
 
     # GDM must still come up when the storage gate fails; keep the ordering but
     # do not make the display manager a hard dependency.

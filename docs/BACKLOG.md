@@ -27,6 +27,7 @@ Status: `todo`, `in progress`, `blocked`, `done`.
 | B17 | P2 | Newcomer labels and first tasks | todo | Add `good first issue` and `help wanted` labels and label 3–5 self-contained tasks (docs CI, builder check runner, component `AGENTS.md` paths, tooling nits), then link them from [DEVELOPING.md](DEVELOPING.md#where-to-start). |
 | B18 | P2 | Security reporting channel | todo | `docs/CONTRIBUTING.md` points at GitHub private vulnerability reporting "when available". Enable it for the repository or add a `SECURITY.md` with a real private channel; the upstream `SECURITY.md` is not carried. |
 | B19 | P3 | Small tooling nits | todo | `tools/export-patches.sh --help` prints `mkdir` usage; root `.gitignore` still ignores `/tests`, `/scripts`, `/manifests`, a trap for repo-level tooling; consider installation hints in `tools/check-dev-env.sh` for the Fedora-era toolchain. |
+| B23 | P1 | Desktop defaults and owner autologin | done | CI overlay now installs the English locale, Noto symbol/emoji/CJK fonts and `power-profiles-daemon`, enables the power profile service, and pre-creates `saksham` (wheel, password `fedora`) with GDM autologin for KDE and GNOME. Validated with `maint/prepare-ci-tree.py --check` and `bash -n` on the generated builder scripts. |
 
 ## Next
 

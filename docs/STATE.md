@@ -131,7 +131,9 @@ the worktree head with the recorded gitlink before moving a pointer.
 - Images get an optional COPR repo (`UKE_COPR=0` disables it), excluding kernel
   and OEM packages.
 - Desktop profiles install Firefox, a text editor, the store, an archive manager
-  and a calculator, plus `ru_RU.UTF-8`.
+  and a calculator. They use `en_US.UTF-8`, ship Noto symbol/emoji/CJK font
+  coverage and `power-profiles-daemon`, and the KDE and GNOME overlays pre-create
+  the `saksham` wheel account with GDM autologin.
 - Release packaging and issue templates exist; screenshots are in the README.
 - Build speed: kernel SRPM reuse, locked status file, `--parallel N`, CI caches.
 
