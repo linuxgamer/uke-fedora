@@ -58,6 +58,8 @@ def main():
             install -Dm0644 "$here/../configs/flatpak/global" "$root/var/lib/flatpak/overrides/global"
             chroot "$root" flatpak remote-add --system --if-not-exists flathub \\
                 https://flathub.org/repo/flathub.flatpakrepo || die 'Failed to add Flathub remote'
+            install -Dm644 "$here/../configs/vlc/vlcrc" "$root/etc/skel/.config/vlc/vlcrc"
+            install -Dm644 "$here/../configs/vlc/vlcrc" "$root/etc/vlc/vlcrc"
 """
     text = text.replace(anchor, integration + anchor, 1)
 
