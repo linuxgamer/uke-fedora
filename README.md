@@ -56,9 +56,6 @@ Developer-level evidence and blockers: [docs/HARDWARE.md](docs/HARDWARE.md).
 
 ## Screenshots
 
-| KDE Plasma | GPU and Vulkan |
-| --- | --- |
-| ![KDE Plasma on the tablet](.github/assets/screenshots/uke-fedora-kde-2026-10-17.png) | ![Chromium GPU status](.github/assets/screenshots/Fedora_Rawhide_PAD7_UKE_Chromium_GPU_Status.png) |
 
 Screenshots are from upstream and will be replaced; they are not evidence that every block works in the current release.
 
