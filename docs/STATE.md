@@ -15,9 +15,9 @@ rebased component forks; patches are exported for review only. See
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
-| `senemos-uke-kernel` | `main` | `3163e55` (gitlink and worktree) | video series active; native `%prep` fixed; Nanosic WN8030 HID keyboard with an independent ABL overlay; `referances/` removed and its last path strings scrubbed from manifests |
+| `senemos-uke-kernel` | `main` | `deccf8a` (gitlink and worktree) | video series active; native `%prep` fixed; Nanosic WN8030 HID keyboard with an independent ABL overlay; upstream reset pulse and resume keepalive merged; `referances/` removed and its last path strings scrubbed from manifests |
 | `uke-fedora-builder` | `main` | `3662473` (gitlink and worktree) | apps, ru locale, COPR repo; internal source cache renamed to `source-cache/` |
-| `uke-linux-hardware-support` | `main` | `1d20cc3` (gitlink and worktree) | firmware payload with uke-firmware provides; top-level docs removed, internal caches renamed |
+| `uke-linux-hardware-support` | `main` | `cf48c20` (gitlink and worktree) | firmware payload with uke-firmware provides; top-level docs removed, internal caches renamed |
 
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
@@ -55,6 +55,30 @@ The kernel submodule URL now points at the `Dustymind` fork of the kernel
 repository, because `3163e55` exists only there once it is pushed.
 `actions/checkout` fetches submodules recursively, so a run started before that
 push fails at checkout with `not our ref` rather than during the build.
+
+## Fork sync `saksham-991/uke-fedora` (2026-11-18)
+
+Merge commit `241563b` brings the six upstream umbrella commits
+(`817c38b..08cc97a`) into `main`; the kernel gitlink moves to `deccf8a`, the
+merge of our `ba3156d` with the upstream `378c41f` (reset pulse: 2 ms, boot
+50 ms, wake 20 ms) and `eae9b27` (restart the 12 s keepalive after resume).
+
+Upstream additions kept: the `MCU_Upgrade.bin` install (identical blob), the
+`nanosic-authd` script and unit, and `modules-load.d/nanosic.conf` which loads
+`hid-nanosic-wn8030` at boot. Both `replace_or_skip` conversions around the
+module-signing policy are kept; they now hit the already-applied marker in the
+pinned tree and only the integrity-lockdown rewrite runs.
+
+Our side kept: the zh_CN locale block, the `authselect` PAM assertion, and the
+removal of the GDM and pre-created-account overlay, so KDE still ships stock
+SDDM with the Plasma first-run setup. `nanosic-authd.service` is installed but
+nothing enables it and it is not in a preset; the driver falls back to the
+offline zero token, so the keyboard works either way.
+
+The kernel spec still says release `106` and the builder still pins
+`7.3.1`/`106`, so an image built from this head carries the same NEVRA as
+`ci-44209941663` with different kernel content. Bump both before installing an
+image over an existing system.
 
 ## CI rootfs overlay: locale, login and PAM (2026-11-18)
 
