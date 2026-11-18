@@ -15,7 +15,7 @@ rebased component forks; patches are exported for review only. See
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
-| `senemos-uke-kernel` | `main` | `deccf8a` (gitlink and worktree) | video series active; native `%prep` fixed; Nanosic WN8030 HID keyboard with an independent ABL overlay; upstream reset pulse and resume keepalive merged; `referances/` removed and its last path strings scrubbed from manifests |
+| `senemos-uke-kernel` | `main` | `181d8ef` (gitlink and worktree) | release `7.3.1-107`; video series active; native `%prep` fixed; Nanosic WN8030 HID keyboard with an independent ABL overlay; upstream reset pulse and resume keepalive merged; `referances/` removed and its last path strings scrubbed from manifests |
 | `uke-fedora-builder` | `main` | `3662473` (gitlink and worktree) | apps, ru locale, COPR repo; internal source cache renamed to `source-cache/` |
 | `uke-linux-hardware-support` | `main` | `cf48c20` (gitlink and worktree) | firmware payload with uke-firmware provides; top-level docs removed, internal caches renamed |
 
@@ -91,10 +91,14 @@ keeps working whether the daemon runs or not. Two caveats: the daemon holds a
 single open, and its SIGTERM handler cannot break the blocking read, so
 `systemctl stop` waits for the stop timeout before SIGKILL.
 
-The kernel spec still says release `106` and the builder still pins
-`7.3.1`/`106`, so an image built from this head carries the same NEVRA as
-`ci-44209941663` with different kernel content. Bump both before installing an
-image over an existing system.
+The kernel spec now says release `107`, so this head no longer collides with
+`ci-44209941663`. The builder used to pin the kernel NEVRA separately in
+`configs/package-lock.json`; `maint/prepare-ci-tree.py` now copies the release
+out of the spec into that lock, because `build-rootfs.sh` resolves the kernel
+RPM by that NEVRA and a lagging lock fails the rootfs stage only after the
+whole kernel has compiled. The changelog entry records the four changes in
+this release: the standalone keyboard overlay, the native ABL patch re-anchor,
+and the two upstream Nanosic fixes.
 
 ## CI rootfs overlay: locale, login and PAM (2026-11-18)
 
