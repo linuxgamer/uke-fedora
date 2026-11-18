@@ -8,12 +8,6 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 > [!WARNING]
 > This is not ready for daily use. Installing to `userdata` overwrites Android user data. Back up any data you have!
 
-## Demo
-
-https://github.com/user-attachments/assets/aaa5c2a5-fe86-4cba-84c5-56b9adcc9963
-
-10-second on-device capture from the Xiaomi Pad 7 running KDE Plasma on the Fedora 44 Uke image.
-
 ## Start here
 
 - **Installing the port:** read the [installation guide](docs/INSTALL.md) and the
@@ -53,11 +47,6 @@ https://github.com/user-attachments/assets/aaa5c2a5-fe86-4cba-84c5-56b9adcc9963
 🟢 Working · 🟡 Partial · 🔴 Not working · ⚪ Not verified
 
 Developer-level evidence and blockers: [docs/HARDWARE.md](docs/HARDWARE.md).
-
-## Screenshots
-
-
-Screenshots are from upstream and will be replaced; they are not evidence that every block works in the current release.
 
 ## Downloads and building
 
