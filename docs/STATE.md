@@ -71,9 +71,25 @@ pinned tree and only the integrity-lockdown rewrite runs.
 
 Our side kept: the zh_CN locale block, the `authselect` PAM assertion, and the
 removal of the GDM and pre-created-account overlay, so KDE still ships stock
-SDDM with the Plasma first-run setup. `nanosic-authd.service` is installed but
-nothing enables it and it is not in a preset; the driver falls back to the
-offline zero token, so the keyboard works either way.
+SDDM with the Plasma first-run setup.
+
+`nanosic-authd.service` is also enabled now: upstream installs the unit and
+`[Install] WantedBy=multi-user.target` but never enables it, and the image has
+no preset pass for a file installed outside rpm. The overlay writes the
+`multi-user.target.wants` symlink itself, which is what `systemctl enable`
+would create, so no host tooling is involved. The unit is a plain system
+service: root, no session bus, no graphical target, no login, so it answers
+`/dev/nanosic_auth` from early boot and on the `tty` profile as well, where the
+same rootfs block runs.
+
+Tested off-device against a pty standing in for the char device: a 32-byte
+request is answered with the 16-byte zero token, with a 32-hex
+`/etc/nanosic/auth-token` it is answered with that token, and with no device
+present the daemon stays up retrying every 2 s. The driver drops auth requests
+without stalling the IRQ thread when the device is not open, so the keyboard
+keeps working whether the daemon runs or not. Two caveats: the daemon holds a
+single open, and its SIGTERM handler cannot break the blocking read, so
+`systemctl stop` waits for the stop timeout before SIGKILL.
 
 The kernel spec still says release `106` and the builder still pins
 `7.3.1`/`106`, so an image built from this head carries the same NEVRA as

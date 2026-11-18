@@ -90,7 +90,9 @@ def main():
 
     # Assets live in the umbrella repository, outside the container rootfs.
     # The Nanosic keyboard MCU firmware is loaded by the HID driver at probe
-    # time, so a missing file means no keyboard at all.
+    # time, so a missing file means no keyboard at all. The auth daemon has to
+    # run from boot: it answers /dev/nanosic_auth before any login, so it is
+    # enabled the way "systemctl enable" would, as a multi-user.target want.
     replace_once(
         f"{builder}/build-rootfs.sh",
         "if [[ $copr == 1 ]]; then\n",
@@ -106,6 +108,9 @@ def main():
         '"$output/root/usr/local/sbin/nanosic-authd"\n'
         'sudo install -Dm644 "$here/../configs/nanosic/nanosic-authd.service" '
         '"$output/root/usr/lib/systemd/system/nanosic-authd.service"\n'
+        'sudo install -d "$output/root/etc/systemd/system/multi-user.target.wants"\n'
+        'sudo ln -sf /usr/lib/systemd/system/nanosic-authd.service '
+        '"$output/root/etc/systemd/system/multi-user.target.wants/nanosic-authd.service"\n'
         'printf "%s\\n" hid-nanosic-wn8030 | '
         'sudo tee "$output/root/etc/modules-load.d/nanosic.conf" >/dev/null\n'
         "if [[ $copr == 1 ]]; then\n",
