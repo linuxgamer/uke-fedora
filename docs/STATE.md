@@ -152,11 +152,12 @@ release`: GitHub rejects a single release asset of 2 GiB or more, the KDE
 archive is about 2.4 GiB, `gh release create` returned HTTP 422 and rolled the
 whole release back. The artifact was complete (7.54 GiB).
 
-- The packaging step now runs with `ZSTD_CLEVEL=19` and `ZSTD_NBTHREADS=4`, which
-  the `tar --zstd` child honours. Measured on 1.2 GiB of PE binaries: 359 MB at
-  level 3, 269 MB at level 19. `ZSTD_NBTHREADS=0` means one thread, not all.
-  `--long=27` would need a patch to `package-release.sh` in the builder; it is
-  not used.
+- The packaging step now runs with `ZSTD_CLEVEL=12` and `ZSTD_NBTHREADS=4`, which
+  the `tar --zstd` child honours. Level 19 cost 9m07s of the 40m45s job on the
+  4.4 GiB rootfs; on the 1.72 GB sample tar level 12 wrote 198 MB in 12 s and
+  level 19 wrote 170 MB in 178 s, so the larger archive is left to the splitter.
+  `ZSTD_NBTHREADS=0` means one thread, not all. `--long=27` would need a patch
+  to `package-release.sh` in the builder; it is not used.
 - `tools/split-release-assets.sh` turns a packaging directory into release
   assets: archives of 1900 MiB or more become `<name>.part-NN`, the parts are
   proven to reassemble to the original digest, and it writes `SHA256SUMS` over
@@ -173,6 +174,31 @@ whole release back. The artifact was complete (7.54 GiB).
 
 Checked with a 3 GiB archive: two parts, matching reassembly digest, `sha256sum
 -c` clean, and the parts branch copies untouched. No build, no publish.
+
+## CI wall-clock reductions (2026-11-18)
+
+Run `44243678354` took 40m45s: 28m17s in `Build baseline image` and 9m07s in
+`Package release archives`. Three changes target the seconds and the reliability,
+not the stages:
+
+- `ZSTD_CLEVEL` 19 → 12. The step is a pure compression pass and level 12 keeps
+  most of the saving; `tools/split-release-assets.sh` absorbs the larger archive
+  by emitting another part.
+- The cache paths dropped `~/.cache/ccache` and `~/.cache/docker`: the builder
+  exports `CCACHE_DIR=/build-cache/ccache`, and rootful Docker keeps images in
+  `/var/lib/docker`, so both entries restored and saved nothing. They were
+  replaced by the per-component `source-cache` trees, which are the actual
+  network dependency: `uke-sensors` fetches libssc from codeberg.org, and run
+  `44253183775` failed at `make srpm` with `curl: (6) Could not resolve host:
+  codeberg.org`.
+- The tool image is rebuilt on every run (`ensure-build-image.sh` inspects the
+  daemon store, which starts empty), costing about 70 s. It is left alone here:
+  it needs a `docker save`/`load` pair and the image tag embeds the recipe hash.
+
+Not changed: `--parallel 1` (the builder serialises tty before desktops and
+there are only two profiles), `UKE_JOBS=$(nproc)` (already four on the runner),
+and the kernel RPM re-use path (`kernel-rpm-cache.sh` needs the multi-GB
+`rpmbuild` tree in the cache; that is a builder change).
 
 ## Baseline CI image build success (2026-11-14)
 

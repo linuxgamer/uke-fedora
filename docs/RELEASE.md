@@ -20,14 +20,15 @@ Use the release packager instead of hand-picking files from a pair directory.
 It compresses with `tar --zstd`, so the level comes from the environment:
 
 ```sh
-ZSTD_CLEVEL=19 ZSTD_NBTHREADS=4 \
+ZSTD_CLEVEL=12 ZSTD_NBTHREADS=4 \
   ./uke-fedora-builder/tools/package-release.sh --tag <tag> --output build/release-<tag> \
     --twrp <twrp_recovery_ab.tar.zst> build/<name>/*-pair
 ```
 
-Level 19 is about a quarter smaller than the level-3 default on the KDE rootfs,
-at the cost of a slower pass; `ZSTD_NBTHREADS=0` means one thread, not all of
-them.
+Level 12 shrinks a 1.72 GB tar of the 7.3.1 source tree to 198 MB in 12 s;
+level 19 takes 178 s for 170 MB. The CI workflow uses 12 because the packaging
+step cost 9m07s at 19 and splitting absorbs the larger archive. `ZSTD_NBTHREADS=0`
+means one thread, not all of them.
 
 Each archive contains exactly the shipped files and a checksum file:
 

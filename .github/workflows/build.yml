@@ -50,11 +50,21 @@ jobs:
         uses: actions/cache/restore@v4
         id: cache-restore
         with:
+          # The builder keeps ccache under build/cache/ccache and the tool
+          # images in the daemon's own store, so a paths entry for either
+          # ~/.cache directory would always archive nothing. The per-component
+          # source-cache trees are what make a run survive an upstream outage:
+          # uke-sensors alone fetches libssc from codeberg.org, and run
+          # 44253183775 died when that host stopped resolving.
           path: |
             senemos-uke-kernel/source-cache
             uke-fedora-builder/build/cache
-            ~/.cache/ccache
-            ~/.cache/docker
+            uke-linux-hardware-support/uke-sensors/source-cache
+            uke-linux-hardware-support/uke-boot/source-cache
+            uke-linux-hardware-support/uke-video/source-cache
+            uke-linux-hardware-support/uke-desktop-packaging/source-cache
+            uke-linux-hardware-support/uke-desktop-integration/source-cache
+            uke-linux-hardware-support/xiaomi-uke-firmware/source-cache
           key: uke-cache-v3-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
           restore-keys: |
             uke-cache-v3-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-
@@ -103,17 +113,23 @@ jobs:
           path: |
             senemos-uke-kernel/source-cache
             uke-fedora-builder/build/cache
-            ~/.cache/ccache
-            ~/.cache/docker
+            uke-linux-hardware-support/uke-sensors/source-cache
+            uke-linux-hardware-support/uke-boot/source-cache
+            uke-linux-hardware-support/uke-video/source-cache
+            uke-linux-hardware-support/uke-desktop-packaging/source-cache
+            uke-linux-hardware-support/uke-desktop-integration/source-cache
+            uke-linux-hardware-support/xiaomi-uke-firmware/source-cache
           key: uke-cache-v3-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
 
       - name: Package release archives
         if: success()
         env:
-          # zstd reads these for the tar --zstd child. Level 19 takes about a
-          # quarter off the level-3 default on a 4.4 GiB rootfs; four threads
-          # (0 would mean one) keep the extra pass inside the job budget.
-          ZSTD_CLEVEL: '19'
+          # zstd reads these for the tar --zstd child. Level 19 costs 9m07s on
+          # the 4.4 GiB rootfs; level 12 keeps most of the saving for about
+          # half the time, and split-release-assets.sh splits whatever comes
+          # out, so a slightly larger archive only adds another part file.
+          # Four threads because ZSTD_NBTHREADS=0 would mean one, not all.
+          ZSTD_CLEVEL: '12'
           ZSTD_NBTHREADS: '4'
         run: |
           set -Eeuo pipefail
