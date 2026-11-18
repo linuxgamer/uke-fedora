@@ -310,15 +310,22 @@ def main():
         f"{kernel}/src/boot/dracut/module-setup.sh",
         "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr\n",
         "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr /usr/bin/ln\n", writes)
-
-    # Keep the WLAN patch in the validated series, but drop its RPMH
-    # allow-list hunk: those WLAN rails leave UFS waiting on smpb2 forever.
-    regulator_patch = ROOT / f"{kernel}/patches/7.3.0/0015-uke-wlan-supplies-and-dma.patch"
-    patch_text = regulator_patch.read_text()
-    start = patch_text.index("diff --git a/drivers/regulator/qcom-rpmh-regulator-uke.c")
-    end = patch_text.index("diff --git a/drivers/net/wireless/ath/ath11k/ahb.c", start)
-    if writes:
-        regulator_patch.write_text(patch_text[:start] + patch_text[end:])
+    # UFS can finish deferred probe after udev's first settle. Do not abort
+    # the guard at 7 seconds; keep scanning long enough for the UFS host.
+    replace_once(
+        f"{kernel}/src/boot/dracut/root-guard.sh",
+        "udevadm settle --timeout=40 || {\n"
+        "    echo 'UKE_ROOT_REJECTED: device discovery did not settle' >&2; exit 1;\n"
+        "}\n",
+        "udevadm settle --timeout=40 || true\n", writes)
+    replace_once(
+        f"{kernel}/src/boot/dracut/root-guard.sh",
+        "while [ \"$attempt\" -lt 45 ]; do\n",
+        "while [ \"$attempt\" -lt 120 ]; do\n", writes)
+    replace_once(
+        f"{kernel}/src/boot/dracut/root-guard.sh",
+        "[ \"$(( ${uptime%%.*} - started ))\" -lt 45 ] || break\n",
+        "[ \"$(( ${uptime%%.*} - started ))\" -lt 120 ] || break\n", writes)
 
     # codeberg.org no longer resolves for the runners; the Ubuntu pool
     # carries the exact same 0.4.4 tarball (same sha256).
