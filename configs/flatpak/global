@@ -1,0 +1,7 @@
+[Context]
+devices=dri;
+filesystems=/var/lib/uke-vaapi:ro;
+
+[Environment]
+LIBVA_DRIVER_NAME=msm
+LIBVA_DRIVERS_PATH=/var/lib/uke-vaapi
