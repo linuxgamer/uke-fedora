@@ -133,8 +133,6 @@ def main():
     replace_once(
         f"{builder}/build-rootfs.sh",
         "            if [[ $profile != tty ]]; then\n",
-        "            dnf_install_with_download_retry -y --use-host-config "
-        "--setopt=system_cachedir=$dnf_cache --setopt=keepcache=True "
         "            chroot \"$root\" flatpak remote-add --system --if-not-exists flathub "
         "https://flathub.org/repo/flathub.flatpakrepo || die 'Failed to add Flathub remote'\n"
         "            install -Dm644 \"$here/../configs/vlc/vlcrc\" \"$root/etc/skel/.config/vlc/vlcrc\"\n"
