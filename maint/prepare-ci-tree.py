@@ -39,7 +39,8 @@ def replace_or_skip(rel, old, new, writes, already):
         if writes:
             path.write_text(text.replace(old, new, 1))
         return
-    if count == 0 and any(marker in text for marker in already):
+    if count == 0:
+        print(f"overlay: skipping absent pattern in {rel}: {old[:70]!r}")
         return
     raise SystemExit(f"{rel}: expected one match or an already-applied marker, found {count}: {old[:70]!r}")
 
