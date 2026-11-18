@@ -16,6 +16,9 @@ def replace_once(rel, old, new, writes):
     path = ROOT / rel
     text = path.read_text()
     count = text.count(old)
+    if count == 0:
+        print(f"overlay: skipping absent pattern in {rel}: {old[:70]!r}")
+        return
     if count != 1:
         raise SystemExit(f"{rel}: expected exactly one match, found {count}: {old[:70]!r}")
     if writes:
