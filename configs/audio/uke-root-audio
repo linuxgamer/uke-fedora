@@ -1,0 +1,20 @@
+#!/usr/bin/bash
+# Start the per-session audio stack for a root KDE session.
+set -u
+
+[[ ${EUID:-$(id -u)} == 0 ]] || exit 0
+
+runtime=/run/user/0
+install -d -m 0700 -o root -g root "$runtime"
+export XDG_RUNTIME_DIR="$runtime"
+export PIPEWIRE_RUNTIME_DIR="$runtime"
+
+start() {
+    /usr/bin/pgrep -u 0 -x "$1" >/dev/null 2>&1 && return 0
+    nohup "$1" >/run/uke-root-audio.log 2>&1 &
+}
+
+start pipewire
+sleep 1
+start wireplumber
+start pipewire-pulse

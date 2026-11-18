@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=UKE Root Audio
+Comment=Start PipeWire and WirePlumber for the root graphical session
+Exec=/usr/local/bin/uke-root-audio
+NoDisplay=true
+OnlyShowIn=KDE;
+X-KDE-autostart-after=panel

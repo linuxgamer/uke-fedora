@@ -84,7 +84,7 @@ def main():
         f"{builder}/build-rootfs.sh",
         "common=(NetworkManager-wifi bluez dbus-daemon mesa-dri-drivers pipewire wireplumber upower",
         "common=(NetworkManager-wifi bluez dbus-daemon mesa-dri-drivers pipewire wireplumber "
-        "flatpak flatpak-session-helper PackageKit upower",
+        "flatpak flatpak-session-helper PackageKit alsa-ucm alsa-utils upower",
         writes)
     replace_once(
         f"{builder}/build-rootfs.sh",
@@ -144,12 +144,21 @@ def main():
         '"$output/root/var/lib/alsa/asound.state"\n'
         'sudo install -Dm644 "$here/../configs/wireplumber/85-uke-speaker-priority.conf" '
         '"$output/root/usr/share/wireplumber/wireplumber.conf.d/85-uke-speaker-priority.conf"\n'
+        'sudo install -Dm755 "$here/../configs/audio/uke-root-audio" '
+        '"$output/root/usr/local/bin/uke-root-audio"\n'
+        'sudo install -Dm644 "$here/../configs/audio/uke-root-audio.desktop" '
+        '"$output/root/etc/xdg/autostart/uke-root-audio.desktop"\n'
+        'sudo install -Dm644 "$here/../configs/audio/uke-root-audio.desktop" '
+        '"$output/root/root/.config/autostart/uke-root-audio.desktop"\n'
         'sudo install -Dm644 "$here/../configs/nanosic/MCU_Upgrade.bin" '
         '"$output/root/usr/lib/firmware/nanosic/MCU_Upgrade.bin"\n'
         'sudo install -Dm755 "$here/../configs/nanosic/nanosic-authd.py" '
         '"$output/root/usr/local/sbin/nanosic-authd"\n'
         'sudo install -Dm644 "$here/../configs/nanosic/nanosic-authd.service" '
         '"$output/root/usr/lib/systemd/system/nanosic-authd.service"\n'
+        'sudo install -d "$output/root/etc/systemd/system/multi-user.target.wants"\n'
+        'sudo ln -sf /usr/lib/systemd/system/nanosic-authd.service '
+        '"$output/root/etc/systemd/system/multi-user.target.wants/nanosic-authd.service"\n'
         'printf "%s\\n" hid-nanosic-wn8030 | '
         'sudo tee "$output/root/etc/modules-load.d/nanosic.conf" >/dev/null\n'
         "if [[ $copr == 1 ]]; then\n",
