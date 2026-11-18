@@ -104,6 +104,8 @@ def main():
         '"$output/root/usr/local/sbin/nanosic-authd"\n'
         'sudo install -Dm644 "$here/../configs/nanosic/nanosic-authd.service" '
         '"$output/root/usr/lib/systemd/system/nanosic-authd.service"\n'
+        'printf "%s\\n" hid-nanosic-wn8030 | '
+        'sudo tee "$output/root/etc/modules-load.d/nanosic.conf" >/dev/null\n'
         "if [[ $copr == 1 ]]; then\n",
         writes)
 
