@@ -47,7 +47,11 @@ def main():
         raise SystemExit(
             f"build-rootfs.sh: expected one post-install anchor, found {text.count(anchor)}"
         )
-    integration = """            test -f "$root/usr/lib64/dri/v4l2_drv_video.so" || die 'uke-vaapi-v4l2 driver missing'
+    integration = """            dnf_install_with_download_retry -y --use-host-config --setopt=system_cachedir=$dnf_cache \\
+                --setopt=keepcache=True --installroot="$root" --releasever=44 \\
+                --setopt=install_weak_deps=False --allowerasing \\
+                install https://download1.rpmfusion.org/free/fedora/releases/44/Everything/aarch64/os/Packages/l/libavcodec-freeworld-8.0.1-6.fc44.aarch64.rpm
+            test -f "$root/usr/lib64/dri/v4l2_drv_video.so" || die 'uke-vaapi-v4l2 driver missing'
             install -d -m0755 "$root/var/lib/uke-vaapi"
             install -m0644 "$root/usr/lib64/dri/v4l2_drv_video.so" "$root/var/lib/uke-vaapi/v4l2_drv_video.so"
             ln -sfn v4l2_drv_video.so "$root/var/lib/uke-vaapi/msm_drv_video.so"
