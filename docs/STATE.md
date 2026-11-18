@@ -1,9 +1,10 @@
 # State
 
 Updated: 2026-11-19 (first boot to a root shell on the tablet; the Pogo
-keyboard works). Verify with commands before relying on it; update this file at
-the end of every session. Long history and decisions live in the private notes;
-this file records only facts.
+keyboard works and no longer goes silent a few minutes in). Verify with
+commands before relying on it; update this file at the end of every session.
+Long history and decisions live in the private notes; this file records only
+facts.
 
 ## Upstream and forks
 
@@ -15,7 +16,7 @@ rebased component forks; patches are exported for review only. See
 | Component | Branch | Head | State |
 | --- | --- | --- | --- |
 | umbrella | `main` | this handoff commit | docs; Flatpak VA-API override; kernel and hardware gitlinks moved |
-| `senemos-uke-kernel` | `main` | `291d2d5` (gitlink and worktree) | release `7.3.1-107`; video series active; native `%prep` fixed; WN8030 keyboard boots from the initramfs; RPMH regulator driver registers again; keyboard bus admitted by the ABL scope pass |
+| `senemos-uke-kernel` | `main` | `5c87b0f` (gitlink and worktree) | release `7.3.1-107`; video series active; native `%prep` fixed; WN8030 keyboard boots from the initramfs and keeps scanning keys (`mi_auth=0`); RPMH regulator driver registers again; keyboard bus admitted by the ABL scope pass |
 | `uke-fedora-builder` | `main` | `3662473` (gitlink) | apps, ru locale, COPR repo; internal source cache renamed to `source-cache/` |
 | `uke-linux-hardware-support` | `main` | `00c9420` (gitlink and worktree) | firmware payload with uke-firmware provides; libssc fetched from Codeberg again |
 
@@ -106,6 +107,69 @@ photo showed deferred.
 Flashing this build needs `boot_a` only: the fix is all `=y` code and keeps the
 `7.3.1-107` release, so the module vermagic is unchanged and the existing
 `userdata` stays valid.
+
+## The keyboard stops scanning keys after a few minutes (2026-11-19)
+
+The Pogo keyboard works from boot and then goes silent: nothing reaches
+`/dev/input/event*`, the Caps Lock LED stops responding to the `leds` class,
+but the MCU keeps talking. `/proc/interrupts` on GPIO 116 climbs while keys are
+pressed (436 counts in 13 s) and falls back to a slow accelerometer trickle
+when idle, so the MCU is alive, the I2C controller works, and the driver keeps
+receiving frames.
+
+Four suspects were ruled out on the device rather than by reading code:
+
+- **No stuck task.** `ps` shows no `D` state process, `sysrq-w` prints an empty
+  blocked-task list and `systemd-udevd` sits in `do_epoll_wait` with one task, so
+  no mutex is held across a dead I2C transfer.
+- **No hall-sensor gating.** `nanosic_wn8030_hall_ids` requires the handler's
+  `swbit` bitmap - `SW_LID | SW_TABLET_MODE`, i.e. `0x3` - to be a subset of the
+  device's. The two `xiaomi_hall` children expose only `0x2` and only `0x1`, so
+  `input_match_device_id()`'s `bitmap_subset(id->swbit, dev->swbit, SW_MAX)`
+  never matches and `hall_connect` is never called. `lid_closed` and
+  `tablet_mode` stay zero, and `input_enabled` stays at the value `probe` set.
+- **Not a stuck `suspended` flag.** `suspend` always sets it, so `resume` always
+  takes the branch that clears it.
+- **Not the MCU refusing to answer.** The GPIO interrupt count keeps rising
+  under key presses.
+
+What is left is the MiAuth handshake. The driver answers it itself: on `0x24`
+it sends `MIAUTH`, on `0x31` it sends `key_meta` plus a challenge, and on `0x32`
+it waits for a token from `/dev/nanosic_auth`. There is no token source on
+Linux. The OEM userspace gets one from
+`odm/bin/hw/vendor.xiaomi.hardware.keyboardnanoapp_aidl-service`, which needs the
+vendor key and a Binder environment; `nanosic-authd` can only answer with
+sixteen zero bytes. The journal shows the MCU challenging about once a minute
+for as long as the tablet runs, always with uid
+`0007000100000000001a51d87f8cd7fa` and a challenge whose first four bytes are
+random while `49490001` and `0411121327760132` stay fixed:
+
+```
+04:50:56 token sent uid=0007... challenge=04212aa9 49490001 04111213 27760132 token=0000...
+04:51:56 token sent uid=0007... challenge=5ad15a69 49490001 04111213 27760132 token=0000...
+04:52:57 token sent uid=0007... challenge=e0010a29 49490001 04111213 27760132 token=0000...
+```
+
+The OEM `nanosic_driver.ko` contains no MiAuth path at all - no `MIAUTH`
+string, none of the `38/31`, `38/32` or `38/33` command prefixes, and no
+`token`/`challenge` text - so on Android the kernel driver is not a participant
+in the handshake the way this driver assumed.
+
+Fixed by leaving the handshake alone unless `mi_auth=1` is passed on load
+(kernel `5c87b0f`). Stopping `nanosic-authd` alone is not enough: the driver
+still sends `MIAUTH` and `s3t1`, the MCU still waits for a token, and the
+keyboard only lasts longer. The daemon is now installed but not enabled
+(umbrella `4dedb5c`, gitlink `e385460`).
+
+The two paths that were dropping input silently now log: a frame failing the
+`0x57` header check, and any change of `input_enabled`.
+
+Because `CONFIG_HID_NANOSIC_WN8030=m`, the driver lives in
+`/usr/lib/modules/7.3.1-107/kernel/drivers/hid/hid-nanosic-wn8030.ko.zst` inside
+`userdata`, not in the boot image. Any fix in this driver that keeps the release
+at `7.3.1-107` can be tried without reflashing: build the `.ko` against the
+cross tree, copy it over and `insmod` it. Reflashing `userdata` is what wipes
+the installed system, so a same-release module swap is the cheap experiment.
 
 ## Pogo keyboard on `main` (2026-11-18)
 
@@ -470,3 +534,16 @@ pass could disable the keyboard bus unnoticed. Wire it into
 
 After that, rotate the COPR token (B2), upload the fixed kernel SRPM and confirm
 a green COPR build (B1). All of these are in the backlog.
+
+Two hardware defects found while chasing the keyboard are still open and are
+independent of it:
+
+- **USB host re-enumeration fails after a role switch.** `xhci-hcd` is removed
+  and re-registered about three seconds later, and every device plugged into the
+  port then fails with `device descriptor read/64, error -71` and
+  `unable to enumerate USB device`. The `usb-profile` is `typec-v1`, so the port
+  is dual-role and the switch leaves the PHY in a state that cannot enumerate.
+- **The touchscreen rejects most frames.** `nt36532-uke-touch spi1.0` logs
+  `Touch matrix packet rejected: -74` (EBADMSG) hundreds of times per second
+  while the panel still tracks touches, so `nvt_uke_decode()` rejects most
+  frames but enough succeed to keep the pointer usable.
