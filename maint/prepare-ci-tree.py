@@ -311,6 +311,14 @@ def main():
         "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr\n",
         "        /usr/bin/mkdir /usr/bin/rmdir /usr/bin/rm /usr/bin/tr /usr/bin/ln\n", writes)
 
+    # codeberg.org no longer resolves for the runners; the Ubuntu pool
+    # carries the exact same 0.4.4 tarball (same sha256).
+    replace_once(
+        f"{hardware}/uke-sensors/Makefile",
+        "url=https://codeberg.org/DylanVanAssche/libssc/archive/v0.4.4.tar.gz",
+        "url=https://archive.ubuntu.com/ubuntu/pool/universe/libs/libssc/libssc_0.4.4.orig.tar.gz",
+        writes)
+
     # TTY image: root gets an autologin shell on tty1-4. The account is
     # created by the existing first-boot unit after the image audit, so the
     # frozen rootfs still contains no ordinary user.
