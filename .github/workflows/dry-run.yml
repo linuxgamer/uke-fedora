@@ -63,11 +63,14 @@ jobs:
         continue-on-error: true
         run: |
           set -Eeuo pipefail
+          # shellcheck exits 1 when it reports anything, which is expected here:
+          # this step exists to publish the warnings, not to judge them.
           shellcheck -x -S warning -f gcc uke-fedora-builder/build-rpms.sh \
               uke-fedora-builder/build-boot-images.sh uke-fedora-builder/build-images.sh \
               uke-fedora-builder/build-rootfs.sh uke-fedora-builder/build-boot-a.sh \
               uke-fedora-builder/src/image/*.sh \
-            | tee shellcheck-warnings.txt | wc -l
+            > shellcheck-warnings.txt 2>&1 || true
+          wc -l < shellcheck-warnings.txt
           {
             echo '### Shellcheck warnings (not gating)'
             echo '```'
@@ -99,11 +102,16 @@ jobs:
             # succeeding quietly, so what is checked is that they report it and
             # do not crash: a stack trace or a syntax error would exit 127 or
             # 2, not 1.
-            ./uke-fedora-builder/"$script" --status --output "$out" >/dev/null 2>&1
-            rc=$?
+            #
+            # `|| rc=$?` rather than a bare call: this step runs under set -e,
+            # so a non-zero status here would end the step before rc could be
+            # inspected - which is exactly how the first version of this check
+            # failed on its own expected result.
+            rc=0
+            ./uke-fedora-builder/"$script" --status --output "$out" >/dev/null 2>&1 || rc=$?
             [[ $rc == 1 ]] || { echo "$script --status exited $rc, expected 1" >&2; exit 1; }
-            ./uke-fedora-builder/"$script" --stop --output "$out" >/dev/null 2>&1
-            rc=$?
+            rc=0
+            ./uke-fedora-builder/"$script" --stop --output "$out" >/dev/null 2>&1 || rc=$?
             [[ $rc == 1 ]] || { echo "$script --stop exited $rc, expected 1" >&2; exit 1; }
             printf '%s --status/--stop: ok\n' "$script"
           done
