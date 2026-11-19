@@ -13,7 +13,7 @@ on:
         default: 'kde'
         type: string
       target:
-        description: 'rpm = kernel RPMs only; boot = fedora_boot.img only; pair = rootfs plus both images'
+        description: 'rpm = core, modules and dtbs RPMs; boot = fedora_boot.img only; pair = rootfs plus both images'
         required: true
         default: 'boot'
         type: choice

@@ -128,18 +128,18 @@ from the Actions tab:
 compiled, not just what is published. They share the kernel build and nothing
 else. `boot` skips `build-rootfs.sh` entirely because the rootfs was never an
 input to `boot_a`, only the source of the `userdata.img` beside it. `rpm` stops
-after staging the four kernel subpackages: installing them on a running tablet
-makes the `boot` subpackage's `%posttrans` run `uke-kernel-update`, which writes
-`boot_a` without any flashing. See
+after staging core, modules and dtbs: installing those updates
+`/usr/lib/modules`, and `boot_a` is flashed separately from what
+`build-boot-images.sh` produces. See
 [uke-fedora-builder docs/BUILD-TARGETS.md](https://github.com/Dustymind/uke-fedora-builder/blob/main/docs/BUILD-TARGETS.md).
 
 ## Building
 
 Three entry points exist and they are not interchangeable:
 
-- **rpm** — `./uke-fedora-builder/build-rpms.sh`, the kernel RPM set only.
-  Fastest, and the only one that needs no flashing: `dnf install` on the tablet
-  writes `boot_a` through the boot subpackage's `%posttrans`.
+- **rpm** — `./uke-fedora-builder/build-rpms.sh`, the kernel RPM set only:
+  core, modules and dtbs.  Installing it updates `/usr/lib/modules`; `boot_a`
+  is not touched and has to be flashed from a boot image.
 - **boot** — `./uke-fedora-builder/build-boot-images.sh`, `fedora_boot.img`
   only. Skips the rootfs, so it is minutes rather than a full build. Only valid
   while the kernel release is unchanged.
