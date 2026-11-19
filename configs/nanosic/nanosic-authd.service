@@ -1,0 +1,14 @@
+[Unit]
+Description=Nanosic WN8030 MiAuth token daemon
+After=systemd-udev-settle.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/nanosic-authd
+EnvironmentFile=-/etc/nanosic/authd.env
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+[Unit]
+Description=Reset the Nanosic WN8030 keyboard auth window
+After=systemd-modules-load.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/nanosic-rebind

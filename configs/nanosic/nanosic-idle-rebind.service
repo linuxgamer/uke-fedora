@@ -1,0 +1,13 @@
+[Unit]
+Description=Idle-aware Nanosic WN8030 auth-window keeper
+After=systemd-modules-load.service
+ConditionPathExists=/sys/bus/i2c/drivers/nanosic_wn8030
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/nanosic-idle-rebind
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target

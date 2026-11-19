@@ -1,0 +1,8 @@
+[core]
+vout=gl
+
+[gl]
+glconv=vaapi
+
+[avcodec]
+avcodec-hw=vaapi

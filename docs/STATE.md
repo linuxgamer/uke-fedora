@@ -17,10 +17,21 @@ rebased component forks; patches are exported for review only. See
 | umbrella | `main` | this handoff commit | docs, AGENTS and dev-tooling pass |
 | `senemos-uke-kernel` | `main` | `57d7fbb3` (gitlink and worktree) | video series active; native `%prep` fixed; `referances/` removed and its last path strings scrubbed from manifests |
 | `uke-fedora-builder` | `main` | `3662473` (gitlink and worktree) | apps, ru locale, COPR repo; internal source cache renamed to `source-cache/` |
-| `uke-linux-hardware-support` | `main` | `847a004` (gitlink and worktree) | firmware payload; top-level docs removed, internal caches renamed |
+| `uke-linux-hardware-support` | `main` | `1d20cc3` (gitlink and worktree) | firmware payload with uke-firmware provides; top-level docs removed, internal caches renamed |
 
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
+
+## Baseline CI image build success (2026-11-14)
+
+- Workflow run 43519285547 succeeded in 12m33s on GitHub Actions ARM64 runner (`ubuntu-24.04-arm`).
+- Generated and uploaded artifact `uke-bootable-images-43519285547` (1.09 GB) containing `fedora_boot.img` and `userdata.img`.
+- Key fixes applied:
+  - Enabled Docker runtime for `build-rootfs.sh` (`UKE_CONTAINER=docker`).
+  - Added `--nocheck` to `rpmbuild -ba` to skip heavy test suites during image composition.
+  - Added `Provides: uke-firmware` and `xiaomi-uke-firmware` to `uke-oem-data.spec` (`1d20cc3`).
+  - Wired `uke-fedora*-oem-data-*.rpm` into the primary DNF install transaction.
+  - Set `UKE_COPR=0` and resolved host file permission on image repository paths.
 
 ## Kernel preparation fix and build unblocking (2026-11-11, later)
 
@@ -120,11 +131,14 @@ the worktree head with the recorded gitlink before moving a pointer.
 - Images get an optional COPR repo (`UKE_COPR=0` disables it), excluding kernel
   and OEM packages.
 - Desktop profiles install Firefox, a text editor, the store, an archive manager
-  and a calculator, plus `ru_RU.UTF-8`.
+  and a calculator. They use `en_US.UTF-8`, ship Noto symbol/emoji/CJK font
+  coverage and `power-profiles-daemon`, and the KDE and GNOME overlays pre-create
+  the `saksham` wheel account with GDM autologin.
 - Release packaging and issue templates exist; screenshots are in the README.
 - Build speed: kernel SRPM reuse, locked status file, `--parallel N`, CI caches.
 
 ## Blockers
+- **Ext4 rootfs expansion blocked by error flag** (fixed 2026-11-17). The ext4 superblock error flag prevented online resize. Fixed on‑device via `echo u > /proc/sysrq-trigger` (emergency remount‑ro), `e2fsck -fy`, `resize2fs`. Documented in [INSTALL.md](INSTALL.md#emergency-rootfs-expansion-ext4).
 
 - **Kernel COPR build needs a rebuild.** The `%prep` failure is fixed and the
   native preparation passes locally, but the fixed SRPM has not been uploaded;

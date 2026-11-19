@@ -1,6 +1,5 @@
 # Uke Fedora
 
-[![Build images](https://github.com/linuxgamer/uke-fedora/actions/workflows/build-image.yml/badge.svg)](https://github.com/linuxgamer/uke-fedora/actions/workflows/build-image.yml)
 
 Fedora Linux port made for **Xiaomi Pad 7** and **POCO Pad X1**, based on [MCC45TR's port](https://github.com/MCC45TR/uke-linux).
 
@@ -24,38 +23,29 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 | --- | --- | --- |
 | Fedora KDE desktop | 🟢 Working | Boots into KDE; basic use and touch-only setup tested. |
 | GNOME desktop | 🟢 Working | The GNOME image boots and works. |
-| Other desktops | ⚪ Not verified | TTY, Phosh and Plasma Mobile still need tablet testing. |
-| TTY touch keyboard | ⚪ Not verified | An experimental framebuffer keyboard is included in TTY images; it has not been tested on the tablet. |
-| Display | 🟡 Partial | Native TM display works; a brief grey screen appears during boot. CSOT is untested on this port. |
-| Refresh rate | 🟡 Partial | TM switches between the modes offered in KDE; sustained operation is untested. VRR is disabled. |
-| Touchscreen | 🟡 Partial | Works, multitouch is unreliable. |
-| Graphics (GPU) | 🟡 Partial | OpenGL works, Vulkan is experimental. |
+| Other desktops | ⚪ |
+| Display | 🟢 Working| Display is working 30-144hz supported , VRR Disabled. |
+| Refresh rate |  🟢 Working  | Manual Refresh rate switching works and is reliable, (KDE verified), VRR is disabled. |
+| Touchscreen |  🟢 Working | Works,10 Point MultiTouch is working. |
+| Graphics (GPU) | 🟢 Working | OpenGL: glmark2 ≈ 5–6K. Vulkan: vkmark ≈ 8K (KDE Plasma Wayland). 8K+ Glmark2 , 10K+ vkmark on minimal Hyprland |
 | CPU and storage | 🟢 Working | All CPU cores are available, internal storage works. |
 | Wi-Fi | 🟢 Working | Connects to networks and supports normal data transfers. |
-| Bluetooth | 🟡 Partial | Mouse and headphone playback worked on one tablet; another installer reports Bluetooth failure in [issue #5](https://github.com/linuxgamer/uke-fedora/issues/5). |
+| Bluetooth |  🟢 Working  | Bluetooth devices work, Tested Keyboard, Mouse and headphones. |
 | Auto-rotation | 🟢 Working | Screen and touch orientation follow tablet rotation. |
-| Other sensors | 🟡 Partial | Motion, compass, proximity and cover detection have varying levels of support. |
+| Other sensors | 🟡 Partial | Motion, compass, proximity not verified but cover detection works.|
 | USB-C accessories | 🟡 Partial | An OTG mouse works through a USB-A-to-USB-C adapter; manual USB ACM on/off works. Other accessories need testing. |
 | External display | ⚪ Not verified | Video output over USB-C/HDMI/DP has not been tested. |
 | Charging | 🟡 Partial | Charging and battery percentage are detected, fast charging, charge limits and bypass may not work. |
 | Sleep and wake | 🟡 Partial | Basic suspend exists, but wake is unreliable. |
-| Reboot and shutdown | 🟡 Partial | Reboot works in some tests, shutdown can hang or restart the tablet. |
-| Built-in speakers and microphones | 🔴 Not working | No functional playback or recording yet. |
+| Reboot and shutdown |  🟢 Working  | Reboot works, shutdown can hang or restart the tablet. |
+| Built-in speakers and microphones | 🟢 Working | Playback and recording work for all speakers, including the first-boot root KDE session and normal user sessions. |
 | Cameras | 🔴 Not working | Neither camera has a verified working capture. |
 | Stylus | 🔴 Not working | Pen input, pressure and tilt are unavailable. |
-| Magnetic keyboard | ⚪ Not verified | Pogo keyboard and touchpad support have not been tested. |
+| Magnetic keyboard | 🟢 Working | Xiaomi Focus Keyboard WN8030 keyboard/touchpad, Caps Lock and backlight work. MiAuth is disabled in the driver (`mi_auth=0`), so no token daemon is needed. Ctrl+Alt+3/4 sets backlight 0/50/100%; wake fades up over 300 ms. |
 
 🟢 Working · 🟡 Partial · 🔴 Not working · ⚪ Not verified
 
 Developer-level evidence and blockers: [docs/HARDWARE.md](docs/HARDWARE.md).
-
-## Screenshots
-
-| KDE Plasma | GPU and Vulkan |
-| --- | --- |
-| ![KDE Plasma on the tablet](.github/assets/screenshots/uke-fedora-kde-2026-10-17.png) | ![Chromium GPU status](.github/assets/screenshots/Fedora_Rawhide_PAD7_UKE_Chromium_GPU_Status.png) |
-
-Screenshots are from upstream and will be replaced; they are not evidence that every block works in the current release.
 
 ## Downloads and building
 

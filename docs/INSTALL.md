@@ -81,7 +81,7 @@ before changing slots or retrying.
 
 ## First boot and return to Android
 
-All images will launch setup wizards. Create your own account, the images include no preset password.
+KDE and GNOME images include the pre-created **saksham** / **fedora** autologin account and a second admin account **UKE** / **FEDORA**. Change both passwords after first boot.
 
 If Fedora does not boot:
 1. Keep the exact error or a photo of the screen and make a bug report.
@@ -104,3 +104,49 @@ Fedora. Keep a matching stock fastboot ROM and your data backup before flashing.
 4. Do not flash firmware from an older ROM: anti-rollback can brick the tablet.
 5. Never re-lock the bootloader while a non-stock `boot` or `vendor_boot` is
    flashed.
+
+## Emergency rootfs expansion (ext4)
+
+If the root filesystem does not expand to fill the `userdata` partition on first boot, the ext4 superblock may have an error flag set that blocks online resizing. Symptoms:
+
+- `df -h /` shows ~8 GiB used of a larger partition (e.g. 105 GiB `userdata`)
+- `dmesg -T | grep ext4` shows:
+  ```
+  EXT4-fs warning: There are errors in the filesystem, so online resizing is not allowed
+  ```
+
+### Fix without USB / without rebooting the tablet
+
+1. Ensure `sysrq` is enabled (default on these images):
+   ```sh
+   cat /proc/sys/kernel/sysrq
+   # should print 1 or higher
+   ```
+
+2. Trigger an emergency remount-read-only via the SysRq `u` key:
+   ```sh
+   sudo sh -c 'echo u > /proc/sysrq-trigger'
+   ```
+   The root filesystem will be remounted read-only. This clears the in‑memory ext4 error flag.
+
+3. Run the ext4 repair (it will prompt; answer `y`):
+   ```sh
+   sudo e2fsck -fy /dev/disk/by-partlabel/userdata
+   ```
+
+4. The filesystem is now clean and mounted read‑only. Remount it read‑write and grow it:
+   ```sh
+   sudo mount -o remount,rw /
+   sudo resize2fs /dev/disk/by-partlabel/userdata
+   ```
+
+5. Verify:
+   ```sh
+   df -h /
+   # should now show the full partition size (e.g. 105 GiB)
+   ```
+
+**Why this works**: The ext4 kernel driver sets an in‑memory `EXT4_ERROR_FS` flag when it detects metadata checksum mismatches. Online resize refuses to run while that flag is set. The SysRq `u` (emergency remount‑ro) forces the filesystem to flush and remount read‑only, which clears the flag. `e2fsck` fixes the on‑disk metadata (bitmap checksums, free counts). After remounting read‑write, the flag stays clear and `resize2fs` succeeds.
+
+> **Note**: This procedure modifies the live root filesystem. It worked on a Xiaomi Pad 7 (SM7675) running the Fedora 44 `userdata` image. If `e2fsck` reports unrecoverable corruption, flash a fresh image instead.
+

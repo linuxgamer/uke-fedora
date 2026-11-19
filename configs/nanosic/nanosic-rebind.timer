@@ -1,0 +1,11 @@
+[Unit]
+Description=Keep the Nanosic WN8030 keyboard auth window alive
+
+[Timer]
+OnBootSec=4min45s
+OnUnitActiveSec=4min45s
+AccuracySec=1s
+Persistent=true
+
+[Install]
+WantedBy=timers.target
