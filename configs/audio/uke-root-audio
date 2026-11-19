@@ -18,3 +18,17 @@ start pipewire
 sleep 1
 start wireplumber
 start pipewire-pulse
+
+# WirePlumber may leave the ACP card without a profile on root's first session.
+for _ in $(seq 1 10); do
+    card=$(wpctl status 2>/dev/null |
+           grep -oE '[0-9]+\. Xiaomi Pad 7' | head -1 | cut -d. -f1)
+    [ -n "$card" ] && break
+    sleep 1
+done
+if [ -n "${card:-}" ]; then
+    wpctl set-profile "$card" 1 >/dev/null 2>&1 || true
+fi
+if [ -n "${card:-}" ]; then
+    wpctl set-profile "$card" 1 >/dev/null 2>&1 || true
+fi
