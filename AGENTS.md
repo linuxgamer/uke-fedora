@@ -122,25 +122,33 @@ from the Actions tab:
 | Input | Effect |
 | --- | --- |
 | `profiles` | which profiles to build, e.g. `kde` or `tty,kde` |
-| `images` | `rpm` = kernel RPMs only; `boot` = `fedora_boot.img` only; `pair` = rootfs plus both images |
+| `target` | `rpm` = kernel RPMs only; `boot` = `fedora_boot.img` only; `pair` = rootfs plus both images |
 
-All three share the kernel RPM stages - the kernel is compiled either way - and
-differ only in what runs afterwards. `boot` skips `build-rootfs.sh` entirely
-because the rootfs was never an input to `boot_a`, only the source of the
-`userdata.img` beside it. `rpm` stops after staging the four kernel subpackages:
-installing them on a running tablet makes the `boot` subpackage's `%posttrans`
-run `uke-kernel-update`, which writes `boot_a` without any flashing. See
-[uke-fedora-builder docs/boot-only-builds.md](https://github.com/Dustymind/uke-fedora-builder/blob/main/docs/boot-only-builds.md).
+`target` selects which of the three builder scripts runs, so it decides what is
+compiled, not just what is published. They share the kernel build and nothing
+else. `boot` skips `build-rootfs.sh` entirely because the rootfs was never an
+input to `boot_a`, only the source of the `userdata.img` beside it. `rpm` stops
+after staging the four kernel subpackages: installing them on a running tablet
+makes the `boot` subpackage's `%posttrans` run `uke-kernel-update`, which writes
+`boot_a` without any flashing. See
+[uke-fedora-builder docs/BUILD-TARGETS.md](https://github.com/Dustymind/uke-fedora-builder/blob/main/docs/BUILD-TARGETS.md).
 
 ## Building
 
-Two entry points exist and they are not interchangeable:
+Three entry points exist and they are not interchangeable:
 
-- **Images** — `./uke-fedora-builder/build-images.sh` (or `./ukelinux.sh`),
+- **rpm** — `./uke-fedora-builder/build-rpms.sh`, the kernel RPM set only.
+  Fastest, and the only one that needs no flashing: `dnf install` on the tablet
+  writes `boot_a` through the boot subpackage's `%posttrans`.
+- **boot** — `./uke-fedora-builder/build-boot-images.sh`, `fedora_boot.img`
+  only. Skips the rootfs, so it is minutes rather than a full build. Only valid
+  while the kernel release is unchanged.
+- **images** — `./uke-fedora-builder/build-images.sh` (or `./ukelinux.sh`),
   from the umbrella. Needs Docker or Podman, `avbtool`, `jq`, `g++`, `zstd`,
   about 25 GiB free, and a long first run. Requirements, cache and resume logic:
-  [build guide](https://github.com/linuxgamer/uke-fedora-builder/blob/main/docs/BUILDING.md)
-  and [cache guide](https://github.com/linuxgamer/uke-fedora-builder/blob/main/docs/BUILD-CACHE.md).
+  [build targets](https://github.com/Dustymind/uke-fedora-builder/blob/main/docs/BUILD-TARGETS.md),
+  [build guide](https://github.com/Dustymind/uke-fedora-builder/blob/main/docs/BUILDING.md)
+  and [cache guide](https://github.com/Dustymind/uke-fedora-builder/blob/main/docs/BUILD-CACHE.md).
 - **Kernel only** — `senemos.sh` inside the kernel repository, for kernel
   development and verification without an image. It can install host packages
   and needs the same order of free space.

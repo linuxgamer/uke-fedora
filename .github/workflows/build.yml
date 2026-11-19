@@ -12,7 +12,7 @@ on:
         required: true
         default: 'kde'
         type: string
-      images:
+      target:
         description: 'rpm = kernel RPMs only; boot = fedora_boot.img only; pair = rootfs plus both images'
         required: true
         default: 'boot'
@@ -27,8 +27,8 @@ on:
         description: 'Comma-separated profiles to build'
         required: true
         type: string
-      images:
-        description: 'Which images to publish: boot or pair'
+      target:
+        description: 'What to build: rpm, boot or pair'
         required: false
         default: 'pair'
         type: string
@@ -41,7 +41,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: build-${{ github.ref }}-${{ inputs.profiles }}-${{ inputs.images || 'pair' }}
+  group: build-${{ github.ref }}-${{ inputs.profiles }}-${{ inputs.target || 'pair' }}
   cancel-in-progress: false
 
 jobs:
@@ -51,12 +51,10 @@ jobs:
     outputs:
       artifact: uke-images-${{ github.run_id }}
     env:
-      # A workflow_dispatch run reads inputs.images; a workflow_call run passes
-      # it through.  Building the boot image still needs a rootfs underneath -
-      # build-boot-a.sh packs the kernel into an OEM-derived boot_a and refuses
-      # to run without one - so "boot" saves on what is published, not on what
-      # is compiled.
-      IMAGES: ${{ inputs.images || 'pair' }}
+      # A workflow_dispatch run reads inputs.target; a workflow_call run passes
+      # it through.  The value selects which script runs, so it decides what is
+      # compiled, not just what is published.
+      TARGET: ${{ inputs.target || 'pair' }}
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v4
@@ -149,11 +147,19 @@ jobs:
           set -Eeuo pipefail
           output="build/ci-$GITHUB_RUN_ID"
           mkdir -p build
-          # IMAGES=boot skips the rootfs entirely: a kernel-only change keeps the
-          # release, so the installed userdata stays valid and boot_a alone is
-          # enough.  Anything else builds the pair.
-          ./ukelinux.sh --profiles "$PROFILES" --images "$IMAGES" \
-            --parallel 1 --output "$output"
+          # Three separate scripts, one product each.  Picking the script here
+          # rather than passing a mode keeps every target's stage plan intact:
+          # a script only ever plans what it actually builds.
+          case $TARGET in
+            # The runner is arm64, so no --cross-kernel: that flag requires an
+            # x86_64 host and each script rejects it otherwise.
+            rpm)  ./uke-fedora-builder/build-rpms.sh --output "$output" ;;
+            boot) ./uke-fedora-builder/build-boot-images.sh --profiles "$PROFILES" \
+                      --parallel 1 --output "$output" ;;
+            pair) ./uke-fedora-builder/build-images.sh --profiles "$PROFILES" \
+                      --parallel 1 --output "$output" ;;
+            *)    echo "Unknown target: $TARGET" >&2; exit 1 ;;
+          esac
 
       - name: Save build cache
         uses: actions/cache/save@v4
@@ -171,7 +177,7 @@ jobs:
           key: uke-cache-v3-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
 
       - name: Package release archives
-        if: success() && env.IMAGES == 'pair'
+        if: success() && env.TARGET == 'pair'
         env:
           # zstd reads these for the tar --zstd child. Level 19 costs 9m07s on
           # the 4.4 GiB rootfs; level 12 keeps most of the saving for about
@@ -190,7 +196,7 @@ jobs:
 
       - name: Publish release with direct download links
         id: publish
-        if: success() && env.IMAGES == 'pair'
+        if: success() && env.TARGET == 'pair'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -221,7 +227,7 @@ jobs:
             [[ -f $pair/manifest.json ]] && \
               cp "$pair/manifest.json" "publish/manifest-${profile}-$GITHUB_RUN_ID.json"
           done
-          # --images rpm produces no image pair; its kernel RPM set is the
+          # The rpm target produces no image pair; its kernel RPM set is the
           # whole artifact.
           for dir in build/ci-*/kernel-rpms; do
             [[ -d $dir ]] || continue
@@ -255,7 +261,7 @@ jobs:
           {
             echo "## Uke Baseline Image Build"
             echo "- Profiles: \`${{ inputs.profiles }}\`"
-            echo "- Images: \`$IMAGES\`"
+            echo "- Target: \`$TARGET\`"
             echo "- Result: \`${{ job.status }}\`"
             if compgen -G 'publish/SHA256SUMS' >/dev/null; then
               echo
