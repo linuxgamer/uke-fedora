@@ -23,12 +23,11 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 | --- | --- | --- |
 | Fedora KDE desktop | 🟢 Working | Boots into KDE; basic use and touch-only setup tested. |
 | GNOME desktop | 🟢 Working | The GNOME image boots and works. |
-| Other desktops | ⚪ Not verified | TTY, Phosh and Plasma Mobile still need tablet testing. |
-| TTY touch keyboard | ⚪ Not verified | An experimental framebuffer keyboard is included in TTY images; it has not been tested on the tablet. |
-| Display | 🟡 Partial | Native TM display works; a brief grey screen appears during boot. CSOT is untested on this port. |
+| Other desktops | ⚪ |
+| Display | 🟢 Working| Display is working 30-144hz supported , VRR Disabled. |
 | Refresh rate |  🟢 Working  | Manual Refresh rate switching works and is reliable, (KDE verified), VRR is disabled. |
 | Touchscreen |  🟢 Working | Works,10 Point MultiTouch is working. |
-| Graphics (GPU) | 🟡 Working, needs more testing | OpenGL: glmark2 ≈ 5–6K. Vulkan: vkmark ≈ 8K (KDE Plasma Wayland). |
+| Graphics (GPU) | 🟢 Working | OpenGL: glmark2 ≈ 5–6K. Vulkan: vkmark ≈ 8K (KDE Plasma Wayland). |
 | CPU and storage | 🟢 Working | All CPU cores are available, internal storage works. |
 | Wi-Fi | 🟢 Working | Connects to networks and supports normal data transfers. |
 | Bluetooth |  🟢 Working  | Bluetooth devices work, Tested Keyboard, Mouse and headphones. |
