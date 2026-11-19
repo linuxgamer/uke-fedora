@@ -6,4 +6,4 @@
 	url = https://github.com/linuxgamer/uke-fedora-builder.git
 [submodule "uke-linux-hardware-support"]
 	path = uke-linux-hardware-support
-	url = https://github.com/linuxgamer/uke-linux-hardware-support.git
+	url = https://github.com/saksham-991/uke-linux-hardware-support.git
