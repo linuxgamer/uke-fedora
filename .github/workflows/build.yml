@@ -13,7 +13,7 @@ on:
         default: 'kde'
         type: string
       images:
-        description: 'boot = fedora_boot.img only; pair = boot and userdata'
+        description: 'boot = skip the rootfs, build fedora_boot.img only; pair = rootfs plus both images'
         required: true
         default: 'pair'
         type: choice
@@ -148,7 +148,11 @@ jobs:
           set -Eeuo pipefail
           output="build/ci-$GITHUB_RUN_ID"
           mkdir -p build
-          ./ukelinux.sh --profiles "$PROFILES" --parallel 1 --output "$output"
+          # IMAGES=boot skips the rootfs entirely: a kernel-only change keeps the
+          # release, so the installed userdata stays valid and boot_a alone is
+          # enough.  Anything else builds the pair.
+          ./ukelinux.sh --profiles "$PROFILES" --images "$IMAGES" \
+            --parallel 1 --output "$output"
 
       - name: Save build cache
         uses: actions/cache/save@v4
@@ -205,10 +209,16 @@ jobs:
           shopt -s nullglob
           for pair in build/ci-*/*-pair; do
             profile=$(basename "$pair" | sed 's/-pair$//')
-            cp "$pair/fedora_boot.img" "publish/fedora_boot-${profile}-$GITHUB_RUN_ID.img"
-            if [[ $IMAGES == pair ]]; then
-              cp "$pair/userdata.img" "publish/userdata-${profile}-$GITHUB_RUN_ID.img"
-            fi
+            # The builder already decided which images exist; copy what is
+            # there instead of filtering again, so a boot-only output cannot
+            # silently publish an empty set.
+            for image in fedora_boot.img userdata.img; do
+              [[ -f $pair/$image ]] || continue
+              stem=${image%.img}
+              cp "$pair/$image" "publish/${stem}-${profile}-$GITHUB_RUN_ID.img"
+            done
+            [[ -f $pair/manifest.json ]] && \
+              cp "$pair/manifest.json" "publish/manifest-${profile}-$GITHUB_RUN_ID.json"
           done
           [[ -n $(ls -A publish 2>/dev/null) ]] || { echo 'No image was produced' >&2; exit 1; }
           # The status manifest records the kernel release each image expects,
