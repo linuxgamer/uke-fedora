@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+set -Eeuo pipefail
+
+driver=/sys/bus/i2c/drivers/nanosic_wn8030
+device=5-004c
+
+[ -e "$driver/$device" ] || exit 0
+
+# Do not fight a token daemon if one is installed later.
+if systemctl is-active --quiet nanosic-authd; then
+    exit 0
+fi
+
+echo "$device" > "$driver/unbind"
+sleep 0.2
+echo "$device" > "$driver/bind"
