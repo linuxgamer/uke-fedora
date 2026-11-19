@@ -53,4 +53,5 @@ source "$root/uke-fedora-builder/src/image/core.sh"
 # shellcheck source=uke-fedora-builder/src/public/entry.sh
 # shellcheck disable=SC1091
 source "$entry"
+export UKE_FASTBOOT_OUTPUT=${UKE_FASTBOOT_OUTPUT:-1}
 public_main "$@"
