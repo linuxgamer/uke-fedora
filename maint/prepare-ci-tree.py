@@ -134,8 +134,6 @@ def main():
         f"{builder}/build-rootfs.sh",
         "            if [[ $profile != tty ]]; then\n",
         "            install -d -m0755 \"$root/var/lib/flatpak\" \"$root/var/lib/flatpak/overrides\"\n"
-        "            install -Dm644 \"$here/../configs/vlc/vlcrc\" \"$root/etc/skel/.config/vlc/vlcrc\"\n"
-        "            install -Dm644 \"$here/../configs/vlc/vlcrc\" \"$root/etc/vlc/vlcrc\"\n"
         "            if [[ $profile != tty ]]; then\n",
         writes)
 
