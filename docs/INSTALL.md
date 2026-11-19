@@ -81,7 +81,7 @@ before changing slots or retrying.
 
 ## First boot and return to Android
 
-All images will launch setup wizards. Create your own account, the images include no preset password.
+KDE and GNOME images include the pre-created **saksham** / **fedora** autologin account and a second admin account **UKE** / **FEDORA**. Change both passwords after first boot.
 
 If Fedora does not boot:
 1. Keep the exact error or a photo of the screen and make a bug report.

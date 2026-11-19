@@ -1,0 +1,11 @@
+[Unit]
+Description=Unmute Xiaomi Pad 7 speakers
+After=pipewire.service wireplumber.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 3
+ExecStart=/bin/sh -c "amixer -c 0 sset 'BottomLeft Speaker' on; amixer -c 0 sset 'BottomRight Speaker' on; amixer -c 0 sset 'TopLeft Speaker' on; amixer -c 0 sset 'TopRight Speaker' on; wpctl set-profile 43 1; wpctl set-default 107; wpctl set-volume 107 1.0"
+
+[Install]
+WantedBy=default.target

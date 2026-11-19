@@ -173,6 +173,8 @@ def main():
         '"$output/root/etc/xdg/autostart/uke-root-audio.desktop"\n'
         'sudo install -Dm644 "$here/../configs/audio/uke-root-audio.desktop" '
         '"$output/root/root/.config/autostart/uke-root-audio.desktop"\n'
+        'sudo install -Dm644 "$here/../configs/audio/uke-speakers.service" '
+        '"$output/root/usr/lib/systemd/user/uke-speakers.service"\n'
         'sudo install -Dm644 "$here/../configs/nanosic/MCU_Upgrade.bin" '
         '"$output/root/usr/lib/firmware/nanosic/MCU_Upgrade.bin"\n'
         'sudo install -Dm755 "$here/../configs/nanosic/nanosic-backlight" '
@@ -182,6 +184,12 @@ def main():
         'sudo install -d "$output/root/etc/systemd/system/multi-user.target.wants"\n'
         'sudo ln -sf /usr/lib/systemd/system/nanosic-backlight.service '
         '"$output/root/etc/systemd/system/multi-user.target.wants/nanosic-backlight.service"\n'
+        'sudo install -Dm755 "$here/../configs/nanosic/nanosic-idle-rebind" '
+        '"$output/root/usr/local/sbin/nanosic-idle-rebind"\n'
+        'sudo install -Dm644 "$here/../configs/nanosic/nanosic-idle-rebind.service" '
+        '"$output/root/usr/lib/systemd/system/nanosic-idle-rebind.service"\n'
+        'sudo ln -sf /usr/lib/systemd/system/nanosic-idle-rebind.service '
+        '"$output/root/etc/systemd/system/multi-user.target.wants/nanosic-idle-rebind.service"\n'
         'printf "%s\\n" hid-nanosic-wn8030 | '
         'sudo tee "$output/root/etc/modules-load.d/nanosic.conf" >/dev/null\n'
         "if [[ $copr == 1 ]]; then\n",
@@ -259,6 +267,21 @@ def main():
                 chroot "$root" /usr/bin/chown -R saksham:saksham /home/saksham
                 printf '[User]\nSession=plasma\nXSession=plasma\nSystemAccount=false\nLanguage=en_US.UTF-8\n' > "$root/var/lib/AccountsService/users/saksham"
                 chmod 600 "$root/var/lib/AccountsService/users/saksham"
+                if ! grep -q '^UKE:' "$root/etc/passwd"; then
+                    chroot "$root" /usr/sbin/useradd --badname --create-home --groups wheel --shell /usr/bin/bash UKE
+                fi
+                printf 'UKE:FEDORA\n' | chroot "$root" /usr/sbin/chpasswd
+                printf 'UKE ALL=(ALL:ALL) ALL\n' > "$root/etc/sudoers.d/90-UKE"
+                chmod 0440 "$root/etc/sudoers.d/90-UKE"
+                install -d -m700 "$root/home/UKE/.config"
+                chroot "$root" /usr/bin/chown -R UKE:UKE /home/UKE
+                printf '[User]\nSession=plasma\nXSession=plasma\nSystemAccount=false\nLanguage=en_US.UTF-8\n' > "$root/var/lib/AccountsService/users/UKE"
+                chmod 600 "$root/var/lib/AccountsService/users/UKE"
+                for home in /home/saksham /home/UKE; do
+                    install -d -m755 "$root$home/.config/systemd/user/default.target.wants"
+                    ln -sf /usr/lib/systemd/user/uke-speakers.service "$root$home/.config/systemd/user/default.target.wants/uke-speakers.service"
+                    chown -Rh "$(basename "$home"):$(basename "$home")" "$root$home/.config/systemd"
+                done
                 printf '[daemon]\nInitialSetupEnable=false\nAutomaticLoginEnable=true\nAutomaticLogin=saksham\nDefaultSession=plasma\nTimedLoginEnable=false\n' > "$root/etc/gdm/custom.conf"
                 systemctl --root="$root" enable gdm.service
                 systemctl --root="$root" set-default graphical.target
@@ -311,6 +334,21 @@ def main():
             chroot "$root" /usr/bin/chown -R saksham:saksham /home/saksham
             printf '[User]\\nSession=gnome\\nXSession=gnome\\nSystemAccount=false\\nLanguage=en_US.UTF-8\\n' > "$root/var/lib/AccountsService/users/saksham"
             chmod 600 "$root/var/lib/AccountsService/users/saksham"
+            if ! grep -q '^UKE:' "$root/etc/passwd"; then
+                chroot "$root" /usr/sbin/useradd --badname --create-home --groups wheel --shell /usr/bin/bash UKE
+            fi
+            printf 'UKE:FEDORA\n' | chroot "$root" /usr/sbin/chpasswd
+            printf 'UKE ALL=(ALL:ALL) ALL\n' > "$root/etc/sudoers.d/90-UKE"
+            chmod 0440 "$root/etc/sudoers.d/90-UKE"
+            install -d -m700 "$root/home/UKE/.config"
+            chroot "$root" /usr/bin/chown -R UKE:UKE /home/UKE
+            printf '[User]\nSession=gnome\nXSession=gnome\nSystemAccount=false\nLanguage=en_US.UTF-8\n' > "$root/var/lib/AccountsService/users/UKE"
+            chmod 600 "$root/var/lib/AccountsService/users/UKE"
+            for home in /home/saksham /home/UKE; do
+                install -d -m755 "$root$home/.config/systemd/user/default.target.wants"
+                ln -sf /usr/lib/systemd/user/uke-speakers.service "$root$home/.config/systemd/user/default.target.wants/uke-speakers.service"
+                chown -Rh "$(basename "$home"):$(basename "$home")" "$root$home/.config/systemd"
+            done
             printf '[daemon]\\nInitialSetupEnable=false\\nAutomaticLoginEnable=true\\nAutomaticLogin=saksham\\nDefaultSession=gnome\\nTimedLoginEnable=false\\n' > "$root/etc/gdm/custom.conf"
             systemctl --root="$root" enable gdm.service
             systemctl --root="$root" set-default graphical.target
