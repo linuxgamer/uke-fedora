@@ -39,10 +39,10 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 | Charging | 🟡 Partial | Charging and battery percentage are detected, fast charging, charge limits and bypass may not work. |
 | Sleep and wake | 🟡 Partial | Basic suspend exists, but wake is unreliable. |
 | Reboot and shutdown |  🟢 Working  | Reboot works, shutdown can hang or restart the tablet. |
-| Built-in speakers and microphones | 🟢 Working | Both Playback and Recording works for all 4 speakers. |
+| Built-in speakers and microphones | 🟢 Working | Playback and recording work for all speakers, including the first-boot root KDE session and normal user sessions. |
 | Cameras | 🔴 Not working | Neither camera has a verified working capture. |
 | Stylus | 🔴 Not working | Pen input, pressure and tilt are unavailable. |
-| Magnetic keyboard | 🟡 Partia | Pogo keyboard and touchpad support is there, but it works for sometime then stops working due to MiTrustZone(WIP). |
+| Magnetic keyboard | 🟢 Working | Xiaomi Focus Keyboard WN8030 keyboard/touchpad, Caps Lock and backlight work. MiAuth is disabled in the driver (`mi_auth=0`), so no token daemon is needed. Ctrl+Alt+3/4 sets backlight 0/50/100%; wake fades up over 300 ms. |
 
 🟢 Working · 🟡 Partial · 🔴 Not working · ⚪ Not verified
 
