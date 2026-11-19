@@ -1,0 +1,125 @@
+#!/usr/bin/python3
+"""Keyboard backlight shortcuts and wake fade for the Xiaomi Focus Keyboard."""
+
+import glob
+import os
+import select
+import struct
+import time
+
+LED = "/sys/class/leds/nanosic::kbd_backlight"
+LEFT_CTRL = 29
+LEFT_ALT = 56
+RIGHT_CTRL = 97
+RIGHT_ALT = 100
+KEY_3 = 4
+KEY_4 = 5
+WAKE_IDLE = 8.0
+FADE_STEPS = 15
+FADE_DELAY = 0.02
+
+
+def find_events():
+    paths = []
+    for name in glob.glob("/sys/class/input/event*/device/name"):
+        try:
+            if open(name).read().strip() in ("Xiaomi Keyboard", "Xiaomi Touchpad"):
+                paths.append("/dev/input/" + name.split("/")[-3])
+        except OSError:
+            pass
+    return sorted(set(paths))
+
+
+def max_brightness():
+    try:
+        return int(open(f"{LED}/max_brightness").read())
+    except OSError:
+        return 100
+
+
+def brightness():
+    try:
+        return int(open(f"{LED}/brightness").read())
+    except OSError:
+        return 0
+
+
+def set_brightness(value):
+    maximum = max_brightness()
+    value = max(0, min(maximum, value))
+    try:
+        with open(f"{LED}/brightness", "w") as f:
+            f.write(str(value))
+    except OSError:
+        pass
+
+
+def fade_to(target):
+    if target <= 0:
+        set_brightness(0)
+        return
+    set_brightness(0)
+    for step in range(1, FADE_STEPS + 1):
+        set_brightness(round(target * step / FADE_STEPS))
+        time.sleep(FADE_DELAY)
+
+
+def main():
+    ctrl = alt = False
+    last_activity = time.monotonic()
+    last_nonzero = brightness() or 50
+    fading = False
+
+    while True:
+        paths = find_events()
+        if not paths:
+            time.sleep(1)
+            continue
+        fds = []
+        try:
+            for path in paths:
+                fds.append(os.open(path, os.O_RDONLY | os.O_NONBLOCK))
+        except OSError:
+            for fd in fds:
+                os.close(fd)
+            time.sleep(1)
+            continue
+
+        try:
+            while True:
+                now = time.monotonic()
+                ready, _, _ = select.select(fds, [], [], 1.0)
+                for fd in ready:
+                    data = os.read(fd, 24 * 64)
+                    for offset in range(0, len(data) - 23, 24):
+                        _, _, ev_type, code, value = struct.unpack_from("qqHHI", data, offset)
+                        if ev_type != 1:
+                            continue
+                        if now - last_activity >= WAKE_IDLE and not fading:
+                            fading = True
+                            fade_to(last_nonzero)
+                            fading = False
+                        last_activity = now
+                        if code in (LEFT_CTRL, RIGHT_CTRL):
+                            ctrl = value != 0
+                        elif code in (LEFT_ALT, RIGHT_ALT):
+                            alt = value != 0
+                        elif ctrl and alt and value == 1:
+                            if code == KEY_3:
+                                set_brightness(brightness() - 50)
+                            elif code == KEY_4:
+                                set_brightness(brightness() + 50)
+                            current = brightness()
+                            if current > 0:
+                                last_nonzero = current
+        except OSError:
+            pass
+        finally:
+            for fd in fds:
+                os.close(fd)
+
+        time.sleep(0.2)
+
+
+if __name__ == "__main__":
+    main()
