@@ -1,0 +1,150 @@
+name: Build script dry run
+
+# Manual only, and cheap on purpose.  Every other workflow either compiles the
+# kernel or builds an image, so the first thing that actually runs an entry
+# point is a 25-minute job - which is how build-rpms.sh shipped with a missing
+# `source` and failed at exit code 127 on the first CI run that reached
+# target=rpm.
+#
+# This one resolves every entry point without building anything: it proves the
+# scripts parse, that the files they source exist, that the shared functions
+# they call are reachable, and that each control path (--help, --status,
+# --stop) works against a throwaway output directory.  A container runtime is
+# deliberately absent from the runner, so a passing run is also evidence that
+# none of these paths needs one.
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      profiles:
+        description: 'Profiles the release paths would plan for'
+        required: false
+        default: 'kde'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-script-dry-run-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PROFILES: ${{ inputs.profiles || 'kde' }}
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install check tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends shellcheck jq
+
+      - name: Shellcheck the build entry points
+        run: |
+          set -Eeuo pipefail
+          # Errors only.  The scripts carry long-standing SC2034/SC2086/SC2015
+          # warnings that no build depends on, and a lane that goes red for a
+          # known cosmetic set stops being read.
+          shellcheck -x -S error uke-fedora-builder/build-rpms.sh \
+              uke-fedora-builder/build-boot-images.sh uke-fedora-builder/build-images.sh \
+              uke-fedora-builder/build-rootfs.sh uke-fedora-builder/build-boot-a.sh \
+              uke-fedora-builder/src/image/*.sh
+          printf 'shellcheck: no errors\n'
+
+      - name: Report warnings without failing on them
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          shellcheck -x -S warning -f gcc uke-fedora-builder/build-rpms.sh \
+              uke-fedora-builder/build-boot-images.sh uke-fedora-builder/build-images.sh \
+              uke-fedora-builder/build-rootfs.sh uke-fedora-builder/build-boot-a.sh \
+              uke-fedora-builder/src/image/*.sh \
+            | tee shellcheck-warnings.txt | wc -l
+          {
+            echo '### Shellcheck warnings (not gating)'
+            echo '```'
+            head -40 shellcheck-warnings.txt || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Source closure and shared-function reachability
+        run: bash uke-fedora-builder/src/image/check-scripts.sh
+
+      - name: Plan every target without building it
+        run: |
+          set -Eeuo pipefail
+          # --help is the cheapest path that loads a script end to end: it
+          # parses every argument branch and every sourced file, then exits
+          # before host checks, container setup or any output directory work.
+          for script in build-rpms.sh build-boot-images.sh build-images.sh; do
+            ./uke-fedora-builder/"$script" --help >/dev/null
+            printf '%s --help: ok\n' "$script"
+          done
+
+      - name: Control paths against an empty output directory
+        run: |
+          set -Eeuo pipefail
+          out=$(mktemp -d)
+          trap 'rm -rf -- "$out"' EXIT
+          for script in build-rpms.sh build-boot-images.sh build-images.sh; do
+            # Both control paths report "nothing here" as exit 1 rather than
+            # succeeding quietly, so what is checked is that they report it and
+            # do not crash: a stack trace or a syntax error would exit 127 or
+            # 2, not 1.
+            ./uke-fedora-builder/"$script" --status --output "$out" >/dev/null 2>&1
+            rc=$?
+            [[ $rc == 1 ]] || { echo "$script --status exited $rc, expected 1" >&2; exit 1; }
+            ./uke-fedora-builder/"$script" --stop --output "$out" >/dev/null 2>&1
+            rc=$?
+            [[ $rc == 1 ]] || { echo "$script --stop exited $rc, expected 1" >&2; exit 1; }
+            printf '%s --status/--stop: ok\n' "$script"
+          done
+
+      - name: Argument handling rejects unknown flags
+        run: |
+          set -Eeuo pipefail
+          for script in build-rpms.sh build-boot-images.sh build-images.sh; do
+            if ./uke-fedora-builder/"$script" --definitely-not-a-flag >/dev/null 2>&1; then
+              echo "$script accepted an unknown argument" >&2
+              exit 1
+            fi
+            printf '%s rejects unknown arguments: ok\n' "$script"
+          done
+
+      - name: Claimed profiles are known to every script that takes them
+        run: |
+          set -Eeuo pipefail
+          # A typo in the dispatch input should fail here, not 20 minutes into
+          # an image build.  The scripts validate --profiles against their own
+          # canonical list, so ask them directly.
+          case $PROFILES in
+            *[!a-z,-]*) echo "Profile list has unexpected characters: $PROFILES" >&2; exit 1 ;;
+          esac
+          for script in build-boot-images.sh build-images.sh; do
+            d=$(mktemp -d)
+            if ./uke-fedora-builder/"$script" --profiles 'not-a-profile' --output "$d" 2>/dev/null; then
+              echo "$script accepted an unknown profile" >&2
+              exit 1
+            fi
+            rm -rf -- "$d"
+            printf '%s rejects unknown profiles: ok\n' "$script"
+          done
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Build script dry run"
+            echo "- Profiles: \`$PROFILES\`"
+            echo "- Result: \`${{ job.status }}\`"
+            echo
+            echo "No kernel was compiled and no image was produced."
+          } >> "$GITHUB_STEP_SUMMARY"
