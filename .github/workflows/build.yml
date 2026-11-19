@@ -13,13 +13,14 @@ on:
         default: 'kde'
         type: string
       images:
-        description: 'boot = skip the rootfs, build fedora_boot.img only; pair = rootfs plus both images'
+        description: 'rpm = kernel RPMs only; boot = fedora_boot.img only; pair = rootfs plus both images'
         required: true
-        default: 'pair'
+        default: 'boot'
         type: choice
         options:
-          - pair
           - boot
+          - rpm
+          - pair
   workflow_call:
     inputs:
       profiles:
@@ -220,7 +221,17 @@ jobs:
             [[ -f $pair/manifest.json ]] && \
               cp "$pair/manifest.json" "publish/manifest-${profile}-$GITHUB_RUN_ID.json"
           done
-          [[ -n $(ls -A publish 2>/dev/null) ]] || { echo 'No image was produced' >&2; exit 1; }
+          # --images rpm produces no image pair; its kernel RPM set is the
+          # whole artifact.
+          for dir in build/ci-*/kernel-rpms; do
+            [[ -d $dir ]] || continue
+            for rpm in "$dir"/*.rpm; do
+              [[ -f $rpm ]] || continue
+              cp "$rpm" publish/
+            done
+            [[ -f $dir/SHA256SUMS ]] && cp "$dir/SHA256SUMS" "publish/kernel-rpms-SHA256SUMS"
+          done
+          [[ -n $(ls -A publish 2>/dev/null) ]] || { echo 'Nothing was produced' >&2; exit 1; }
           # The status manifest records the kernel release each image expects,
           # which decides whether the other partition has to be refreshed too.
           find build/ci-* -maxdepth 1 -name 'status.json' -exec cp {} publish/ \; || true

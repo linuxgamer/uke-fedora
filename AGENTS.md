@@ -122,13 +122,14 @@ from the Actions tab:
 | Input | Effect |
 | --- | --- |
 | `profiles` | which profiles to build, e.g. `kde` or `tty,kde` |
-| `images` | `pair` builds the rootfs and both images; `boot` skips the rootfs and builds only `fedora_boot.img` |
+| `images` | `rpm` = kernel RPMs only; `boot` = `fedora_boot.img` only; `pair` = rootfs plus both images |
 
-`boot` reaches the builder as `--images boot` and skips `build-rootfs.sh`
-entirely: the rootfs was never an input to `boot_a`, only the source of the
-`userdata.img` that travels beside it. Use it when a kernel-only change keeps
-the release at `7.3.1-107`, because then the installed userdata stays valid and
-only `boot_a` needs flashing. See
+All three share the kernel RPM stages - the kernel is compiled either way - and
+differ only in what runs afterwards. `boot` skips `build-rootfs.sh` entirely
+because the rootfs was never an input to `boot_a`, only the source of the
+`userdata.img` beside it. `rpm` stops after staging the four kernel subpackages:
+installing them on a running tablet makes the `boot` subpackage's `%posttrans`
+run `uke-kernel-update`, which writes `boot_a` without any flashing. See
 [uke-fedora-builder docs/boot-only-builds.md](https://github.com/Dustymind/uke-fedora-builder/blob/main/docs/boot-only-builds.md).
 
 ## Building
