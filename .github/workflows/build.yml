@@ -1,16 +1,10 @@
 name: Build Baseline Bootable Image
 
+# Manual only.  An image build takes roughly 25 minutes on a 50-minute arm64
+# runner and produces several gigabytes, and GitHub disables workflows on forks
+# whose inherited triggers look wasteful.  Start it deliberately, either here
+# or through one of the image-* workflows.
 on:
-  push:
-    branches: [main]
-    # Documentation and policy edits cannot change an image, so keep them off
-    # the 50-minute runner. Anything that reaches scripts, configs, manifests
-    # or the submodule pointers still builds.
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - 'LICENSE'
-      - '.gitignore'
   workflow_dispatch:
     inputs:
       profiles:
@@ -18,18 +12,50 @@ on:
         required: true
         default: 'kde'
         type: string
+      images:
+        description: 'boot = fedora_boot.img only; pair = boot and userdata'
+        required: true
+        default: 'pair'
+        type: choice
+        options:
+          - pair
+          - boot
+  workflow_call:
+    inputs:
+      profiles:
+        description: 'Comma-separated profiles to build'
+        required: true
+        type: string
+      images:
+        description: 'Which images to publish: boot or pair'
+        required: false
+        default: 'pair'
+        type: string
+    outputs:
+      artifact:
+        description: 'Name of the artifact holding the requested images'
+        value: ${{ jobs.build.outputs.artifact }}
 
 permissions:
   contents: write
 
 concurrency:
-  group: build-${{ github.ref }}-${{ github.sha }}
+  group: build-${{ github.ref }}-${{ inputs.profiles }}-${{ inputs.images || 'pair' }}
   cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 300
+    outputs:
+      artifact: uke-images-${{ github.run_id }}
+    env:
+      # A workflow_dispatch run reads inputs.images; a workflow_call run passes
+      # it through.  Building the boot image still needs a rootfs underneath -
+      # build-boot-a.sh packs the kernel into an OEM-derived boot_a and refuses
+      # to run without one - so "boot" saves on what is published, not on what
+      # is compiled.
+      IMAGES: ${{ inputs.images || 'pair' }}
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v4
@@ -114,7 +140,7 @@ jobs:
 
       - name: Build baseline image
         env:
-          PROFILES: ${{ inputs.profiles || 'kde' }}
+          PROFILES: ${{ inputs.profiles }}
           UKE_VIDEO_OVERLAY: '1'
           UKE_CONTAINER: docker
           UKE_COPR: '0'
@@ -140,7 +166,7 @@ jobs:
           key: uke-cache-v3-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
 
       - name: Package release archives
-        if: success()
+        if: success() && env.IMAGES == 'pair'
         env:
           # zstd reads these for the tar --zstd child. Level 19 costs 9m07s on
           # the 4.4 GiB rootfs; level 12 keeps most of the saving for about
@@ -159,7 +185,7 @@ jobs:
 
       - name: Publish release with direct download links
         id: publish
-        if: success()
+        if: success() && env.IMAGES == 'pair'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -171,19 +197,34 @@ jobs:
             --title "Uke Fedora $tag" \
             --notes-file "build/publish-$tag/README.txt"
 
-      - name: Upload bootable image artifacts
+      - name: Collect requested images
+        if: always()
+        run: |
+          set -Eeuo pipefail
+          mkdir -p publish
+          shopt -s nullglob
+          for pair in build/ci-*/*-pair; do
+            profile=$(basename "$pair" | sed 's/-pair$//')
+            cp "$pair/fedora_boot.img" "publish/fedora_boot-${profile}-$GITHUB_RUN_ID.img"
+            if [[ $IMAGES == pair ]]; then
+              cp "$pair/userdata.img" "publish/userdata-${profile}-$GITHUB_RUN_ID.img"
+            fi
+          done
+          [[ -n $(ls -A publish 2>/dev/null) ]] || { echo 'No image was produced' >&2; exit 1; }
+          # The status manifest records the kernel release each image expects,
+          # which decides whether the other partition has to be refreshed too.
+          find build/ci-* -maxdepth 1 -name 'status.json' -exec cp {} publish/ \; || true
+          find build/ci-* -maxdepth 1 -name 'build.log' -exec cp {} publish/ \; || true
+          ( cd publish; sha256sum ./* > SHA256SUMS )
+          ls -lh publish
+
+      - name: Upload requested images
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: uke-bootable-images-${{ github.run_id }}
-          path: |
-            build/ci-*/*-pair/fedora_boot.img
-            build/ci-*/*-pair/userdata.img
-            build/ci-*/*-pair/SHA256SUMS
-            build/ci-*/status.json
-            build/ci-*/build.log
-            build/publish-*/*
-          if-no-files-found: warn
+          name: uke-images-${{ github.run_id }}
+          path: publish/*
+          if-no-files-found: error
           compression-level: 0
           retention-days: 14
 
@@ -192,14 +233,14 @@ jobs:
         run: |
           {
             echo "## Uke Baseline Image Build"
-            echo "- Profiles: \`${{ inputs.profiles || 'kde' }}\`"
+            echo "- Profiles: \`${{ inputs.profiles }}\`"
+            echo "- Images: \`$IMAGES\`"
             echo "- Result: \`${{ job.status }}\`"
-            echo "- Release: \`${{ steps.publish.outcome || 'skipped' }}\`"
-            if compgen -G 'build/publish-*' >/dev/null; then
+            if compgen -G 'publish/SHA256SUMS' >/dev/null; then
               echo
               echo '### Assets'
               echo '```'
-              cat build/publish-*/SHA256SUMS 2>/dev/null || true
+              cat publish/SHA256SUMS 2>/dev/null || true
               echo '```'
             fi
           } >> "$GITHUB_STEP_SUMMARY"

@@ -108,10 +108,27 @@ Full setup, expected outputs and known failure modes are in
 | `tools/sync-upstream.sh status` / `verify` | Pin, drift, sync policy | Read-only; `verify` needs a clean tree |
 
 CI: kernel `source-contracts` (pull request), builder `source-contracts`
-(push and pull request), umbrella `build-image` (manual). The builder CI also
-runs `shellcheck` and the full contract suite; there is no local one-shot runner
-yet, so reproduce the commands from
+(push and pull request), umbrella image build (manual only). The builder CI
+also runs `shellcheck` and the full contract suite; there is no local one-shot
+runner yet, so reproduce the commands from
 [uke-fedora-builder source-contracts](https://github.com/linuxgamer/uke-fedora-builder/blob/main/.github/workflows/source-contracts.yml).
+
+The umbrella runs nothing on push. An image build takes roughly 25 minutes on a
+50-minute arm64 runner and produces several gigabytes, and GitHub disables
+workflows on forks whose inherited triggers look wasteful - it did once, with
+`repository invocation blocked` and a cancelled run. Start one deliberately
+from the Actions tab:
+
+| Input | Effect |
+| --- | --- |
+| `profiles` | which profiles to build, e.g. `kde` or `tty,kde` |
+| `images` | `pair` builds and publishes both images; `boot` publishes only `fedora_boot.img` |
+
+`boot` reduces what is *published*, not what is compiled: `build-boot-a.sh`
+packs the kernel into an OEM-derived `boot_a` and refuses to run without a
+rootfs beside it. Use it when a kernel-only change keeps the release at
+`7.3.1-107`, because then the installed userdata stays valid and only `boot_a`
+needs flashing.
 
 ## Building
 

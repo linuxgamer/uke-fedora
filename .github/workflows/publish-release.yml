@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       run_id:
-        description: Build run id containing uke-bootable-images artifact
+        description: Build run id containing the uke-images artifact
         required: true
       tag:
         description: Release tag to create
@@ -28,7 +28,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh run download "${{ inputs.run_id }}" --repo "$GITHUB_REPOSITORY" \
-            --name "uke-bootable-images-${{ inputs.run_id }}" --dir assets
+            --name "uke-images-${{ inputs.run_id }}" --dir assets
           find assets -maxdepth 3 -type f | sort
 
       - name: Split archives that exceed the release asset limit
