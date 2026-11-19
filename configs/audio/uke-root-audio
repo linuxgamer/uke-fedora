@@ -29,6 +29,3 @@ done
 if [ -n "${card:-}" ]; then
     wpctl set-profile "$card" 1 >/dev/null 2>&1 || true
 fi
-if [ -n "${card:-}" ]; then
-    wpctl set-profile "$card" 1 >/dev/null 2>&1 || true
-fi

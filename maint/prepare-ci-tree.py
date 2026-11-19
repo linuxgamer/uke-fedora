@@ -182,7 +182,6 @@ def main():
         'sudo install -d "$output/root/etc/systemd/system/multi-user.target.wants"\n'
         'sudo ln -sf /usr/lib/systemd/system/nanosic-backlight.service '
         '"$output/root/etc/systemd/system/multi-user.target.wants/nanosic-backlight.service"\n'
-        '"$output/root/etc/systemd/system/multi-user.target.wants/nanosic-idle-rebind.service"\n'
         'printf "%s\\n" hid-nanosic-wn8030 | '
         'sudo tee "$output/root/etc/modules-load.d/nanosic.conf" >/dev/null\n'
         "if [[ $copr == 1 ]]; then\n",
