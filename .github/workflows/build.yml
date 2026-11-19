@@ -118,7 +118,7 @@ jobs:
           sudo chmod +x /usr/local/bin/avbtool
           avbtool --help >/dev/null
 
-      - name: Apply CI overlay to pinned components
+      - name: Check product settings in the pinned components
         run: |
           mkdir -p uke-fedora-builder/build/cache
           python3 maint/prepare-ci-tree.py
@@ -126,16 +126,6 @@ jobs:
           python3 maint/prepare-ci-kvm.py
           bash senemos-uke-kernel/tools/refresh-source-pins.sh
           sudo chmod -R 777 uke-fedora-builder/build/cache ~/.cache 2>/dev/null || true
-
-      - name: Add Flatpak VA-API integration
-        run: |
-          set -Eeuo pipefail
-          sed -i '/if \[\[ \$copr == 1 \]\]; then/i \
-          test -f "$output/root/usr/lib64/dri/v4l2_drv_video.so" || { echo "uke-vaapi-v4l2 driver missing"; exit 1; }\
-          sudo install -Dm644 "$output/root/usr/lib64/dri/v4l2_drv_video.so" "$output/root/var/lib/uke-vaapi/v4l2_drv_video.so"\
-          sudo ln -sfn v4l2_drv_video.so "$output/root/var/lib/uke-vaapi/msm_drv_video.so"\
-          sudo install -Dm644 "$here/../configs/flatpak/global" "$output/root/var/lib/flatpak/overrides/global"' uke-fedora-builder/build-rootfs.sh
-          grep -q 'var/lib/uke-vaapi' uke-fedora-builder/build-rootfs.sh
 
       - name: Build baseline image
         env:
