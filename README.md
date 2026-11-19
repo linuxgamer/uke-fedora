@@ -27,7 +27,7 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 | Display | 🟢 Working| Display is working 30-144hz supported , VRR Disabled. |
 | Refresh rate |  🟢 Working  | Manual Refresh rate switching works and is reliable, (KDE verified), VRR is disabled. |
 | Touchscreen |  🟢 Working | Works,10 Point MultiTouch is working. |
-| Graphics (GPU) | 🟢 Working | OpenGL: glmark2 ≈ 5–6K. Vulkan: vkmark ≈ 8K (KDE Plasma Wayland). |
+| Graphics (GPU) | 🟢 Working | OpenGL: glmark2 ≈ 5–6K. Vulkan: vkmark ≈ 8K (KDE Plasma Wayland). 8K+ Glmark2 , 10K+ vkmark on minimal Hyprland |
 | CPU and storage | 🟢 Working | All CPU cores are available, internal storage works. |
 | Wi-Fi | 🟢 Working | Connects to networks and supports normal data transfers. |
 | Bluetooth |  🟢 Working  | Bluetooth devices work, Tested Keyboard, Mouse and headphones. |
