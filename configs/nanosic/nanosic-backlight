@@ -1,0 +1,88 @@
+#!/usr/bin/python3
+"""Ctrl+Alt+3/4 keyboard-backlight control for the Xiaomi Focus Keyboard."""
+
+import glob
+import os
+import select
+import struct
+import time
+
+LED = "/sys/class/leds/nanosic::kbd_backlight"
+LEFT_CTRL = 29
+LEFT_ALT = 56
+RIGHT_CTRL = 97
+RIGHT_ALT = 100
+KEY_3 = 4
+KEY_4 = 5
+
+
+def find_event():
+    for name in glob.glob("/sys/class/input/event*/device/name"):
+        try:
+            if open(name).read().strip() == "Xiaomi Keyboard":
+                return "/dev/input/" + name.split("/")[-3]
+        except OSError:
+            pass
+    return None
+
+
+def brightness():
+    try:
+        return int(open(f"{LED}/brightness").read())
+    except OSError:
+        return 0
+
+
+def set_brightness(value):
+    maximum = 100
+    try:
+        maximum = int(open(f"{LED}/max_brightness").read())
+    except OSError:
+        pass
+    value = max(0, min(maximum, value))
+    try:
+        with open(f"{LED}/brightness", "w") as f:
+            f.write(str(value))
+    except OSError:
+        pass
+
+
+def main():
+    ctrl = alt = False
+    while True:
+        path = find_event()
+        if not path:
+            time.sleep(1)
+            continue
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+        except OSError:
+            time.sleep(1)
+            continue
+        try:
+            while True:
+                ready, _, _ = select.select([fd], [], [], 1.0)
+                if not ready:
+                    continue
+                data = os.read(fd, 24 * 64)
+                for offset in range(0, len(data) - 23, 24):
+                    _, _, ev_type, code, value = struct.unpack_from("qqHHI", data, offset)
+                    if ev_type != 1:
+                        continue
+                    if code in (LEFT_CTRL, RIGHT_CTRL):
+                        ctrl = value != 0
+                    elif code in (LEFT_ALT, RIGHT_ALT):
+                        alt = value != 0
+                    elif ctrl and alt and value == 1:
+                        if code == KEY_3:
+                            set_brightness(brightness() - 50)
+                        elif code == KEY_4:
+                            set_brightness(brightness() + 50)
+        except OSError:
+            pass
+        finally:
+            os.close(fd)
+
+
+if __name__ == "__main__":
+    main()

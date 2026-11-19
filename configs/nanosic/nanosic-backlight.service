@@ -1,0 +1,12 @@
+[Unit]
+Description=Xiaomi Focus Keyboard backlight shortcuts
+After=systemd-modules-load.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/nanosic-backlight
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target
