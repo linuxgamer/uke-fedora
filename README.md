@@ -40,10 +40,11 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 | Charging | 🟡 Partial | Charging and battery percentage are detected, fast charging, charge limits and bypass may not work. |
 | Sleep and wake | 🟡 Partial | Basic suspend exists, but wake is unreliable. |
 | Reboot and shutdown |  🟢 Working  | Reboot works, shutdown can hang or restart the tablet. |
-| Built-in speakers and microphones | 🟢 Working | Both Playback and Recording works for all 4 speakers. |
+| Built-in speakers | 🟢 Working | All four amplifiers play. ACP rejects a UCM profile when any mapping fails to open, and the speaker verb carried a DisplayPort device on `hw:0,0` that this kernel does not open - that discarded the whole HiFi profile and left the desktop with a dummy output. Without that device the profile is accepted and the UCM sequence enables the amplifiers itself. |
+| Built-in microphones | 🟢 Working | The four-channel array records; the UCM routes it through the same HiFi profile that carries playback. |
 | Cameras | 🔴 Not working | Neither camera has a verified working capture. |
 | Stylus | 🔴 Not working | Pen input, pressure and tilt are unavailable. |
-| Magnetic keyboard | ⚪ WIP| Nanosic WN8030 HID driver and firmware in `main`; not compiled or tested on the tablet. |
+| Magnetic keyboard | 🟡 Partial | Keys work for about a minute, then the MCU stops scanning them. It asks for an MiAuth token on a timer of its own and gives up when the window closes; the token comes from the Android devauth TA over RPMB and Linux has no way to produce one, so the answer is not to fake it - a zero-token reply is worse than none. The workaround pulses the MCU reset line, which re-arms the window in roughly 70 ms with the supplies untouched, and a userspace helper does that once the keyboard has been idle past the window. Each reset costs the MCU its Caps Lock state, and a reset that lands mid-typing loses those keystrokes. |
 
 🟢 Working · 🟡 Partial · 🔴 Not working · ⚪ Not verified
 
