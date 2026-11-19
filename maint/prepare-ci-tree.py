@@ -134,8 +134,6 @@ def main():
         f"{builder}/build-rootfs.sh",
         "            if [[ $profile != tty ]]; then\n",
         "            install -d -m0755 \"$root/var/lib/flatpak\" \"$root/var/lib/flatpak/overrides\"\n"
-        "            chroot \"$root\" flatpak remote-add --system --if-not-exists flathub "
-        "https://flathub.org/repo/flathub.flatpakrepo || die 'Failed to add Flathub remote'\n"
         "            install -Dm644 \"$here/../configs/vlc/vlcrc\" \"$root/etc/skel/.config/vlc/vlcrc\"\n"
         "            install -Dm644 \"$here/../configs/vlc/vlcrc\" \"$root/etc/vlc/vlcrc\"\n"
         "            if [[ $profile != tty ]]; then\n",
