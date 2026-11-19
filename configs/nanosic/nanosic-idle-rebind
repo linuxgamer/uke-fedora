@@ -1,0 +1,91 @@
+#!/usr/bin/python3
+"""Keep the Nanosic WN8030 keyboard auth window alive without TrustZone.
+
+The MCU stops reporting after its short MiAuth window. A full I2C driver
+reprobe resets that window but takes ~0.8 s, so do it during an idle gap
+instead of on a fixed wall-clock timer.
+"""
+
+import glob
+import os
+import select
+import struct
+import subprocess
+import time
+
+DRIVER = "/sys/bus/i2c/drivers/nanosic_wn8030"
+DEVICE = "5-004c"
+IDLE_SECONDS = 1.5
+EARLY_RESET = 270
+LATE_RESET = 285
+
+
+def find_event():
+    for name in glob.glob("/sys/class/input/event*/device/name"):
+        try:
+            if open(name).read().strip() == "Xiaomi Keyboard":
+                return "/dev/input/" + name.split("/")[-3]
+        except OSError:
+            pass
+    return None
+
+
+def rebind():
+    subprocess.run(
+        [
+            "/bin/sh",
+            "-c",
+            f"echo {DEVICE} > {DRIVER}/unbind; sleep 0.02; "
+            f"echo {DEVICE} > {DRIVER}/bind",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+
+
+def main():
+    last_reset = time.monotonic()
+    last_key = last_reset
+
+    while True:
+        path = find_event()
+        if not path or not os.path.exists(f"{DRIVER}/{DEVICE}"):
+            time.sleep(1)
+            continue
+
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+        except OSError:
+            time.sleep(1)
+            continue
+
+        try:
+            while True:
+                now = time.monotonic()
+                ready, _, _ = select.select([fd], [], [], 0.5)
+                if ready:
+                    data = os.read(fd, 24 * 64)
+                    for offset in range(0, len(data) - 23, 24):
+                        _, _, ev_type, _, _ = struct.unpack_from("qqHHI", data, offset)
+                        if ev_type == 1:
+                            last_key = now
+
+                if now - last_reset >= EARLY_RESET and now - last_key >= IDLE_SECONDS:
+                    rebind()
+                    last_reset = time.monotonic()
+                    break
+                if now - last_reset >= LATE_RESET:
+                    rebind()
+                    last_reset = time.monotonic()
+                    break
+        except OSError:
+            pass
+        finally:
+            os.close(fd)
+
+        time.sleep(1)
+
+
+if __name__ == "__main__":
+    main()
