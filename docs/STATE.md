@@ -611,7 +611,7 @@ and the kernel RPM re-use path (`kernel-rpm-cache.sh` needs the multi-GB
 - RPMH regulator suppliers register, so UFS, PHY and the keyboard rails bind
   instead of deferring.
 - Flatpak apps can reach the host V4L2 VA-API driver through a global override;
-  see `.github/workflows/build.yml` and `configs/flatpak/global`.
+  see `.github/workflows/build.yml` and `configs/rootfs/var/lib/flatpak/overrides/global`.
 
 ## Blockers
 - **Ext4 rootfs expansion blocked by error flag** (fixed 2026-11-17). The ext4 superblock error flag prevented online resize. Fixed on‑device via `echo u > /proc/sysrq-trigger` (emergency remount‑ro), `e2fsck -fy`, `resize2fs`. Documented in [INSTALL.md](INSTALL.md#emergency-rootfs-expansion-ext4).

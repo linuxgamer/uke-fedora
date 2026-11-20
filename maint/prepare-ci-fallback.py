@@ -30,7 +30,7 @@ MARKERS = [
     ("uke-fedora-builder/build-rootfs.sh",
      "var/lib/uke-vaapi/msm_drv_video.so",
      "Flatpak sandboxes get a copy of that driver"),
-    ("uke-fedora-builder/configs/flatpak/global",
+    ("uke-fedora-builder/configs/rootfs/var/lib/flatpak/overrides/global",
      "LIBVA_DRIVER_NAME=msm",
      "the override that points them at it"),
     ("uke-fedora-builder/src/image/build-kernel-rpms.sh",
