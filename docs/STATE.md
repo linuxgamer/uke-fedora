@@ -1,8 +1,8 @@
 # State
 
-Updated: 2026-11-20 (the shipped image carries no kernel A/B machinery; the
-rootfs package selection is hand-written and differs from the canonical
-manifest). Verify with commands before relying on it; update this file at the
+Updated: 2026-11-21 (image assets moved into `configs/rootfs` and the keyboard
+became a package, so the rootfs no longer depends on host-side copies; nothing
+built yet). Verify with commands before relying on it; update this file at the
 end of every session.
 Long history and decisions live in the private notes; this file records only
 facts.
@@ -92,6 +92,45 @@ What still differs from `src/image/install-userdata-device-packages.sh`:
 `--setopt=tsflags=nodocs`, `%_install_langs`, signature checking
 (`localpkg_gpgcheck=False` here, `True` there) and the closing `dnf check`
 pass. Tracked as B31.
+
+## Image assets have one home (2026-11-21)
+
+`build-rootfs.sh` used to copy seven keyboard files and four desktop assets
+into `$output/root` from the host, after the container had exited and after the
+expensive dnf work. That stage needed `sudo` while everything else ran
+rootless, wrote a second ownership source into a tree the container otherwise
+owned, and none of it was covered by `BUILD-INPUTS.sha256`, so `--resume`
+reused a rootfs built from the old bytes after an asset had been edited.
+
+There are now two places and no third:
+
+- `configs/rootfs/` mirrors the target paths and is copied inside the container
+  by an `apply_overlay` stage in `build-rootfs.sh`. `configs/rootfs-copr/` is
+  applied only when `UKE_COPR` is not 0, and that variable is now passed into
+  the container, where it is actually read.
+- The keyboard firmware, three helpers and three units are one noarch package,
+  `uke-keyboard-support`, built from `configs/nanosic` by
+  `packaging/uke-keyboard-support.spec`; `build-images.sh` builds it into
+  `hardware-rpms` before the rootfs step. The helpers moved from
+  `/usr/local/sbin` to `/usr/bin` (SELinux type `usr_t` to `bin_t`), the module
+  load entry from `/etc/modules-load.d` to `/usr/lib/modules-load.d`, and
+  `nanosic-authd` is still installed with its unit still not enabled.
+
+Both trees and the package inputs feed `BUILD-INPUTS.sha256`. `audit-rootfs.sh`
+walks the overlay trees and requires each file to exist, stay a regular file,
+keep mode 0644 and match its source byte for byte; ownership is asserted inside
+the container instead, because a rootless build maps container root to the
+invoking user, so the host tree is user-owned by design. The audit also checks
+the keyboard package layout, an empty `machine-id`, no SSH host keys and no
+`random-seed`. The keyboard RPM's digest lands in `HARDWARE-RPMS.sha256`, so the
+image now records which firmware it carries instead of leaving that to the
+working tree; the package is built reproducibly (changelog epoch, fixed build
+host, pinned mtimes), so that digest changes only when its inputs do and
+`--resume` keeps reusing the rootfs.
+
+Builder commits `c18e08c..0320d3e` (overlay, package, ownership check where the
+container mapping makes it observable, reproducible package, audit path fix). No
+image has been built with any of them yet; B32 tracks the first build.
 
 ## First boot and working keyboard (2026-11-19)
 
