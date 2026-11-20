@@ -46,28 +46,52 @@ the Fedora 44 path requires it, and `uke-core-meta-1.0.4-1.fc44` does not list
 it. A move to a dedicated `linux` root partition has to add it back, or the
 userdata-only units stay enabled on a root they no longer describe.
 
-## Rootfs package selection is hand-written (2026-11-20)
+## Rootfs packages now come from comps groups (2026-11-21)
 
-`build-rootfs.sh` installs explicit package lists, not comps groups, and runs
-every transaction with `--setopt=install_weak_deps=False`. The other composition
-path names more of the same stack explicitly - `src/public/root-packages.sh`
-lists `fedora-repos`, `dnf5-plugins`, `chrony`, `firewalld`, `openssh-server`,
-`policycoreutils`, `cracklib-dicts` and `qt6-qttranslations` - and
-`src/image/install-userdata-device-packages.sh:19-37` adds `--setopt=tsflags=nodocs`,
-`%_install_langs all`, signature checking and a `dnf check` pass that the image
-path does not have.
+`build-rootfs.sh` no longer carries a hand-written package list for the base and
+desktop layers. The base transaction installs `@core` and
+`@networkmanager-submodules`; the desktops install `@kde-desktop`,
+`@gnome-desktop`, `@phosh-desktop` or `@kde-mobile`, and the shared layer adds
+`@multimedia`. That closes the gaps the hand-written lists had accumulated:
+`procps-ng`, `iputils`, `iproute`, `man-db`, `dnf5-plugins`, `plymouth`,
+`firewalld`, `alsa-ucm`, `pipewire-pulseaudio` and a Wi-Fi backend in the TTY
+image, which previously had none because only the desktop branch named
+`NetworkManager-wifi`.
 
-Solving the actual lists against Fedora 44 shows what the weak-deps setting
-drops. Base set: 159 packages with no `fedora-release-identity-*`, so
-`/etc/os-release` has no `VARIANT_ID`. KDE set: 1031 packages with no
-`procps-ng` (`ps`, `top`, `free`, `pgrep`), no `iputils` (`ping`), no
-`dnf5-plugins`, no `cracklib-dicts`, no `plymouth`, no `flatpak` or Discover
-app backends, and no `power-profiles-daemon`. `chrony`, `openssh-server` and
-`bluez` do arrive: `uke-boot-integration` requires them.
+Measured closures (aarch64, empty installroot, `install_weak_deps=False`),
+against the hand-written sets they replace: TTY 158 → 288, KDE 1020 → 1398,
+GNOME 655 → 1114, phosh 648 → 886, plasma-mobile 936. The growth is the group
+defaults: akonadi and samba for KDE, gnome-boxes and rygel for GNOME. No image
+has been built with the new sets yet.
 
-The TTY profile never installs `NetworkManager-wifi`, and that subpackage is
-what pulls `wpa_supplicant`, so a TTY image has no usable Wi-Fi backend. The
-desktop profiles add it explicitly.
+Three facts that the groups forced:
+
+- `systemd-pam` is still not in the `@core` closure with weak dependencies off.
+  It stays explicit, because `authselect` below rewrites the PAM stack and
+  `audit-rootfs.sh` checks `/usr/lib64/security/pam_systemd.so`.
+- Both KDE groups prefer `plasma-login-manager`, and `kde-settings-plasmalogin`
+  hard-requires it, so the SDDM profiles exclude all three
+  (`kde-settings-plasmalogin`, `plasma-login-manager`, `kcm-plasmalogin`) and
+  name `sddm`, `sddm-breeze` and `sddm-wayland-plasma` explicitly. Excluding
+  `plasma-login-manager` alone fails the transaction. `sddm-breeze` is what
+  carries the `01-breeze-fedora` theme that `audit-rootfs.sh:87` requires.
+- `@kde-desktop` installs `fedora-release-kde-desktop`, which replaces the
+  release identity and changes `VARIANT_ID` in `/etc/os-release` - and with it
+  the `osrel` entry the boot image carries. That is accepted deliberately, not
+  an accident. GNOME keeps the basic identity because its group names no
+  release package.
+
+Other deliberate replacements: GNOME's terminal is `ptyxis` now, not
+`gnome-terminal`, and `firefox`, `kate`, `kcalc`, `powerdevil`,
+`plasma-keyboard` and the KDE VM stack stay named because no group carries
+them. `@phosh-desktop` is a phone shell with no `gdm`, no
+`gnome-initial-setup` and no `gnome-control-center`, so the gdm path keeps
+those three explicit.
+
+What still differs from `src/image/install-userdata-device-packages.sh`:
+`--setopt=tsflags=nodocs`, `%_install_langs`, signature checking
+(`localpkg_gpgcheck=False` here, `True` there) and the closing `dnf check`
+pass. Tracked as B31.
 
 ## First boot and working keyboard (2026-11-19)
 
