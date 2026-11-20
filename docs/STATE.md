@@ -589,6 +589,22 @@ and the kernel RPM re-use path (`kernel-rpm-cache.sh` needs the multi-GB
 - The image CI run 43008866968 was cancelled; the extended workflow has not run.
 - No image has been built after the broad native archive fix (`30dfa729`).
 
+## VM stack removed, SELinux off (2026-11-21)
+
+The KDE image no longer installs `qemu-system-aarch64`, `qemu-img`, `libvirt`,
+`virt-install` or `edk2-aarch64`. Linux runs at EL1 on this SoC, so KVM cannot
+initialise; the stack only contributed 38 libvirt/iscsi/lvm units that never
+start and about half a gigabyte. Builder `4926cef`.
+
+SELinux is off end to end. The kernel's `CONFIG_CMDLINE` now carries
+`selinux=0` (kernel `78122e8`), which is the only place the argument reaches
+the kernel because `CONFIG_CMDLINE_FORCE=y` and the root selector rewrites only
+`root=`. `build-rootfs.sh` writes `SELINUX=disabled` into
+`/etc/selinux/config`, and `finalize-rootfs.sh` no longer applies or verifies
+file labels, so `ext4-labels.cpp` left the Fedora 44 path and its build input
+hash. `selinux-policy-targeted` still arrives with `@core` and is unread.
+Unbuilt: the next image build is the first check of both changes.
+
 ## Working now
 
 - Kernel video bring-up is source-complete: the candidate series applies on
