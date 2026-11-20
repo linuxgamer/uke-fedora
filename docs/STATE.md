@@ -217,6 +217,33 @@ Flashing this build needs `boot_a` only: the fix is all `=y` code and keeps the
 `7.3.1-107` release, so the module vermagic is unchanged and the existing
 `userdata` stays valid.
 
+## The reset pulse killed the keyboard in the shipped image (2026-11-21)
+
+`465e124` made the helper prefer the soft reset, and the image from run
+`44805425755` (builder `2c79158`, kernel `e0b91cf`) shipped it. The keyboard went
+deaf on the first pulse and stayed deaf: the driver pulsed reset, the MCU dropped
+into its bootrom, the firmware lives in RAM and nothing downloaded it again, and
+`soft_reset_store()` returned `count` regardless, so the helper kept logging
+`soft: reset at 50.7s` while no key ever arrived again.
+
+Two fixes, both needed:
+
+- kernel `807a50f`: the pulse now repeats the probe download sequence, and a
+  failed reload is returned as an error instead of success.
+- builder `445a9f2`: the helper defaults to `auto`, and while the reload cost
+  makes the pulse no faster than a rebind it still keeps the HID devices
+  registered. `be3e9e4` added `NANOSIC_REBIND_RESET`, which `465e124`'s helper
+  did not have at all - a `systemctl edit` setting it on that image is read by
+  nothing, and even a variable it does read only takes effect after
+  `systemctl restart`, because the process is a `Type=simple` loop that never
+  exits. `auto` now also escalates: two pulse periods with no key event force a
+  rebind, so a deaf keyboard heals instead of printing for an hour.
+
+On an image older than those commits the only rescue is to stop the pulse: patch
+`/usr/bin/nanosic-rebind` in place (`if soft_reset():` -> `if False:`, which
+preserves the `bin_t` label that `sed -i` would lose), restart the unit, then
+write `5-004c` to `unbind` and `bind` once to bring the MCU out of its bootrom.
+
 ## The keyboard stops scanning keys after a few minutes (2026-11-19)
 
 The Pogo keyboard works from boot and then goes silent: nothing reaches
