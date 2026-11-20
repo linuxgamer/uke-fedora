@@ -1,5 +1,11 @@
 name: Publish run images as release
 
+# Manual only. This packages whatever a finished build uploaded, whatever that
+# build concluded: a run that failed late - audit, release creation, a cache
+# save - has already produced the images, and publishing them is a decision for
+# the person dispatching this, not for the workflow. Nothing here reads the
+# source run's status.
+
 on:
   workflow_dispatch:
     inputs:
@@ -31,19 +37,22 @@ jobs:
             --name "uke-images-${{ inputs.run_id }}" --dir assets
           find assets -maxdepth 3 -type f | sort
 
-      - name: Split archives that exceed the release asset limit
+      - name: Install zstd
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends zstd
+
+      - name: Pack the uploaded images into release archives
+        env:
+          # Same settings as the build's packaging step: level 12 keeps most of
+          # the saving at half the time, and the splitter takes care of whatever
+          # still exceeds the release asset limit.
+          ZSTD_CLEVEL: '12'
+          ZSTD_NBTHREADS: '4'
         run: |
-          set -Eeuo pipefail
-          # Runs packed after the splitter landed already ship parts; copy those
-          # as they are so their checksums keep covering every asset.
-          part=$(find assets -name '*.tar.zst.part-00' -print -quit)
-          if [[ -n $part ]]; then
-            cp -a "$(dirname "$part")" publish
-          else
-            archive=$(find assets -name '*.tar.zst' -print -quit)
-            [[ -n $archive ]] || { echo 'No release archive in the artifact' >&2; exit 1; }
-            ./tools/split-release-assets.sh --input "$(dirname "$archive")" --output publish
-          fi
+          ./tools/pack-run-images.sh --run-id "${{ inputs.run_id }}" \
+            --tag "${{ inputs.tag }}" --output archives assets
+
+      - name: Split archives that exceed the release asset limit
+        run: ./tools/split-release-assets.sh --input archives --output publish
 
       - name: Publish release
         env:

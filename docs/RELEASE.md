@@ -63,9 +63,16 @@ used as the release notes. Publish the contents of `build/publish-<tag>`:
 
 A split archive is reassembled with `cat <name>.part-* > <name>`, then checked
 against the digest printed in `README.txt`; `sha256sum -c SHA256SUMS` only
-covers the parts as downloaded. The `.github/workflows/build.yml` and
-`publish-release.yml` workflows run the same commands, so a hand-made release
-and a CI release have identical layouts.
+covers the parts as downloaded. `.github/workflows/build.yml` and this
+procedure run the same commands, so a hand-made release and a CI release have
+identical layouts.
+
+`publish-release.yml` is the other way in: dispatch it with a build run id and
+a tag, and it downloads that run's `uke-images` artifact, packs the flat
+`*.img` files back into the same archives with `tools/pack-run-images.sh`, and
+splits and publishes them. It never looks at the run's conclusion, so a build
+that failed after the images were made - on the log audit, on the release
+upload - can still be published deliberately.
 
 Mark the GitHub release as a pre-release while the image is still alpha. The
 release notes must say so in the first line; do not present an alpha image as a

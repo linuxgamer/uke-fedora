@@ -423,10 +423,12 @@ whole release back. The artifact was complete (7.54 GiB).
   consumes the input archives, because the arm64 runner has no room for a second
   copy.
 - Both workflows publish the split layout: `build.yml` via `build/publish-<tag>`,
-  `publish-release.yml` by downloading the artifact and splitting it, or copying
-  it unchanged when the run already shipped parts. The publish step is
-  `continue-on-error` and the job summary reports the release outcome separately
-  from the build result.
+  and `publish-release.yml` by packing the flat `*.img` files from a finished
+  run's artifact with `tools/pack-run-images.sh` and splitting the result. That
+  workflow reads no status from the source run - a build that failed on the log
+  audit still has images, and publishing them is the dispatcher's decision. The
+  publish step in `build.yml` is `continue-on-error` and the job summary reports
+  the release outcome separately from the build result.
 - The artifact path moved to `build/publish-*`, so a failed release still leaves
   downloadable assets.
 
