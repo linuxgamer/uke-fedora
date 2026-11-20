@@ -1,8 +1,9 @@
 # State
 
-Updated: 2026-11-19 (first boot to a root shell on the tablet; the Pogo
-keyboard works and no longer goes silent a few minutes in). Verify with
-commands before relying on it; update this file at the end of every session.
+Updated: 2026-11-20 (the shipped image carries no kernel A/B machinery; the
+rootfs package selection is hand-written and differs from the canonical
+manifest). Verify with commands before relying on it; update this file at the
+end of every session.
 Long history and decisions live in the private notes; this file records only
 facts.
 
@@ -22,6 +23,51 @@ rebased component forks; patches are exported for review only. See
 
 Verify with `git submodule status` and `git ls-tree HEAD -- <component>`; compare
 the worktree head with the recorded gitlink before moving a pointer.
+
+## No kernel A/B in the shipped image (2026-11-20)
+
+`build-rootfs.sh` refuses seven packages by name before the image is accepted
+(`build-rootfs.sh:263`): `senemos-uke-linux-kernel-mainline`, its `-boot`
+subpackage, `uke-kernel-update`, `uke-charge-control`, `uke-offline-charge`,
+`uke-boot-recovery` and `uke-cdc-debug`.
+
+`uke-userdata-accept.service`, `uke-userdata-fallback.service` and both update
+profiles live in the `uke-kernel-update` subpackage
+(`uke-boot/packaging/uke-boot-integration.spec:330-339`), so the image carries
+none of them: no binary, no units, no `/etc/senemos/*-update.conf`. The kernel
+reaches the tablet one way only - rebuild and flash `boot_a`. Nothing stages
+itself and no rollback slot is in use. The userdata A/B design in
+`uke-boot/docs/USERDATA-AB.md` is an asset for a later profile, not a capability
+of this release.
+
+`uke-install-profile` is absent for the same reason: it is the `linux` root
+profile's detector and unit masker (`install-profile.cpp:236-239`), nothing in
+the Fedora 44 path requires it, and `uke-core-meta-1.0.4-1.fc44` does not list
+it. A move to a dedicated `linux` root partition has to add it back, or the
+userdata-only units stay enabled on a root they no longer describe.
+
+## Rootfs package selection is hand-written (2026-11-20)
+
+`build-rootfs.sh` installs explicit package lists, not comps groups, and runs
+every transaction with `--setopt=install_weak_deps=False`. The other composition
+path names more of the same stack explicitly - `src/public/root-packages.sh`
+lists `fedora-repos`, `dnf5-plugins`, `chrony`, `firewalld`, `openssh-server`,
+`policycoreutils`, `cracklib-dicts` and `qt6-qttranslations` - and
+`src/image/install-userdata-device-packages.sh:19-37` adds `--setopt=tsflags=nodocs`,
+`%_install_langs all`, signature checking and a `dnf check` pass that the image
+path does not have.
+
+Solving the actual lists against Fedora 44 shows what the weak-deps setting
+drops. Base set: 159 packages with no `fedora-release-identity-*`, so
+`/etc/os-release` has no `VARIANT_ID`. KDE set: 1031 packages with no
+`procps-ng` (`ps`, `top`, `free`, `pgrep`), no `iputils` (`ping`), no
+`dnf5-plugins`, no `cracklib-dicts`, no `plymouth`, no `flatpak` or Discover
+app backends, and no `power-profiles-daemon`. `chrony`, `openssh-server` and
+`bluez` do arrive: `uke-boot-integration` requires them.
+
+The TTY profile never installs `NetworkManager-wifi`, and that subpackage is
+what pulls `wpa_supplicant`, so a TTY image has no usable Wi-Fi backend. The
+desktop profiles add it explicitly.
 
 ## First boot and working keyboard (2026-11-19)
 
