@@ -632,6 +632,13 @@ file labels, so `ext4-labels.cpp` left the Fedora 44 path and its build input
 hash. `selinux-policy-targeted` still arrives with `@core` and is unread.
 Unbuilt: the next image build is the first check of both changes.
 
+`maint/prepare-ci-kvm.py` went with the stack it guarded: it required
+`qemu-system-aarch64` and `virt-install` in the KDE profile's package list, so
+the run after the removal would have failed before it built anything. The
+kernel-side markers it also checked (`VHOST_NET`, `VSOCKETS`,
+`VIRTIO_VSOCKETS`) stay in the config; only the assertion that the image ships
+guest tooling is gone.
+
 ## Working now
 
 - Kernel video bring-up is source-complete: the candidate series applies on
