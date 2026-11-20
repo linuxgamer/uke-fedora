@@ -38,7 +38,7 @@ on:
         value: ${{ jobs.build.outputs.artifact }}
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: build-${{ github.ref }}-${{ inputs.profiles }}-${{ inputs.target || 'pair' }}
@@ -166,38 +166,10 @@ jobs:
             uke-linux-hardware-support/xiaomi-uke-firmware/source-cache
           key: uke-cache-v3-${{ steps.pins.outputs.kernel }}-${{ steps.pins.outputs.builder }}-${{ github.run_id }}
 
-      - name: Package release archives
-        if: success() && env.TARGET == 'pair'
-        env:
-          # zstd reads these for the tar --zstd child. Level 19 costs 9m07s on
-          # the 4.4 GiB rootfs; level 12 keeps most of the saving for about
-          # half the time, and split-release-assets.sh splits whatever comes
-          # out, so a slightly larger archive only adds another part file.
-          # Four threads because ZSTD_NBTHREADS=0 would mean one, not all.
-          ZSTD_CLEVEL: '12'
-          ZSTD_NBTHREADS: '4'
-        run: |
-          set -Eeuo pipefail
-          tag="ci-$GITHUB_RUN_ID"
-          ./uke-fedora-builder/tools/package-release.sh --tag "$tag" \
-            --output "build/release-$tag" build/ci-$GITHUB_RUN_ID/*-pair
-          ./tools/split-release-assets.sh \
-            --input "build/release-$tag" --output "build/publish-$tag"
-
-      - name: Publish release with direct download links
-        id: publish
-        if: success() && env.TARGET == 'pair'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -Eeuo pipefail
-          tag="ci-$GITHUB_RUN_ID"
-          gh release create "$tag" build/publish-$tag/* \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "Uke Fedora $tag" \
-            --notes-file "build/publish-$tag/README.txt"
-
+      # A build publishes nothing. Releases are created by hand through
+      # `Publish run images as release`, which packs whatever this run uploaded
+      # into a release archive. That keeps the decision - and the tag - out of
+      # a 25-minute build that also has to be rerun whenever an image is wrong.
       - name: Collect requested images
         if: always()
         run: |
