@@ -24,19 +24,19 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 | Fedora KDE desktop | 🟢 Working | Boots into KDE; basic use and touch-only setup tested. |
 | GNOME desktop | 🟢 Working | The GNOME image boots and works. |
 | Other desktops | ⚪ |
-| Display | 🟢 Working| Display is working 30-144hz supported , VRR Disabled. |
+| Display | 🟢 Working| Display is working 30-144hz supported, a brief 2-3 second white screen appears on boot. |
 | Refresh rate |  🟢 Working  | Manual Refresh rate switching works and is reliable, (KDE verified), VRR is disabled. |
 | Touchscreen |  🟢 Working | Works,10 Point MultiTouch is working. |
 | Graphics (GPU) | 🟢 Working | OpenGL: glmark2 ≈ 5–6K. Vulkan: vkmark ≈ 8K (KDE Plasma Wayland). 8K+ Glmark2 , 10K+ vkmark on minimal Hyprland |
-| CPU and storage | 🟢 Working | All CPU cores are available, internal storage works. |
+| CPU and storage | 🟢 Working | All CPU cores are available, internal storage works and root partition expands to device storage.|
 | Wi-Fi | 🟢 Working | Connects to networks and supports normal data transfers. |
 | Bluetooth |  🟢 Working  | Bluetooth devices work, Tested Keyboard, Mouse and headphones. |
 | Auto-rotation | 🟢 Working | Screen and touch orientation follow tablet rotation. |
 | Other sensors | 🟡 Partial | Motion, compass, proximity not verified but cover detection works.|
-| USB-C accessories | 🟡 Partial | An OTG mouse works through a USB-A-to-USB-C adapter; manual USB ACM on/off works. Other accessories need testing. |
+| USB-C accessories |🟢 Working | An OTG mouse/Keyboard works through a USB-A-to-USB-C adapter; Usb Hub also working. |
 | External display | ⚪ Not verified | Video output over USB-C/HDMI/DP has not been tested. |
-| Charging | 🟡 Partial | Charging and battery percentage are detected, fast charging, charge limits and bypass may not work. |
-| Sleep and wake | 🟡 Partial | Basic suspend exists, but wake is unreliable. |
+| Charging | 🟡 Partial | Charging and battery percentage are detected, fast charging, charge limits and bypass may not work. Detected 20-25Watt of charging instead of full 45 Watt. |
+| Sleep and wake |🟢 Working  | Basic suspend exists. |
 | Reboot and shutdown |  🟢 Working  | Reboot works, shutdown can hang or restart the tablet. |
 | Built-in speakers and microphones | 🟢 Working | Playback and recording work for all speakers, including the first-boot root KDE session and normal user sessions. |
 | Cameras | 🔴 Not working | Neither camera has a verified working capture. |
