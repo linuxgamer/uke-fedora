@@ -37,8 +37,8 @@ jobs:
           test ! -e packages
           test "$(git config -f .gitmodules --get submodule.uke-linux-hardware-support.path)" = uke-linux-hardware-support
           test ! -e senemeos.sh
-          test -x senemos-uke-kernel/senemos.sh
-          bash -n senemos-uke-kernel/senemos.sh
+          test -f senemos-uke-kernel/Makefile
+          bash -n senemos-uke-kernel/packaging/rpm/kernel/build-srpm.sh
           test -x ukelinux.sh
           bash -n ukelinux.sh
       - name: Validate Core image entry contracts

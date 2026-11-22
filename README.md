@@ -264,7 +264,7 @@ confirm the running version with `uname -r`.
 
 | Component | Repository |
 | --- | --- |
-| Kernel and device trees | [senemos-uke-kernel-mainline](https://github.com/MCC45TR/senemos-uke-kernel-mainline/tree/main) |
+| Kernel and device trees | [senemos-uke-kernel-mainline](https://github.com/MCC45TR/senemos-uke-kernel-mainline) |
 | Hardware integration and packages | [uke-linux-hardware-support](https://github.com/MCC45TR/uke-linux-hardware-support/tree/main) |
 | Image builder | [uke-fedora-builder](https://github.com/MCC45TR/uke-fedora-builder/tree/main) |
 | Image distribution | [uke-linux-images](https://github.com/MCC45TR/uke-linux-images/tree/main) |
