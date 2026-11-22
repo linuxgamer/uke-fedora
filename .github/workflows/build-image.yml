@@ -31,6 +31,11 @@ on:
         required: false
         default: ""
         type: string
+      autologin_user:
+        description: Desktop user to pre-create and autologin (empty keeps first-run setup)
+        required: false
+        default: ""
+        type: string
 permissions:
   contents: write
 concurrency:
@@ -46,6 +51,11 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - name: Apply desktop defaults
+        env:
+          UKE_AUTOLOGIN_USER: ${{ inputs.autologin_user }}
+        run: python3 maint/prepare-desktop-defaults.py
 
       - name: Record component pins
         id: pins
