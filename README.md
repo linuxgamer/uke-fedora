@@ -21,7 +21,7 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 
 | Component | Status | Notes |
 | --- | --- | --- |
-| Fedora KDE desktop | 🟢 Working | Boots into KDE; basic use and touch-only setup tested. |
+| Fedora KDE desktop | 🟢 Working | Boots and Works |
 | GNOME desktop | 🟢 Working | The GNOME image boots and works. |
 | Other desktops | 🟢 Working | Sway, Hyprland, i3wm xfce, lxqt , cinnamon are verified working.
 | Display | 🟢 Working| Display is working 30-144hz supported, a brief 2-3 second white screen appears on boot. |
