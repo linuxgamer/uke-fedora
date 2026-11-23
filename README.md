@@ -51,8 +51,10 @@ Developer-level evidence and blockers: [docs/HARDWARE.md](docs/HARDWARE.md).
 
 Go to [releases](https://github.com/linuxgamer/uke-fedora/releases) and download the KDE or GNOME image. Then look at the [installation guide](docs/INSTALL.md).
 
-To build separate Fedora 44 images on an x86_64 PC, use
-`./uke-fedora-builder/build-images.sh --cross-kernel --output build/<DESIRED FOLDER>`.
+To build separate Fedora 44 images on an x86_64 PC, use:-
+```
+./uke-fedora-builder/build-images.sh --cross-kernel --output build/<DESIRED FOLDER>
+```
 By default all desktop variants are built, add `--profiles <ANY DE YOU WANT>,<DE 2>` to select DEs.
 `--cross-kernel` speeds up the kernel compilation by running Clang natively
 on the x86 PC, other packages and rootfs still use AArch64 containers. On an ARM64
