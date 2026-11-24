@@ -13,35 +13,37 @@ firmware bring-up before it can be tested.
 | --- | --- | --- | --- |
 | KDE Plasma desktop | verified | r1, owner report | — |
 | GNOME desktop | verified | r1, owner report | — |
+| Sway / Hyprland / i3wm / xfce / lxqt / cinnamon | verified | owner report | — |
 | TTY / Phosh / Plasma Mobile | untested | — | built, never booted on the tablet |
-| Display, TM panel | verified | native DPU/DSI, r1 | grey screen for ~2-3 s during handoff |
+| Display, TM panel | verified | native DPU/DSI, r1 | white screen for ~2-3 s during handoff |
 | Display, CSOT panel | untested | runtime variant selection exists | needs a CSOT tablet |
-| Refresh rates | partial | 60/120 Hz observed | other OEM modes unverified; VRR disabled |
-| Touch (NT36532) | verified | TM tablet | multitouch unreliable |
-| GPU OpenGL | verified | `freedreno` renderer | — |
-| GPU Vulkan | partial | experimental | not qualified |
+| Refresh rates | verified | 60-144 Hz observed, manual switching reliable | VRR disabled |
+| Touch (NT36532) | verified | TM tablet | 10-point multitouch working |
+| GPU OpenGL | verified | `freedreno` renderer, glmark2 ≈ 5-6K | — |
+| GPU Vulkan | verified | `freedreno` renderer, vkmark ≈ 8K | — |
 | Video decode (H.264/HEVC) | broken | no `/dev/video*` | series active in kernel preparation and media config; boot overlay gated by `UKE_VIDEO_OVERLAY=1` (fail-soft); build/device test pending |
 | CPU / DVFS | verified | all cores | — |
 | Storage (UFS, growfs) | verified | rootfs grows to partition | — |
 | Wi-Fi | verified | connects, transfers | — |
-| Bluetooth | partial | controller works, GUI now ships | factory MAC is missing; `uke-bluetooth-address` fails, manual `btmgmt public-addr` needed |
-| Audio playback | broken | no sound | no working codec/UCM path |
-| Microphones | broken | — | — |
-| Cameras | broken | — | no capture path |
+| Bluetooth | verified | KB, mouse, headphones tested | factory MAC missing; `btmgmt public-addr` workaround |
+| Audio playback | verified | all speakers, root + user sessions | — |
+| Microphones | verified | recording works | — |
+| Cameras | partial | WIP | no capture path verified yet |
 | Stylus | broken | — | no pen input |
 | Pogo keyboard | untested | issue #1 | needs a driver/ABL change |
-| Sensors (IMU, compass, proximity, cover) | partial | varying support | per-sensor verification missing |
-| USB-C OTG | partial | mouse via adapter | other accessories untested |
+| Magnetic keyboard (Focus WN8030) | verified | KB/touchpad, Caps Lock, backlight (Ctrl+Alt+3/4) | MiAuth disabled (`mi_auth=0`) |
+| Sensors (IMU, compass, proximity, cover) | partial | cover detection works | per-sensor verification missing |
+| USB-C OTG | verified | mouse, KB, hub via adapter | — |
 | USB CDC ACM | partial | manual on/off works | off by default |
-| External display (DP/HDMI) | untested | — | — |
-| Charging | partial | percentage and status | fast charge, limits, bypass unverified |
+| External display (DP/HDMI) | untested | — | DP stack in `fix/usb-c-display-alt-mode` |
+| Charging | partial | percentage and status | 20-25W observed vs 45W spec; fast charge, limits, bypass unverified |
 | Battery percentage | reported | KDE applet | — |
 | Battery time estimate | broken | `energy_*` are zero | driver patch `0127-qcom-battmgr-report-energy-in-mah` on branch `fix/battmgr-energy-mah`; needs device test |
-| Suspend / wake | partial | basic suspend | wake unreliable |
-| Reboot | partial | works in some tests | — |
+| Suspend / wake | verified | basic suspend works | — |
+| Reboot | verified | works | — |
 | Shutdown | partial | can hang or reboot | — |
-| zram swap | fixed after r1 | `zram-generator`, `CONFIG_ZRAM=m` | verify on the next image |
-| Boot reliability | verified | issue #8 closed | the report was a reporter tablet fault, not the port; keep watching for a recurrence |
+| zram swap | verified | `zram-generator`, `CONFIG_ZRAM=m` | — |
+| Boot reliability | verified | issue #8 closed | reporter tablet fault, not the port |
 
 ## Notes for bring-up work
 
@@ -58,6 +60,7 @@ firmware bring-up before it can be tested.
   exported `ENERGY_*` for mWh. Patch derived energy from charge × voltage.
 - **Boot loop**: userspace does not write `boot_a`; the fastboot fallback is an
   ABL-side decision (slot or boot-attempt state) or repeated boot failures.
+- **External display**: DP alt mode stack in `fix/usb-c-display-alt-mode` branch; needs device validation.
 
 ## Verification commands
 

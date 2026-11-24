@@ -72,12 +72,12 @@ This repository brings together the following components as submodules:
 
 | Component | Repository |
 | --- | --- |
-| Kernel and device trees | [senemos-uke-kernel-mainline](https://github.com/linuxgamer/senemos-uke-kernel-mainline) |
-| Hardware support and packages | [uke-linux-hardware-support](https://github.com/linuxgamer/uke-linux-hardware-support) |
-| Fedora image builder | [uke-fedora-builder](https://github.com/linuxgamer/uke-fedora-builder) |
+| Kernel and device trees | [senemos-uke-kernel-mainline](https://github.com/saksham-991/senemos-uke-kernel-mainline) |
+| Hardware support and packages | [uke-linux-hardware-support](https://github.com/saksham-991/uke-linux-hardware-support) |
+| Fedora image builder | [uke-fedora-builder](https://github.com/saksham-991/uke-fedora-builder) |
 
 To clone with the submodules:
 
 ```sh
-git clone --recurse-submodules https://github.com/linuxgamer/uke-fedora.git
+git clone --recurse-submodules https://github.com/saksham-991/uke-fedora.git
 ```
