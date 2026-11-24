@@ -37,7 +37,7 @@ This port is **work in progress**. Differences are: Fedora 44, `/userdata` insta
 | Reboot and shutdown |  🟢 Working  | Reboot works, shutdown can hang or restart the tablet. |
 | Built-in speakers and microphones | 🟢 Working | Playback and recording work for all speakers, including the first-boot root KDE session and normal user sessions. |
 | Magnetic keyboard | 🟢 Working | Xiaomi Focus Keyboard WN8030 keyboard/touchpad, Caps Lock and backlight work. MiAuth is disabled in the driver (`mi_auth=0`), so no token daemon is needed. Ctrl+Alt+3/4 sets backlight 0/50/100%; wake fades up over 300 ms. |
-| External display | ⚪ Not verified | Video output over USB-C/HDMI/DP has not been tested. |
+| External display | ⚪ WIP | Video output over USB-C/HDMI/DP has not been tested. |
 | Cameras | ⚪WIP | Neither camera has a verified working capture. |
 | Other sensors | 🟡 Partial | Motion, compass, proximity not verified but cover detection works.|
 | Charging | 🟡 Partial | Charging and battery percentage are detected, fast charging, charge limits and bypass may not work. Detected 20-25Watt of charging instead of full 45 Watt. |
