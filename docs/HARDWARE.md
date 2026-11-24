@@ -21,7 +21,7 @@ firmware bring-up before it can be tested.
 | Touch (NT36532) | verified | TM tablet | 10-point multitouch working |
 | GPU OpenGL | verified | `freedreno` renderer, glmark2 ≈ 5-6K | — |
 | GPU Vulkan | verified | `freedreno` renderer, vkmark ≈ 8K | — |
-| Video decode (H.264/HEVC) | broken | no `/dev/video*` | series active in kernel preparation and media config; boot overlay gated by `UKE_VIDEO_OVERLAY=1` (fail-soft); build/device test pending |
+| Video decode (H.264/HEVC) | verified | `/dev/video*` present, HW decode works | — |
 | CPU / DVFS | verified | all cores | — |
 | Storage (UFS, growfs) | verified | rootfs grows to partition | — |
 | Wi-Fi | verified | connects, transfers | — |
@@ -30,15 +30,14 @@ firmware bring-up before it can be tested.
 | Microphones | verified | recording works | — |
 | Cameras | partial | WIP | no capture path verified yet |
 | Stylus | broken | — | no pen input |
-| Pogo keyboard | untested | issue #1 | needs a driver/ABL change |
-| Magnetic keyboard (Focus WN8030) | verified | KB/touchpad, Caps Lock, backlight (Ctrl+Alt+3/4) | MiAuth disabled (`mi_auth=0`) |
+| Magnetic keyboard (Focus WN8030 / pogo) | verified | KB/touchpad, Caps Lock, backlight (Ctrl+Alt+3/4) | MiAuth disabled (`mi_auth=0`) |
 | Sensors (IMU, compass, proximity, cover) | partial | cover detection works | per-sensor verification missing |
 | USB-C OTG | verified | mouse, KB, hub via adapter | — |
 | USB CDC ACM | partial | manual on/off works | off by default |
 | External display (DP/HDMI) | untested | — | DP stack in `fix/usb-c-display-alt-mode` |
 | Charging | partial | percentage and status | 20-25W observed vs 45W spec; fast charge, limits, bypass unverified |
 | Battery percentage | reported | KDE applet | — |
-| Battery time estimate | broken | `energy_*` are zero | driver patch `0127-qcom-battmgr-report-energy-in-mah` on branch `fix/battmgr-energy-mah`; needs device test |
+| Battery time estimate | partial | works intermittently | driver patch `0127-qcom-battmgr-report-energy-in-mah` on branch `fix/battmgr-energy-mah`; needs consistent device test |
 | Suspend / wake | verified | basic suspend works | — |
 | Reboot | verified | works | — |
 | Shutdown | partial | can hang or reboot | — |
