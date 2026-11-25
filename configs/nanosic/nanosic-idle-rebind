@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 """Keep the Nanosic WN8030 keyboard auth window alive without TrustZone.
 
-The MCU stops reporting after its short MiAuth window. A full I2C driver
-reprobe resets that window but takes ~0.8 s, so do it during an idle gap
-instead of on a fixed wall-clock timer.
+3-minute window, seek 1.5s idle gap. If found, rebind ONCE per window.
+After rebind, restart new 3-minute window.
 """
 
 import glob
@@ -15,10 +14,9 @@ import time
 
 DRIVER = "/sys/bus/i2c/drivers/nanosic_wn8030"
 DEVICE = "5-004c"
-IDLE_SECONDS = 1.5
-EARLY_RESET = 270
-LATE_RESET = 285
-
+IDLE_GAP = 1.5
+WINDOW = 180
+UNBIND_DELAY = 0.01
 
 def find_event():
     for name in glob.glob("/sys/class/input/event*/device/name"):
@@ -35,7 +33,7 @@ def rebind():
         [
             "/bin/sh",
             "-c",
-            f"echo {DEVICE} > {DRIVER}/unbind; sleep 0.02; "
+            f"echo {DEVICE} > {DRIVER}/unbind; sleep {UNBIND_DELAY}; "
             f"echo {DEVICE} > {DRIVER}/bind",
         ],
         stdout=subprocess.DEVNULL,
@@ -45,8 +43,9 @@ def rebind():
 
 
 def main():
-    last_reset = time.monotonic()
-    last_key = last_reset
+    window_start = time.monotonic()
+    last_key = window_start
+    rebind_done = False
 
     while True:
         path = find_event()
@@ -71,14 +70,24 @@ def main():
                         if ev_type == 1:
                             last_key = now
 
-                if now - last_reset >= EARLY_RESET and now - last_key >= IDLE_SECONDS:
-                    rebind()
-                    last_reset = time.monotonic()
+                elapsed = now - window_start
+
+                if elapsed >= WINDOW:
+                    if not rebind_done:
+                        rebind()
+                        rebind_done = True
+                    window_start = now
+                    last_key = now
+                    rebind_done = False
                     break
-                if now - last_reset >= LATE_RESET:
+
+                if not rebind_done and (now - last_key) >= IDLE_GAP:
                     rebind()
-                    last_reset = time.monotonic()
+                    rebind_done = True
+                    window_start = now
+                    last_key = now
                     break
+
         except OSError:
             pass
         finally:
