@@ -1,11 +1,13 @@
 [Unit]
 Description=Unmute Xiaomi Pad 7 speakers
 After=pipewire.service wireplumber.service
+Before=systemd-suspend.service systemd-hibernate.service
 
 [Service]
 Type=oneshot
 ExecStartPre=/bin/sleep 3
-ExecStart=/bin/sh -c "amixer -c 0 sset 'BottomLeft Speaker' on; amixer -c 0 sset 'BottomRight Speaker' on; amixer -c 0 sset 'TopLeft Speaker' on; amixer -c 0 sset 'TopRight Speaker' on; wpctl set-profile 43 1; wpctl set-default 107; wpctl set-volume 107 1.0"
+ExecStart=/bin/sh -c "amixer -c 0 cset numid=55 1; amixer -c 0 cset numid=58 1; amixer -c 0 cset numid=61 1; amixer -c 0 cset numid=64 1; amixer -c 0 cset numid=13 1; amixer -c 0 cset numid=19 1"
+RemainAfterExit=yes
 
 [Install]
-WantedBy=default.target
+WantedBy=default.target suspend.target hibernate.target hybrid-sleep.target

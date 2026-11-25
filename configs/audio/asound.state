@@ -162,7 +162,7 @@ state.POCOPadX1 {
 	control.13 {
 		iface MIXER
 		name 'CLSH Switch'
-		value false
+		value true
 		comment {
 			access 'read write'
 			type BOOLEAN
@@ -230,7 +230,7 @@ state.POCOPadX1 {
 	control.19 {
 		iface MIXER
 		name 'LDOH Enable Switch'
-		value false
+		value true
 		comment {
 			access 'read write'
 			type BOOLEAN
