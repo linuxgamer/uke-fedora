@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-"""Desktop and headless diagnostics for Uke Linux."""
+"""Desktop and headless diagnostics for uke-fedora."""
 
 import argparse
 import json

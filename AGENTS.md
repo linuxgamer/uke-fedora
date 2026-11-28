@@ -1,4 +1,4 @@
-# Working on Uke Linux
+# Working on uke-fedora
 
 - Read `README.md` for the layout. Keep new folders inside the existing top-level folders.
 - Put component docs under `docs/<component>/`, using the matching project folder name. Keep project-wide docs directly under `docs/`.

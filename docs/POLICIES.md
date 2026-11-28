@@ -1,10 +1,10 @@
-# ukelinux project policies
+# uke-fedora project policies
 
 Draft for review. The [bring-up plan](BRINGUP.md) tracks work toward the first bootable port.
 
 ## Repository and code
 
-- Develop on `dev`. Promote tested commits to `stable`. Keep development builds out of the stable update channel.
+- Develop on `dev`. Promote tested commits to `stable`. Keep the previous implementation on `legacy`.
 - Keep the seven top-level folders described in the [README](../README.md). Keep the build entry point easy to find and keep contributor and agent instructions short. Use `private/TODO.md` for pending work and `private/HANDOFF.md` for context another agent needs to continue.
 - Organize component documentation under `docs/` using the matching project folder name. Keep project-wide documents directly under `docs/`.
 - Use Python for project-owned build and maintenance scripts. Call existing tools for tasks such as kernel compilation, package installation, and image creation.

@@ -19,7 +19,7 @@ The POCO Pad X1 shares the `uke` target. The hardware results here are from the 
 ## Bring-up scope
 
 - Use the old `uke-fedora` and MCC45TR's `uke-linux` checkouts only as code references. A tester reports success with `uke-fedora` R1 and newer commits. Record the exact build and device configuration when available.
-- Rewrite the port around Senemos. The kernel source is pinned under `kernel/senemos/`. Keep port-specific kernel integration in `ukelinux` and evaluate legacy kernel fixes individually.
+- Use the pinned Senemos source under `kernel/senemos/`. Keep port-specific kernel integration in `uke-fedora` and evaluate legacy kernel fixes individually.
 - Target Xiaomi Pad 7 and POCO Pad X1 with one `uke` image.
 - Install Fedora in `userdata` and boot from slot A. This wipes Android user data. Leave dual boot outside the initial scope and document how to return to stock.
 - Include a desktop in the first tablet candidate. Defer stable release planning until the image builds and boots reliably.

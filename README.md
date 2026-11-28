@@ -1,6 +1,6 @@
-# ukelinux
+# uke-fedora
 
-A Fedora 45 port for the Xiaomi Pad 7 and POCO Pad X1 (`uke`). `ukelinux` is the rewrite of [uke-fedora](https://github.com/linuxgamer/uke-fedora).
+A Fedora 45 port for the Xiaomi Pad 7 and POCO Pad X1 (`uke`).
 
 **Each preview image includes a touch-first mobile mode and a desktop mode.** Choose an image by the two sessions it offers.
 
@@ -16,7 +16,7 @@ Use the same account in both modes. To switch, sign out and choose a session at 
 - [Test a desktop profile](docs/TESTING.md#desktop-support-checklist)
 - [Build your own image](docs/build/README.md)
 
-The [legacy releases](https://github.com/linuxgamer/uke-fedora/releases) are still available.
+The previous port is available on the [legacy branch](https://github.com/linuxgamer/uke-fedora/tree/legacy) and in the [legacy releases](https://github.com/linuxgamer/uke-fedora/releases).
 
 ## Hardware support
 
@@ -49,7 +49,7 @@ The [legacy releases](https://github.com/linuxgamer/uke-fedora/releases) are sti
 
 The rewrite builds on [uke-linux](https://github.com/MCC45TR/uke-linux) and Senemos. See [remaining feature parity](docs/PARITY.md) for upstream features we still need to qualify.
 
-The full build must work on a fresh machine from a clone of `ukelinux` with its pinned upstream submodules, documented host tools, and documented firmware and device inputs. Senemos is outside the rewrite scope. The old `uke-linux` and `uke-fedora` trees serve only as code references.
+Build from a fresh clone of `uke-fedora` with its pinned upstream submodules, documented host tools, and firmware and device inputs. The upstream `uke-linux` tree and the `legacy` branch are references for the rewrite.
 
 See the [project policies](docs/POLICIES.md) for build and release requirements.
 

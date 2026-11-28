@@ -10,7 +10,8 @@ import sys
 
 DEVICE_TREE = Path("/sys/firmware/devicetree/base")
 PARTITIONS = Path("/dev/disk/by-partlabel")
-BOOT_ID_ARG = b"ukelinux.boot_id="
+# Accept the pre-preview marker on tablets that still have the earlier boot image.
+BOOT_ID_ARGS = (b"uke-fedora.boot_id=", b"ukelinux.boot_id=")
 SLOT_ARG = b"androidboot.slot_suffix="
 BOOTCTL_FALLBACK_MESSAGES = {
     "Couldn't find cmdline arg: 'slot_suffix'",
@@ -43,14 +44,18 @@ def verify_boot_identity(cmdline, handoff, slot_property, boot_a, boot_b):
     if slot_property not in (None, b"_a\0"):
         raise ValueError("Device tree slot disagrees with slot A")
 
-    identifiers = [arg for arg in handoff.split() if arg.startswith(BOOT_ID_ARG)]
-    if len(identifiers) != 1 or not re.fullmatch(rb"[0-9a-f]{64}", identifiers[0][len(BOOT_ID_ARG):]):
-        raise ValueError("Bootloader handoff lacks a unique Uke Linux boot identity")
+    identifiers = [arg for arg in handoff.split() if arg.startswith(BOOT_ID_ARGS)]
+    if len(identifiers) != 1:
+        raise ValueError("Bootloader handoff lacks a unique uke-fedora boot identity")
+    digest = identifiers[0].partition(b"=")[2]
+    if not re.fullmatch(rb"[0-9a-f]{64}", digest):
+        raise ValueError("The uke-fedora boot identity is malformed")
     arguments = boot_a[44:1580].split(b"\0", 1)[0].split()
     if (boot_a[:8] != b"ANDROID!" or boot_a[40:44] != b"\x04\0\0\0" or
-            [arg for arg in arguments if arg.startswith(BOOT_ID_ARG)] != identifiers or
-            b"senemos.root=userdata" not in arguments or identifiers[0] in boot_b):
-        raise ValueError("The running Uke Linux image cannot be attributed uniquely to boot_a")
+            [arg for arg in arguments if arg.startswith(BOOT_ID_ARGS)] != identifiers or
+            b"senemos.root=userdata" not in arguments or
+            any(prefix + digest in boot_b for prefix in BOOT_ID_ARGS)):
+        raise ValueError("The running uke-fedora image cannot be attributed uniquely to boot_a")
 
 
 def bootctl(*args):

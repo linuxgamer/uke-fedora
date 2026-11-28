@@ -13,7 +13,7 @@ PAGE = 4096
 HEADER_SIZE = 1584
 MAX_IMAGE = 512 * 1024**2
 ROOT_ARG = b"senemos.root=userdata"
-BOOT_ID_ARG = b"ukelinux.boot_id="
+BOOT_ID_ARG = b"uke-fedora.boot_id="
 
 
 @dataclass(frozen=True)
@@ -35,7 +35,7 @@ class BootHeader:
     def check_boot_id(self, kernel_sha256):
         identifiers = [arg for arg in self.command_line.split() if arg.startswith(BOOT_ID_ARG)]
         if identifiers != [BOOT_ID_ARG + kernel_sha256.encode("ascii")]:
-            raise ValueError("Boot image lacks the matching Uke Linux boot identity")
+            raise ValueError("Boot image lacks the matching uke-fedora boot identity")
 
 
 def aligned(size):
