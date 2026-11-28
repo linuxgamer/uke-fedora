@@ -1,0 +1,9 @@
+[org.gnome.desktop.screensaver]
+lock-enabled=false
+
+[org.gnome.settings-daemon.plugins.power]
+sleep-inactive-ac-type='suspend'
+sleep-inactive-battery-type='suspend'
+
+[org.gnome.settings-daemon.peripherals.touchscreen]
+orientation-lock=false

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Plasma Mobile Settings
+GenericName=Mobile Settings
+Exec=plasma-settings -x all %u
+Icon=org.kde.mobile.plasmasettings
+Terminal=false
+Categories=Qt;KDE;Settings;
+OnlyShowIn=KDE;
+X-KDE-FormFactors=tablet,handset
+X-DBUS-StartupType=Unique
+X-DBUS-ServiceName=org.kde.mobile.plasmasettings

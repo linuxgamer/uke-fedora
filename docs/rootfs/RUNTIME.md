@@ -1,0 +1,13 @@
+# Boot, power, and clock
+
+### Slot A boot acknowledgement
+
+All profiles acknowledge a successful slot A boot when Fedora reaches `multi-user.target`. The service matches the boot identity from the bootloader's device tree handoff to `boot_a`, checks that `boot_b` does not carry the same identity, and confirms that Fedora is running from `userdata` with slot A active and bootable. It uses Fedora's `qbootctl` to set and verify the success flag only when needed. Use a matching `boot.img` and `userdata.img` from the builder. To inspect the result, run `journalctl -b -u uke-slot-success.service`.
+
+### Idle display and clock
+
+The desktop can blank or lock its display while idle. System suspend uses suspend-to-idle, following the pinned upstream Uke configuration. The Xiaomi Pad 7 resumed to Plasma on a short power-button press with the USB data cable connected. Hibernate and the sleep modes that depend on it are disabled. The logind fallback ignores short power-key presses at the greeter. Desktop environments can handle the key through their own power settings. [Upstream sleep configuration](https://github.com/MCC45TR/uke-linux-hardware-support/blob/0a27cd293fc6ce5758aab631be83c3bfe16277ff/components/uke-desktop-integration/packaging/30-uke-s2idle.conf) · [systemd sleep settings](https://www.freedesktop.org/software/systemd/man/latest/systemd-sleep.conf.html)
+
+In Plasma, Plasma Mobile, and Plasma Login, a device-triggered service forwards Senemos's touchscreen `KEY_WAKEUP` gesture to KScreen to turn on the blanked display. At Plasma Login, closing the magnetic cover blanks the display and opening it turns the display back on. Signed-in sessions use PowerDevil for cover actions. Waking from system suspend also depends on which hardware interrupts can wake the kernel. [KWin wake-key handling](https://github.com/KDE/kwin/blob/v6.8.3/src/dpmsinputeventfilter.cpp)
+
+All profiles enable Fedora's Chrony service. A newly flashed root needs one successful network time sync before it can recover the clock offline. Once network time is synchronized, the Uke clock helper saves a UTC timestamp paired with the PMIC counter. On boot it adds the counter's elapsed seconds, including time powered off. If no saved sample is available or the counter moves backwards, Chrony can still use its saved timestamp as a starting point. Use `chronyc tracking` to check synchronization. [Chrony startup behavior](https://chrony-project.org/doc/4.9/chronyd.html) · [Senemos RTC handling](https://github.com/MCC45TR/senemos-uke-kernel-mainline/blob/38c2f657506822a73a5bc6e7626e08d6c16ecaec/kernel/patches/rtc/0002-rtc-keep-the-Uke-PMIC-counter-out-of-boot-clock-init.patch)

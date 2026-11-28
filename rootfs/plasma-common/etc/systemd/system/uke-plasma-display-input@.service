@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[Unit]
+Description=Handle Uke %i display controls in Plasma
+BindsTo=dev-input-uke\x2d%i.device
+After=dev-input-uke\x2d%i.device systemd-logind.service
+StartLimitIntervalSec=60s
+StartLimitBurst=3
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/python3 -I /usr/libexec/uke-plasma-touch-wake.py %i
+Restart=on-failure
+RestartSec=2s
+DevicePolicy=closed
+DeviceAllow=/dev/input/uke-%i r
+CapabilityBoundingSet=CAP_SETUID CAP_SETGID
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX

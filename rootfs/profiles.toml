@@ -1,0 +1,48 @@
+[desktop]
+packages = [
+    "sudo", "mesa-dri-drivers", "upower",
+    "iio-sensor-proxy", "polkit", "udisks2", "xorg-x11-server-Xwayland",
+    "zram-generator-defaults",
+]
+image_gib = 4
+
+[profiles.plasma]
+manager = "plasmalogin"
+session = "plasma"
+packages = [
+    "plasma-desktop", "plasma-workspace", "kwin", "plasma-login-manager",
+    "plasma-setup", "plasma-keyboard", "plasma-nm", "plasma-pa", "dbus-daemon",
+    "libglvnd-gles", "libcanberra-backend-pulse", "bluedevil", "kscreen", "powerdevil", "konsole", "dolphin",
+    "plasma-discover", "plasma-discover-packagekit",
+]
+
+[profiles.gnome]
+manager = "gdm"
+session = "gnome"
+packages = [
+    "gdm", "gnome-shell", "gnome-session-wayland-session", "gnome-initial-setup",
+    "gnome-control-center", "gnome-settings-daemon", "gnome-console", "nautilus",
+]
+
+[profiles.kde]
+manager = "plasmalogin"
+session = "plasma-mobile"
+packages = [
+    "plasma-mobile", "plasma-workspace", "kwin", "plasma-login-manager",
+    "plasma-setup", "plasma-keyboard", "plasma-settings", "plasma-nm", "dbus-daemon",
+    "libglvnd-gles", "libcanberra-backend-pulse", "plasma-pa", "bluedevil", "kscreen", "powerdevil", "konsole", "dolphin",
+    "plasma-discover", "plasma-discover-packagekit",
+]
+
+[profiles.phosh-gnome]
+manager = "gdm"
+session = "phosh"
+packages = [
+    "phosh", "phoc", "phosh-mobile-settings", "stevia-phosh-osk-provider",
+    "gdm", "gnome-shell", "gnome-session-wayland-session", "gnome-initial-setup",
+    "gnome-control-center", "gnome-settings-daemon", "gnome-console", "nautilus",
+]
+
+[profiles.tty]
+image_gib = 2
+packages = ["inih", "libinput", "libxkbcommon", "kbd"]

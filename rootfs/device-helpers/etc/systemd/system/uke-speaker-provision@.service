@@ -1,0 +1,27 @@
+[Unit]
+Description=Provision Uke speaker protection for %I
+BindsTo=dev-snd-%i.device
+After=dev-snd-%i.device
+RequiresMountsFor=/mnt/vendor/persist
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecCondition=/usr/libexec/uke-speaker-runtime --has-control
+ExecStart=/usr/libexec/uke-speaker-runtime --ensure-loaded --acdb /usr/lib/firmware/qcom/uke/audio/Forte_acdb_cal.acdb
+TimeoutStartSec=20s
+LimitCORE=0
+LimitMEMLOCK=infinity
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH CAP_IPC_LOCK CAP_SYS_RAWIO
+ProtectSystem=full
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictAddressFamilies=AF_UNIX
+DevicePolicy=closed
+DeviceAllow=/dev/snd/%i rw

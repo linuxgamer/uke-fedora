@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Keep Fedora's syscall filter and recover from the saved drift file if the RTC is older.
+OPTIONS="-F 2 -s"

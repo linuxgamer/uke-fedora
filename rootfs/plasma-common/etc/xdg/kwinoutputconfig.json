@@ -1,0 +1,16 @@
+[
+  {
+    "name": "outputs",
+    "data": [
+      {
+        "connectorName": "DSI-1",
+        "scale": 2.5,
+        "autoRotation": "Always"
+      }
+    ]
+  },
+  {
+    "name": "setups",
+    "data": []
+  }
+]

@@ -1,0 +1,14 @@
+[AC][SuspendAndShutdown]
+AutoSuspendAction=1
+LidAction=64
+PowerButtonAction=64
+
+[Battery][SuspendAndShutdown]
+AutoSuspendAction=1
+LidAction=64
+PowerButtonAction=64
+
+[LowBattery][SuspendAndShutdown]
+AutoSuspendAction=1
+LidAction=64
+PowerButtonAction=64

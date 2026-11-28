@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[Unit]
+Description=Restore UTC from the Uke PMIC counter
+DefaultDependencies=no
+ConditionFirmware=device-tree-compatible(xiaomi,uke)
+After=local-fs.target
+Before=sysinit.target time-set.target chronyd.service systemd-timesyncd.service shutdown.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/python3 -I /usr/libexec/uke-clock.py restore
+StateDirectory=uke-clock
+StateDirectoryMode=0700
+TimeoutStartSec=5s
+CapabilityBoundingSet=CAP_SYS_TIME
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateDevices=yes
+
+[Install]
+WantedBy=sysinit.target

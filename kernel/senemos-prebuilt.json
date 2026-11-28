@@ -1,0 +1,8 @@
+{
+  "release": "7.3.5-47",
+  "rpm": "senemos-uke-linux-kernel-mainline-core-7.3.5-47.fc46.aarch64.rpm",
+  "sha256": "3f6da38b7ea8ff232ed98baf5b48cb1c6bc71677d7bb48266305e36eb04abc8e",
+  "boot_kernel_sha256": "9e582967a41a426afccb0808b906d678df53f78407eae42a2ea10ff6250279c6",
+  "reference_revision": "38c2f657506822a73a5bc6e7626e08d6c16ecaec",
+  "source_url": "https://github.com/MCC45TR/senemos-uke-kernel-mainline"
+}

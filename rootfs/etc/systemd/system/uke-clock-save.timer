@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[Unit]
+Description=Periodically save a synchronized Uke clock sample
+ConditionFirmware=device-tree-compatible(xiaomi,uke)
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=2min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

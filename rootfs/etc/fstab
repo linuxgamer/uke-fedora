@@ -1,0 +1,2 @@
+# SPDX-License-Identifier: GPL-3.0-only
+PARTLABEL=userdata / ext4 defaults,noatime,x-systemd.growfs 0 1

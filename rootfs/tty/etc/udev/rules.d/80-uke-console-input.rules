@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-only
+SUBSYSTEM=="input", KERNEL=="event*", DRIVERS=="nt36532-uke-touch", ENV{ID_INPUT_TOUCHSCREEN}=="1", SYMLINK+="input/uke-touchscreen", TAG+="systemd", ENV{SYSTEMD_WANTS}+="uke-console-input.service"
+SUBSYSTEM=="graphics", KERNEL=="fb0", TAG+="systemd", ENV{SYSTEMD_WANTS}+="uke-console-input.service"
+SUBSYSTEM=="misc", KERNEL=="uinput", TAG+="systemd", ENV{SYSTEMD_WANTS}+="uke-console-input.service"

@@ -1,0 +1,25 @@
+<monitors version="2">
+  <configuration>
+    <layoutmode>logical</layoutmode>
+    <logicalmonitor>
+      <x>0</x>
+      <y>0</y>
+      <!-- Mutter requires whole logical pixels. 8/3 gives 1200 by 801. -->
+      <scale>2.6666667461395264</scale>
+      <primary>yes</primary>
+      <monitor>
+        <monitorspec>
+          <connector>DSI-1</connector>
+          <vendor>unknown</vendor>
+          <product>unknown</product>
+          <serial>unknown</serial>
+        </monitorspec>
+        <mode>
+          <width>3200</width>
+          <height>2136</height>
+          <rate>60</rate>
+        </mode>
+      </monitor>
+    </logicalmonitor>
+  </configuration>
+</monitors>

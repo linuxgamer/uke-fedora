@@ -1,0 +1,2 @@
+# Match the integrated Uke audio card and bind provisioning to its control node.
+ACTION=="add", SUBSYSTEM=="sound", KERNEL=="controlC[0-9]*", ATTRS{id}=="POCOPadX1", TAG+="systemd", ENV{SYSTEMD_WANTS}+="uke-speaker-provision@%k.service"

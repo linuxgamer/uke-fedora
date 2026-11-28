@@ -1,91 +1,76 @@
-# Uke Fedora
+# ukelinux
 
-[![Build images](https://github.com/linuxgamer/uke-fedora/actions/workflows/build-image.yml/badge.svg)](https://github.com/linuxgamer/uke-fedora/actions/workflows/build-image.yml)
+A Fedora 45 port for the Xiaomi Pad 7 and POCO Pad X1 (`uke`). `ukelinux` is the rewrite of [uke-fedora](https://github.com/linuxgamer/uke-fedora).
 
-Fedora Linux port made for **Xiaomi Pad 7** and **POCO Pad X1**, based on [MCC45TR's port](https://github.com/MCC45TR/uke-linux).
+**Each preview image includes a touch-first mobile mode and a desktop mode.** Choose an image by the two sessions it offers.
 
-This port is **work in progress**. Differences are: Fedora 44, `/userdata` install, more DEs, build optimisations, polishing and extra QoL stuff.
+| Preview image | Mobile mode | Desktop mode |
+| --- | --- | --- |
+| `kde` | Plasma Mobile | Plasma |
+| `phosh-gnome` | Phosh | GNOME |
 
-> [!WARNING]
-> This is not ready for daily use. Installing to `userdata` overwrites Android user data. Back up any data you have!
+Use the same account in both modes. To switch, sign out and choose a session at the login screen. Installing Fedora erases Android and any existing Fedora files in `userdata`.
 
-## Start here
+- [Install Fedora and prepare recovery](docs/INSTALL.md)
+- [Check profile and hardware status](docs/BRINGUP.md#preview-status)
+- [Test a desktop profile](docs/TESTING.md#desktop-support-checklist)
+- [Build your own image](docs/build/README.md)
 
-- **Installing the port:** read the [installation guide](docs/INSTALL.md) and the
-  [releases](https://github.com/linuxgamer/uke-fedora/releases).
-- **Developing the port:** read [docs/DEVELOPING.md](docs/DEVELOPING.md) for the
-  environment, checks and contribution flow, then [AGENTS.md](AGENTS.md) for the
-  rules. Current facts are in [docs/STATE.md](docs/STATE.md), ordered work in
-  [docs/BACKLOG.md](docs/BACKLOG.md).
+The [legacy releases](https://github.com/linuxgamer/uke-fedora/releases) are still available.
 
 ## Hardware support
 
-| Component | Status | Notes |
-| --- | --- | --- |
-| Fedora KDE desktop | 🟢 Working | Boots into KDE; basic use and touch-only setup tested. |
-| GNOME desktop | 🟢 Working | The GNOME image boots and works. |
-| Other desktops | ⚪ Not verified | TTY, Phosh and Plasma Mobile still need tablet testing. |
-| TTY touch keyboard | ⚪ Not verified | An experimental framebuffer keyboard is included in TTY images; it has not been tested on the tablet. |
-| Display | 🟡 Partial | Native TM display works; a brief grey screen appears during boot. CSOT is untested on this port. |
-| Refresh rate | 🟡 Partial | TM switches between the modes offered in KDE; sustained operation is untested. VRR is disabled. |
-| Touchscreen | 🟡 Partial | Works, multitouch is unreliable. |
-| Graphics (GPU) | 🟡 Partial | OpenGL works, Vulkan is experimental. |
-| CPU and storage | 🟢 Working | All CPU cores are available, internal storage works. |
-| Wi-Fi | 🟢 Working | Connects to networks and supports normal data transfers. |
-| Bluetooth | 🟡 Partial | Mouse and headphone playback worked on one tablet; another installer reports Bluetooth failure in [issue #5](https://github.com/linuxgamer/uke-fedora/issues/5). |
-| Auto-rotation | 🟢 Working | Screen and touch orientation follow tablet rotation. |
-| Other sensors | 🟡 Partial | Motion, compass, proximity and cover detection have varying levels of support. |
-| USB-C accessories | 🟡 Partial | An OTG mouse works through a USB-A-to-USB-C adapter; manual USB ACM on/off works. Other accessories need testing. |
-| External display | ⚪ Not verified | Video output over USB-C/HDMI/DP has not been tested. |
-| Charging | 🟡 Partial | Charging and battery percentage are detected, fast charging, charge limits and bypass may not work. |
-| Sleep and wake | 🟡 Partial | Basic suspend exists, but wake is unreliable. |
-| Reboot and shutdown | 🟡 Partial | Reboot works in some tests, shutdown can hang or restart the tablet. |
-| Built-in speakers and microphones | 🔴 Not working | No functional playback or recording yet. |
-| Cameras | 🔴 Not working | Neither camera has a verified working capture. |
-| Stylus | 🔴 Not working | Pen input, pressure and tilt are unavailable. |
-| Magnetic keyboard | ⚪ Not verified | Pogo keyboard and touchpad support have not been tested. |
+<details>
+<summary>Expand the hardware support table</summary>
 
-🟢 Working · 🟡 Partial · 🔴 Not working · ⚪ Not verified
+| Feature | Xiaomi Pad 7 | POCO Pad X1 | Notes |
+| --- | --- | --- | --- |
+| Boot, internal display and touchscreen | Works | Untested | Slot A boot and touch setup verified on Xiaomi Pad 7. |
+| Adreno graphics | Works | Untested | Freedreno FD735 verified in Plasma and Plasma Login. |
+| Wi-Fi | Partial | Untested | Internet access and one suspend reconnect passed. LAN peers can time out after idle. |
+| Bluetooth | Works | Untested | Pairing was reported working. Accessory and reconnect coverage is limited. |
+| Speakers and microphone | Works | Untested | Internal speaker playback and microphone capture tested. |
+| Auto-rotation and magnetic cover | Works | Untested | Rotation and cover events tested. Cover blanking and reopening passed at Plasma Login. |
+| Suspend and wake | Partial | Untested | Suspend-to-idle and power-button resume tested. Other wake sources need coverage. |
+| Battery and charging | Partial | Untested | UPower reads the battery. The gauge can report Charging while the battery loses charge on low-power USB. |
+| Clock without a network | Works | Untested | Verified on a cold boot after the first network time sync. |
+| Hardware video | Partial | Untested | Native H.264 and HEVC tested with optional Iris firmware. The browser test was limited. |
+| Focus Keyboard, stylus and USB-C docks | Untested | Untested | Accessory tests pending. |
+| Cameras | Unavailable | Untested | Camera capture is outside the preview scope. |
 
-Developer-level evidence and blockers: [docs/HARDWARE.md](docs/HARDWARE.md).
+</details>
 
-## Screenshots
+## What this rewrite adds
 
-| KDE Plasma | GPU and Vulkan |
+- One image per desktop family, with a touch-first session and a desktop session available at sign-in.
+- A single cached Python builder using stock Fedora packages directly and a small, checksum-pinned firmware bundle.
+- Uke Debug diagnostics from a PC over SSH, an authenticated USB console, or TWRP recovery.
+- Tablet-oriented Plasma defaults with 250% scaling, cover blanking, touch wake, and the Adreno render path at login.
+
+The rewrite builds on [uke-linux](https://github.com/MCC45TR/uke-linux) and Senemos. See [remaining feature parity](docs/PARITY.md) for upstream features we still need to qualify.
+
+The full build must work on a fresh machine from a clone of `ukelinux` with its pinned upstream submodules, documented host tools, and documented firmware and device inputs. Senemos is outside the rewrite scope. The old `uke-linux` and `uke-fedora` trees serve only as code references.
+
+See the [project policies](docs/POLICIES.md) for build and release requirements.
+
+Build the Fedora 45 image pair with `python3 build/build.py` on Linux or WSL2. Use `--profile kde` or `--profile phosh-gnome` for a preview image. See the [build instructions](docs/build/README.md) for inputs, host setup, and other profiles.
+
+Use [Uke Debug](docs/extra/README.md) to run tablet diagnostics, view live stats, and open a shell. It provides a desktop GUI and JSON commands for automation.
+
+| Folder | What belongs there |
 | --- | --- |
-| ![KDE Plasma on the tablet](.github/assets/screenshots/uke-fedora-kde-2026-10-17.png) | ![Chromium GPU status](.github/assets/screenshots/Fedora_Rawhide_PAD7_UKE_Chromium_GPU_Status.png) |
+| `.github/` | GitHub Actions, issue templates, and images used in the README |
+| `build/` | Python build scripts, build inputs, temporary work, cache, and outputs |
+| `docs/` | Public documentation organized by the project folder it covers |
+| `extra/` | Optional tools and materials that have no home elsewhere |
+| `kernel/` | Senemos kernel integration, upstream revision, and any local patches |
+| `private/` | Local notes, handoffs, reference material, and other unpublished files |
+| `rootfs/` | Files and configuration intended for the installed root filesystem |
 
-Screenshots are from upstream and will be replaced; they are not evidence that every block works in the current release.
+Build scripts and shareable inputs can be tracked under `build/`. Git ignores `build/cache/`, `build/work/`, `build/out/`, and `build/inputs/local/`. Use the last directory for local-only inputs and `private/` for unpublished reference material.
 
-## Downloads and building
+The rootfs source is the [common Fedora package list](rootfs/packages.txt), [profile definitions](rootfs/profiles.toml), and device configuration under `rootfs/`. Run `git submodule update --init --recursive --depth 1` to populate the [Senemos](kernel/senemos), [hardware-support](rootfs/device-helpers/hardware-support), [HexagonRPC](rootfs/device-helpers/hexagonrpc), and [BuffyBox](rootfs/tty/buffybox) source trees. Bring-up images use the [pinned Senemos RPM](kernel/senemos-prebuilt.json). Builds run in WSL2 write their outputs inside the Linux checkout.
 
-Go to [releases](https://github.com/linuxgamer/uke-fedora/releases) and download the KDE or GNOME image. Then look at the [installation guide](docs/INSTALL.md).
+## License
 
-To build separate Fedora 44 images on an x86_64 PC, use
-`./uke-fedora-builder/build-images.sh --cross-kernel --output build/<DESIRED FOLDER>`.
-By default all desktop variants are built, add `--profiles <ANY DE YOU WANT>,<DE 2>` to select DEs.
-`--cross-kernel` speeds up the kernel compilation by running Clang natively
-on the x86 PC, other packages and rootfs still use AArch64 containers. On an ARM64
-host, omit the flag. Host requirements and the first-hour setup are in
-[docs/DEVELOPING.md](docs/DEVELOPING.md); see the
-[build guide](https://github.com/linuxgamer/uke-fedora-builder/blob/main/docs/BUILDING.md) and the
-[cache guide](https://github.com/linuxgamer/uke-fedora-builder/blob/main/docs/BUILD-CACHE.md)
-for cache, resume and rebuild options.
-
-Package updates can be published to COPR; see [docs/COPR.md](docs/COPR.md).
-
-## Source
-
-This repository brings together the following components as submodules:
-
-| Component | Repository |
-| --- | --- |
-| Kernel and device trees | [senemos-uke-kernel-mainline](https://github.com/linuxgamer/senemos-uke-kernel-mainline) |
-| Hardware support and packages | [uke-linux-hardware-support](https://github.com/linuxgamer/uke-linux-hardware-support) |
-| Fedora image builder | [uke-fedora-builder](https://github.com/linuxgamer/uke-fedora-builder) |
-
-To clone with the submodules:
-
-```sh
-git clone --recurse-submodules https://github.com/linuxgamer/uke-fedora.git
-```
+Original port work is licensed under [GPL-3.0-only](LICENSE). The kernel and code imported from other ports retain their applicable licenses and notices.

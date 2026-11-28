@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[Unit]
+Description=Acknowledge a successful Uke Linux slot A boot
+ConditionKernelCommandLine=root=PARTLABEL=userdata
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I /usr/libexec/uke-slot-success.py
+RemainAfterExit=yes
+TimeoutStartSec=30s
+
+[Install]
+WantedBy=multi-user.target

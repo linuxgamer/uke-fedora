@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[Unit]
+Description=Buffyboard framebuffer keyboard
+DefaultDependencies=no
+After=local-fs.target systemd-udevd.service systemd-modules-load.service
+Before=shutdown.target
+Conflicts=shutdown.target
+ConditionPathExists=/dev/fb0
+ConditionPathExists=/dev/uinput
+ConditionPathExists=/dev/input/uke-touchscreen
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+ExecStart=/usr/bin/buffyboard
+Restart=on-failure
+RestartSec=3s
+DevicePolicy=closed
+DeviceAllow=/dev/uinput rw
+DeviceAllow=char-fb rw
+DeviceAllow=char-input rw
+DeviceAllow=char-tty rw
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

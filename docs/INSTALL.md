@@ -1,38 +1,48 @@
-# Install Fedora 44 on Xiaomi Pad 7
+# Install the Fedora preview on a Uke tablet
 
-This guide has been tested on **Xiaomi Pad 7**. TTY, KDE, GNOME, Phosh and Plasma Mobile images are available for install. The boot image goes to **`boot_a`** and its root filesystem goes to
-**`userdata`**. Slot B can be used for TWRP. Replacing
-`userdata` erases all Android user data. The bootloader must be unlocked!
+Both preview images include a mobile mode and a desktop mode. Check the [profile and hardware status](BRINGUP.md#preview-status) to see which sessions have been tested on your model.
 
-## 1. Prerequisites
+| Image | Mobile mode | Desktop mode |
+| --- | --- | --- |
+| `kde` | Plasma Mobile | Plasma |
+| `phosh-gnome` | Phosh | GNOME |
 
-These images were built and tested with HyperOS **3.304 Global**. Ensure you have this version and unlock the bootloader before installing, other OEM
-versions have not been validated for this release.
-### Unlocking the bootloader
+After setup, sign out and use the login screen’s session menu to switch modes on the same installation. On the Phosh and GNOME image, select your account to reveal the gear menu, then choose **Phosh** or **GNOME** before signing in. Both modes use the same account and files.
 
-1. In HyperOS, enable Developer options, then `OEM unlocking` and USB debugging.
-2. Apply for bootloader unlock in Xiaomi community app.
-3. Use Xiaomi's Mi Unlock tool on a Windows host with the same Mi account as the
-   tablet. Xiaomi may enforce a waiting period (often 168 hours) before the
-   unlock is allowed; plan for it.
-4. Unlocking wipes all user data and may affect the warranty. Back up first.
-5. Never re-lock the bootloader while a non-stock `boot` or `vendor_boot` image
-   is flashed.
-6. Do not flash firmware from an older ROM: anti-rollback can brick the tablet.
+**Installing replaces everything in `userdata`, including Android apps, files, and any existing Fedora installation.** It also replaces the boot image in slot A. The commands below preserve slot B.
 
-Official unlock request: <https://en.miui.com/unlock/>
+## Before you start
 
-After unlocking, choose any available image you want, there are multiple variants:
-- KDE - Best support
-- GNOME - boots and works.
-- Phosh/Plasma Mobile - not tested.
-- TTY - bare console; touch keyboard not yet tested on the tablet.
+1. Back up your files, authenticator recovery codes, and anything else you need to a separate device. Check that you can open the backup.
+2. Save the full stock **fastboot ROM** for your exact tablet model and region. Keep a copy at least as recent as the firmware already on the tablet. Use the [Xiaomi ROM download guide](https://new.c.mi.com/global/post/101089) and [Xiaomi flashing instructions](https://new.c.mi.com/global/miuidownload/detail/guide/global/global/miuidownload/index).
+3. Confirm that the bootloader is unlocked and that you can enter your recovery environment. If you already have working TWRP on slot B, check it now. Check the eligibility for your model and region with [Xiaomi’s bootloader guidance](https://www.mi.com/global/support/faq/details/KA-07238/).
+4. Download and extract [Android Platform Tools](https://developer.android.com/tools/releases/platform-tools) on the computer you’ll use to flash. Use a data cable and keep the tablet charged. Open a terminal in the folder containing the image pair.
 
-## 2. Check the tablet in fastboot
+In Windows PowerShell, if you extracted the tools under Downloads, run `$env:Path = "$HOME\Downloads\platform-tools;$env:Path"` in that terminal. On Linux, add the extracted tools directory to your shell’s `PATH`. Check that the terminal can find the tool with `fastboot --version`.
 
-Run these commands yourself on a computer with a reliable fastboot connection (USB 2.0).
+The reviewed input firmware is Global HyperOS `OS3.0.304.0.WOZMIXM` on Xiaomi Pad 7. Follow the compatibility notes for the image you are testing. The POCO edition needs its own matching stock recovery ROM.
 
-```sh
+## Verify the image pair
+
+Keep `boot.img`, `userdata.img`, `manifest.json`, and `SHA256SUMS` together from the same build. On Linux, run `sha256sum -c SHA256SUMS`. On Windows, run these PowerShell commands from the image folder.
+
+```powershell
+$manifest = Get-Content .\manifest.json -Raw | ConvertFrom-Json
+foreach ($part in @('boot_a', 'userdata')) {
+    $image = $manifest.images.$part
+    $hash = (Get-FileHash -LiteralPath $image.filename -Algorithm SHA256 -ErrorAction Stop).Hash
+    if ($hash -ne $image.sha256) { throw "Checksum mismatch for $($image.filename)" }
+    "$($image.filename) verified"
+}
+```
+
+Both files must pass. For local builds, follow the [build guide](build/README.md) to generate the pair.
+
+## Check the tablet in bootloader fastboot
+
+Power off the tablet. Hold Volume Down and Power to open the fastboot screen. Connect it to the computer and run these commands one at a time.
+
+```text
 fastboot devices
 fastboot getvar product
 fastboot getvar unlocked
@@ -43,64 +53,29 @@ fastboot getvar partition-size:userdata
 fastboot getvar is-logical:userdata
 ```
 
-Continue only if the connected product is `uke`, the bootloader is `unlocked`,
-this is bootloader fastboot (`is-userspace: no`), `boot_a` exists and `userdata`
-is a physical partition. The boot partition should hold at least 100,663,296
-bytes (~96 MiB). The `userdata` partition must be at least as large as
-`root_image_logical_bytes` in the downloaded pair's `manifest.json`; this
-checks the image against the actual tablet without assuming a storage size.
+Continue when exactly one intended tablet is connected, the product is `uke`, the bootloader is unlocked, and both `is-userspace` and `is-logical:userdata` say `no`. Save the current slot for your recovery notes.
 
-## 3. Flash it!
+The minimum boot partition size is **96 MiB** (`0x6000000`). The minimum userdata size is **4 GiB** (`0x100000000`) for graphical builds or **2 GiB** (`0x80000000`) for TTY. Compare against `userdata_logical_bytes` in the manifest; the sparse file on disk is smaller. To convert a hex value in PowerShell, use `[Convert]::ToInt64('6000000', 16)`, replacing the digits with the value fastboot reported after `0x`.
 
-It is also recommended to install TWRP in case your system breaks:
+## Flash the image pair
 
-```sh
-fastboot flash recovery_ab "twrp_recovery_ab.img"
-```
+Run each command separately. Wait for it to succeed before continuing. If a flash fails, stop and save the error before switching slots or rebooting.
 
-`cd` into the extracted folder with Fedora images and use bootloader fastboot:
-
-```sh
-fastboot flash userdata "userdata.img"
-fastboot flash boot_a "fedora_boot.img"
+```text
+fastboot flash userdata userdata.img
+fastboot flash boot_a boot.img
 fastboot set_active a
 fastboot reboot
 ```
 
-If flashing `userdata` fails, **do not reboot into Fedora**. Check the exact
-error, the fastboot version and the USB connection before retrying. The
-reported need for `fastbootd` in
-[issue #5](https://github.com/linuxgamer/uke-fedora/issues/5) was later traced
-to a broken `termux-fastboot` installation; the reporter confirmed the commands
-above work from bootloader fastboot.
+Create your own account and password using the [first-login instructions for your profile](rootfs/README.md). Connect to Wi-Fi once to set the correct date. A new installation saves a clock sample after its first successful network sync, then can restore time offline on later boots. Follow the [desktop support checklist](TESTING.md#desktop-support-checklist) and keep a USB keyboard handy as a fallback for the TTY test.
 
-These commands overwrite `boot_a` and **all existing userdata!**
-Do not touch `userdata` afterward, that would erase the
-new Fedora system. If a command fails, **stop** and inspect the error
-before changing slots or retrying.
+## Recover from a failed boot
 
-## First boot and return to Android
+Record the last message or take a photo. If you previously verified TWRP on slot B, return to bootloader fastboot and run `fastboot set_active b` followed by `fastboot reboot recovery`. Use [Uke Debug](extra/README.md) to collect the Fedora journal if TWRP can mount it. Follow the [bug report guide](../.github/ISSUE_TEMPLATE/bug_report.md) and include the image profile and checksum.
 
-All images will launch setup wizards. Create your own account, the images include no preset password.
+To retry a verified Fedora installation, return to bootloader fastboot and use `fastboot set_active a` followed by `fastboot reboot`. Reflashing `userdata` erases your Fedora files.
 
-If Fedora does not boot:
-1. Keep the exact error or a photo of the screen and make a bug report.
-2. Make sure you flashed the correct `fedora_boot.img` and `userdata.img` from
-   the same build.
-3. Try debugging from TWRP: extract `twrp_recovery_ab.tar.zst` from the release,
-   boot it with `fastboot --set-active=b` and `fastboot reboot recovery and inspect the partitions`. To boot back into Fedora run `fastboot --set-active=a` and `fastboot reboot`
+## Return to Android
 
-### Return to Android
-
-Switching to slot B alone cannot restore `userdata`; that partition now holds
-Fedora. Keep a matching stock fastboot ROM and your data backup before flashing.
-
-1. Download the stock ROM for your region and the TWRP archive from the release.
-2. Back up anything still readable: boot into TWRP and copy the internal storage
-   or the partitions you need to a USB drive.
-3. Return to bootloader fastboot, then run the stock `flash_all.sh` (or MiFlash)
-   from the matching ROM. It erases `userdata` and restores `boot`, `vendor_boot`
-   and the stock system.
-4. Do not flash firmware from an older ROM: anti-rollback can brick the tablet.
-5. Never re-lock the bootloader while a non-stock `boot` or `vendor_boot` is
-   flashed.
+Back up any Fedora files you want to keep. Use the **clean install** option in Xiaomi’s flashing tool or the clean-install script supplied with the full stock fastboot ROM for your exact tablet model and region. Choose the option that leaves the bootloader unlocked. The stock install wipes `userdata` again. Restore your separate Android backup after it boots. Slot B can get you to recovery, but it cannot restore Android’s erased data. [Xiaomi flashing instructions](https://new.c.mi.com/global/miuidownload/detail/guide/global/global/miuidownload/index)

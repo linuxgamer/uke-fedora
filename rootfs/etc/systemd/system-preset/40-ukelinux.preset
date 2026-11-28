@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Preserve port services when systemd applies presets on first boot.
+enable uke-clock-restore.service
+enable uke-clock-save.timer
+enable uke-slot-success.service
+enable uke-bluetooth-address.service
+enable uke-console-input.service

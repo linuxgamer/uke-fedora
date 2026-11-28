@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Common Fedora base and audio stack
+fedora-release
+dnf5
+dnf5-plugins
+rpm
+systemd
+systemd-pam
+systemd-udev
+bash
+coreutils
+util-linux
+python3
+qbootctl
+chrony
+kmod
+shadow-utils
+passwd
+pam
+e2fsprogs
+NetworkManager-wifi
+bluez
+selinux-policy-targeted
+alsa-ucm
+pipewire
+pipewire-pulseaudio
+pipewire-utils
+wireplumber
+
+# Inspect the tablet's input, USB and network interfaces from the console.
+evtest
+usbutils
+iproute

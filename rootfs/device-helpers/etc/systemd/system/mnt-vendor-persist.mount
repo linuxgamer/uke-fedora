@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[Unit]
+Description=Uke factory data for Bluetooth and sensors
+ConditionFirmware=device-tree-compatible(xiaomi,uke)
+JobTimeoutSec=20s
+
+[Mount]
+What=/dev/disk/by-partlabel/persist
+Where=/mnt/vendor/persist
+Type=ext4
+Options=ro,noload,nodev,nosuid,noexec

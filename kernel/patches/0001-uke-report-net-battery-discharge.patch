@@ -1,0 +1,94 @@
+Subject: [PATCH] power: supply: report Uke net battery discharge while plugged in
+
+On a USB2 standard downstream port the tablet can draw more power than
+the port supplies. The OEM status remains Charging while the signed
+battery current and the falling charge counter show discharge.
+
+Use one fresh current read in the existing Uke charge-status path. Keep
+a confirmed partial cap as Not charging and report Discharging for a draw
+greater than 100 mA outside that case. Preserve the OEM status near zero,
+on incomplete reads, or across an observation epoch change.
+
+Base Senemos packaging: 38c2f657506822a73a5bc6e7626e08d6c16ecaec
+Released driver SHA-256: f576da2a2db20745d13258284f9e47ae5f9da129f57f1607d4b6db94ebe71676
+
+diff --git a/drivers/power/supply/qcom_battmgr.c b/drivers/power/supply/qcom_battmgr.c
+index fc94e7d..c058a0c 100644
+--- a/drivers/power/supply/qcom_battmgr.c
++++ b/drivers/power/supply/qcom_battmgr.c
+@@ -1146,12 +1146,12 @@ static int qcom_battmgr_uke_get_charge_status(struct qcom_battmgr *battmgr,
+ 					      union power_supply_propval *val)
+ {
+ 	static const unsigned int confirm[] = {
+-		BATT_CURR_NOW, BATT_CAPACITY, BATT_CHG_CTRL_EN, BATT_CHG_CTRL_END_THR,
++		BATT_CAPACITY, BATT_CHG_CTRL_EN, BATT_CHG_CTRL_END_THR,
+ 	};
+ 	unsigned int end, i;
+ 	u64 before, after;
+ 	bool coherent;
+-	int ret;
++	int current_ua, ret;
+ 
+ 	guard(mutex)(&battmgr->lock);
+ 	coherent = qcom_battmgr_uke_observation_epoch(battmgr, &before);
+@@ -1160,15 +1160,23 @@ static int qcom_battmgr_uke_get_charge_status(struct qcom_battmgr *battmgr,
+ 	if (ret)
+ 		return ret;
+ 	val->intval = battmgr->status.status;
++	if (!coherent || val->intval != POWER_SUPPLY_STATUS_CHARGING)
++		return 0;
+ 
+-	/* The raw charging flag can remain set above a partial cap while
+-	 * the pack is discharging. Cached data only selects candidates.
+-	 */
++	ret = qcom_battmgr_request_property(battmgr, BATTMGR_BAT_PROPERTY_GET,
++					    BATT_CURR_NOW, 0);
++	if (ret || !qcom_battmgr_uke_observation_epoch(battmgr, &after) ||
++	    before != after)
++		return 0;
++	current_ua = battmgr->status.current_now;
++	if (current_ua > 0)
++		return 0;
++
++	/* A confirmed partial cap still takes priority over net current. */
+ 	end = battmgr->info.charge_ctrl_end;
+-	if (!coherent || val->intval != POWER_SUPPLY_STATUS_CHARGING ||
+-	    !end || end >= 100 || battmgr->status.percent > 100 ||
++	if (!end || end >= 100 || battmgr->status.percent > 100 ||
+ 	    battmgr->status.percent < end)
+-		return 0;
++		goto report_current;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(confirm); i++) {
+ 		ret = qcom_battmgr_request_property(battmgr, BATTMGR_BAT_PROPERTY_GET,
+@@ -1176,18 +1184,25 @@ static int qcom_battmgr_uke_get_charge_status(struct qcom_battmgr *battmgr,
+ 		if (ret || !qcom_battmgr_uke_observation_epoch(battmgr, &after) ||
+ 		    before != after)
+ 			return 0;
+-		if (i == 0 && battmgr->status.current_now > 0)
+-			return 0;
+ 	}
+ 	if (!battmgr->control.enabled || battmgr->info.charge_ctrl_end != end ||
+ 	    battmgr->status.percent < end || battmgr->status.percent > 100)
+-		return 0;
++		goto report_current;
+ 
+ 	/* A cable removal can leave the firmware battery status stale. */
+ 	ret = qcom_battmgr_request_property(battmgr, BATTMGR_USB_PROPERTY_GET, USB_ONLINE, 0);
+-	if (!ret && battmgr->usb.online &&
+-	    qcom_battmgr_uke_observation_epoch(battmgr, &after) && before == after)
++	if (ret || !qcom_battmgr_uke_observation_epoch(battmgr, &after) ||
++	    before != after)
++		return 0;
++	if (battmgr->usb.online) {
+ 		val->intval = POWER_SUPPLY_STATUS_NOT_CHARGING;
++		return 0;
++	}
++
++report_current:
++	/* Ignore small negative samples around zero net pack current. */
++	if (current_ua < -100000)
++		val->intval = POWER_SUPPLY_STATUS_DISCHARGING;
+ 	return 0;
+ }
+ 

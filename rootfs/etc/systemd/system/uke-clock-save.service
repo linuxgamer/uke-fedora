@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[Unit]
+Description=Save a synchronized UTC sample for the Uke PMIC counter
+ConditionFirmware=device-tree-compatible(xiaomi,uke)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I /usr/libexec/uke-clock.py save
+StateDirectory=uke-clock
+StateDirectoryMode=0700
+TimeoutStartSec=5s
+CapabilityBoundingSet=
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateDevices=yes
