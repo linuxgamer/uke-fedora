@@ -1,24 +1,24 @@
 # uke-fedora
 
-A Fedora 45 port for the Xiaomi Pad 7 and POCO Pad X1 (`uke`).
+A Fedora 45 port for the Xiaomi Pad 7 and POCO Pad X1 (`uke`). The Xiaomi Pad 7 is the tested model. POCO Pad X1 testing is pending.
 
-**Each preview image includes a touch-first mobile mode and a desktop mode.** Choose an image by the two sessions it offers.
+## Download and install
 
-| Preview image | Mobile mode | Desktop mode |
+1. Open **Release 2** and expand **Assets**. Download one of the two install ZIPs below. [Release 2 downloads](https://github.com/linuxgamer/uke-fedora/releases/tag/r2)
+2. Follow the install guide. You’ll need a computer, a USB data cable, and an unlocked tablet. **Installing replaces Android and erases the tablet’s apps and files.** [Install Fedora](docs/INSTALL.md)
+
+| Download | Mobile mode | Desktop mode |
 | --- | --- | --- |
-| `kde` | Plasma Mobile | Plasma |
-| `phosh-gnome` | Phosh | GNOME |
+| **KDE** (`uke-fedora-kde-…zip`) | Plasma Mobile | Plasma |
+| **Phosh + GNOME** (`uke-fedora-phosh-gnome-…zip`) | Phosh | GNOME |
 
-Use the same account in both modes. To switch, sign out and choose a session at the login screen. Installing Fedora erases Android and any existing Fedora files in `userdata`.
+Each ZIP contains the ready-to-install files. To switch between mobile and desktop modes, sign out and choose a session at the login screen. Both modes share your account and files.
 
-- [Install Fedora and prepare recovery](docs/INSTALL.md)
-- [Check profile and hardware status](docs/BRINGUP.md#preview-status)
-- [Test a desktop profile](docs/TESTING.md#desktop-support-checklist)
-- [Build your own image](docs/build/README.md)
-
-The previous port is available on the [legacy branch](https://github.com/linuxgamer/uke-fedora/tree/legacy) and in the [legacy releases](https://github.com/linuxgamer/uke-fedora/releases).
+Release 1 is the previous port. [Legacy branch](https://github.com/linuxgamer/uke-fedora/tree/legacy) · [Release 1](https://github.com/linuxgamer/uke-fedora/releases/tag/r1)
 
 ## Hardware support
+
+**Before switching.** Camera capture is unavailable. On the tested Wi-Fi network, the tablet could browse the web after waking, but other devices on the network sometimes lost access to it after idle. A low-power computer USB port can supply less power than the tablet uses, even when the battery icon shows charging.
 
 <details>
 <summary>Expand the hardware support table</summary>
@@ -27,7 +27,7 @@ The previous port is available on the [legacy branch](https://github.com/linuxga
 | --- | --- | --- | --- |
 | Boot, internal display and touchscreen | Works | Untested | Slot A boot and touch setup verified on Xiaomi Pad 7. |
 | Adreno graphics | Works | Untested | Freedreno FD735 verified in Plasma and Plasma Login. |
-| Wi-Fi | Partial | Untested | Internet access and one suspend reconnect passed. LAN peers can time out after idle. |
+| Wi-Fi | Partial | Untested | Browsing worked after suspend. Connections from other devices on the same Wi-Fi sometimes timed out after idle. |
 | Bluetooth | Works | Untested | Pairing was reported working. Accessory and reconnect coverage is limited. |
 | Speakers and microphone | Works | Untested | Internal speaker playback and microphone capture tested. |
 | Auto-rotation and magnetic cover | Works | Untested | Rotation and cover events tested. Cover blanking and reopening passed at Plasma Login. |
@@ -40,14 +40,21 @@ The previous port is available on the [legacy branch](https://github.com/linuxga
 
 </details>
 
-## What this rewrite adds
+## What’s new
 
-- One image per desktop family, with a touch-first session and a desktop session available at sign-in.
-- A single cached Python builder using stock Fedora packages directly and a small, checksum-pinned firmware bundle.
-- Uke Debug diagnostics from a PC over SSH, an authenticated USB console, or TWRP recovery.
-- Tablet-oriented Plasma defaults with 250% scaling, cover blanking, touch wake, and the Adreno render path at login.
+- One download per desktop family, with mobile and desktop modes.
+- KDE sign-in uses hardware graphics. Closing the cover turns off the login screen, and opening it brings it back.
+- Larger controls and automatic rotation in Plasma. Discover can browse Fedora apps.
+- Clock restoration on offline boots after the first network time sync.
 
-The rewrite builds on [uke-linux](https://github.com/MCC45TR/uke-linux) and Senemos. See [remaining feature parity](docs/PARITY.md) for upstream features we still need to qualify.
+<details>
+<summary>Building, testing, and contributing</summary>
+
+The rewrite builds on Senemos and uses a cached Python builder with stock Fedora packages and a checksum-pinned firmware bundle. Uke Debug supports SSH, an authenticated USB console, and TWRP recovery. [Upstream uke-linux](https://github.com/MCC45TR/uke-linux) · [Remaining feature parity](docs/PARITY.md)
+
+- [Build your own image](docs/build/README.md)
+- [Check release test status](docs/BRINGUP.md#preview-status)
+- [Test a desktop profile](docs/TESTING.md#desktop-support-checklist)
 
 Build from a fresh clone of `uke-fedora` with its pinned upstream submodules, documented host tools, and firmware and device inputs. The upstream `uke-linux` tree and the `legacy` branch are references for the rewrite.
 
@@ -69,7 +76,9 @@ Use [Uke Debug](docs/extra/README.md) to run tablet diagnostics, view live stats
 
 Build scripts and shareable inputs can be tracked under `build/`. Git ignores `build/cache/`, `build/work/`, `build/out/`, and `build/inputs/local/`. Use the last directory for local-only inputs and `private/` for unpublished reference material.
 
-The rootfs source is the [common Fedora package list](rootfs/packages.txt), [profile definitions](rootfs/profiles.toml), and device configuration under `rootfs/`. Run `git submodule update --init --recursive --depth 1` to populate the [Senemos](kernel/senemos), [hardware-support](rootfs/device-helpers/hardware-support), [HexagonRPC](rootfs/device-helpers/hexagonrpc), and [BuffyBox](rootfs/tty/buffybox) source trees. Bring-up images use the [pinned Senemos RPM](kernel/senemos-prebuilt.json). Builds run in WSL2 write their outputs inside the Linux checkout.
+The rootfs source is the common Fedora package list, profile definitions, and device configuration under `rootfs/`. The build guide covers submodules and the pinned Senemos RPM. Builds run in WSL2 write their outputs inside the Linux checkout. [Packages](rootfs/packages.txt) · [Profiles](rootfs/profiles.toml) · [Kernel pin](kernel/senemos-prebuilt.json)
+
+</details>
 
 ## License
 

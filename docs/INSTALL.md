@@ -1,30 +1,37 @@
-# Install the Fedora preview on a Uke tablet
+# Install Fedora on your tablet
 
-Both preview images include a mobile mode and a desktop mode. Check the [profile and hardware status](BRINGUP.md#preview-status) to see which sessions have been tested on your model.
+You’ll download one ZIP on your computer and use a USB data cable to install it. **Installation replaces Android and erases the tablet’s apps and files.** You need an unlocked bootloader and a way to restore Android before starting.
 
-| Image | Mobile mode | Desktop mode |
-| --- | --- | --- |
-| `kde` | Plasma Mobile | Plasma |
-| `phosh-gnome` | Phosh | GNOME |
+## 1. Back up and check your tablet
 
-After setup, sign out and use the login screen’s session menu to switch modes on the same installation. On the Phosh and GNOME image, select your account to reveal the gear menu, then choose **Phosh** or **GNOME** before signing in. Both modes use the same account and files.
+1. Check the model in Android under **Settings → About tablet**. The image targets Xiaomi Pad 7 and POCO Pad X1. Hardware testing so far is on Xiaomi Pad 7. Check the [hardware support table](../README.md#hardware-support), especially if you need the cameras.
+2. Copy your photos, files, and authenticator recovery codes to another device. Open a few files there to check your backup. Unlocking the bootloader can also erase data.
+3. Save Xiaomi’s factory Android download, called a **fastboot ROM**, for your exact model and region. It lets you reinstall Android. Keep a version at least as recent as the firmware on your tablet. Try entering your recovery environment before writing anything. If you already use TWRP on slot B, check that it opens. [Xiaomi ROM download guide](https://new.c.mi.com/global/post/101089) · [Xiaomi flashing instructions](https://new.c.mi.com/global/miuidownload/detail/guide/global/global/miuidownload/index)
 
-**Installing replaces everything in `userdata`, including Android apps, files, and any existing Fedora installation.** It also replaces the boot image in slot A. The commands below preserve slot B.
+The bootloader is the part that starts Android or Fedora. If it is locked, use Xiaomi’s official unlock process before continuing. On supported devices, pair your Xiaomi account in **Settings → Developer options → Mi Unlock status**, then use Xiaomi’s Mi Unlock tool on a Windows PC. Check Xiaomi’s current requirements for your model, account, and region. [Xiaomi’s bootloader guide](https://www.mi.com/global/support/faq/details/KA-07238/)
 
-## Before you start
+The build uses firmware from Global HyperOS `OS3.0.304.0.WOZMIXM` on Xiaomi Pad 7. Use the compatibility notes for the image you downloaded and the matching Android recovery ROM for your tablet.
 
-1. Back up your files, authenticator recovery codes, and anything else you need to a separate device. Check that you can open the backup.
-2. Save the full stock **fastboot ROM** for your exact tablet model and region. Keep a copy at least as recent as the firmware already on the tablet. Use the [Xiaomi ROM download guide](https://new.c.mi.com/global/post/101089) and [Xiaomi flashing instructions](https://new.c.mi.com/global/miuidownload/detail/guide/global/global/miuidownload/index).
-3. Confirm that the bootloader is unlocked and that you can enter your recovery environment. If you already have working TWRP on slot B, check it now. Check the eligibility for your model and region with [Xiaomi’s bootloader guidance](https://www.mi.com/global/support/faq/details/KA-07238/).
-4. Download and extract [Android Platform Tools](https://developer.android.com/tools/releases/platform-tools) on the computer you’ll use to flash. Use a data cable and keep the tablet charged. Open a terminal in the folder containing the image pair.
+## 2. Download Fedora and open a terminal
 
-In Windows PowerShell, if you extracted the tools under Downloads, run `$env:Path = "$HOME\Downloads\platform-tools;$env:Path"` in that terminal. On Linux, add the extracted tools directory to your shell’s `PATH`. Check that the terminal can find the tool with `fastboot --version`.
+1. Open **Release 2** and expand **Assets**. Choose the **KDE** ZIP for Plasma Mobile and Plasma, or **Phosh + GNOME** for Phosh and GNOME. [Release 2 downloads](https://github.com/linuxgamer/uke-fedora/releases/tag/r2)
+2. Extract the ZIP and open the folder containing `boot.img`, `userdata.img`, `manifest.json`, and `SHA256SUMS`. Keep the four files together.
+3. Download and extract **Android SDK Platform-Tools** for your computer. This is Google’s download containing `fastboot`, the tool that sends the install files to your tablet over USB. [Platform-Tools downloads](https://developer.android.com/tools/releases/platform-tools#downloads)
 
-The reviewed input firmware is Global HyperOS `OS3.0.304.0.WOZMIXM` on Xiaomi Pad 7. Follow the compatibility notes for the image you are testing. The POCO edition needs its own matching stock recovery ROM.
+**Windows 11.** In File Explorer, put the extracted `platform-tools` folder directly inside **Downloads**. In the Fedora image folder, right-click a blank area and choose **Open in Terminal**. Use the PowerShell tab and paste these two lines.
+
+```powershell
+$env:Path = "$HOME\Downloads\platform-tools;$env:Path"
+fastboot --version
+```
+
+**Linux.** Open a terminal in the Fedora image folder. Add the extracted `platform-tools` directory to your shell’s `PATH` and run `fastboot --version`.
+
+Keep this terminal open for the rest of the guide. If you see a version number, it can find Fastboot. If Windows says it can’t find `fastboot`, check that `fastboot.exe` is inside **Downloads → platform-tools**.
 
 ## Verify the image pair
 
-Keep `boot.img`, `userdata.img`, `manifest.json`, and `SHA256SUMS` together from the same build. On Linux, run `sha256sum -c SHA256SUMS`. On Windows, run these PowerShell commands from the image folder.
+This check catches damaged downloads and files mixed from different builds. On Linux, run `sha256sum -c SHA256SUMS`. On Windows, paste the whole block into the PowerShell terminal you just opened. It checks the files for you.
 
 ```powershell
 $manifest = Get-Content .\manifest.json -Raw | ConvertFrom-Json
@@ -38,9 +45,9 @@ foreach ($part in @('boot_a', 'userdata')) {
 
 Both files must pass. For local builds, follow the [build guide](build/README.md) to generate the pair.
 
-## Check the tablet in bootloader fastboot
+## 3. Check the tablet before installing
 
-Power off the tablet. Hold Volume Down and Power to open the fastboot screen. Connect it to the computer and run these commands one at a time.
+Charge the tablet and power it off. Hold **Volume Down** and **Power** until you see the fastboot screen. Connect it to the computer with a USB data cable and run the following checks one at a time.
 
 ```text
 fastboot devices
@@ -53,13 +60,21 @@ fastboot getvar partition-size:userdata
 fastboot getvar is-logical:userdata
 ```
 
-Continue when exactly one intended tablet is connected, the product is `uke`, the bootloader is unlocked, and both `is-userspace` and `is-logical:userdata` say `no`. Save the current slot for your recovery notes.
+| Check | What you should see |
+| --- | --- |
+| `devices` | One line for your tablet. If the list is empty, try a different USB data cable or port. |
+| `product` | `uke` |
+| `unlocked` | `yes` |
+| `is-userspace` and `is-logical:userdata` | `no` for both |
+| `current-slot` | Save the reported slot for your recovery notes. |
+| `partition-size:boot_a` | At least **96 MiB**, shown as `0x6000000` in Fastboot. |
+| `partition-size:userdata` | At least **4 GiB** for either Release 2 image, shown as `0x100000000`. |
 
-The minimum boot partition size is **96 MiB** (`0x6000000`). The minimum userdata size is **4 GiB** (`0x100000000`) for graphical builds or **2 GiB** (`0x80000000`) for TTY. Compare against `userdata_logical_bytes` in the manifest; the sparse file on disk is smaller. To convert a hex value in PowerShell, use `[Convert]::ToInt64('6000000', 16)`, replacing the digits with the value fastboot reported after `0x`.
+Stop if the checks fail. For other builds, the file `manifest.json` gives the required space in `userdata_logical_bytes`. On Windows, `[Convert]::ToInt64('6000000', 16)` converts Fastboot’s numbers to bytes. Replace the sample digits with the digits after `0x`.
 
-## Flash the image pair
+## 4. Install Fedora
 
-Run each command separately. Wait for it to succeed before continuing. If a flash fails, stop and save the error before switching slots or rebooting.
+**This step erases the tablet’s apps and files.** Run each command separately and wait for it to succeed. If a write fails, stop and save the error before changing the active slot or rebooting. The commands write the boot image to slot A and preserve slot B for recovery.
 
 ```text
 fastboot flash userdata userdata.img
@@ -68,7 +83,7 @@ fastboot set_active a
 fastboot reboot
 ```
 
-Create your own account and password using the [first-login instructions for your profile](rootfs/README.md). Connect to Wi-Fi once to set the correct date. A new installation saves a clock sample after its first successful network sync, then can restore time offline on later boots. Follow the [desktop support checklist](TESTING.md#desktop-support-checklist) and keep a USB keyboard handy as a fallback for the TTY test.
+Follow the setup screens to create an account. Connect to Wi-Fi once to set the clock. To switch between mobile and desktop, sign out and choose a session on the login screen. On Phosh + GNOME, select your account first to reveal the gear menu. Both sessions use the same account and files. [First-login details](rootfs/README.md)
 
 ## Recover from a failed boot
 
