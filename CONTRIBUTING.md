@@ -157,6 +157,8 @@ Code contributions retain their authors and verified `Co-authored-by` credit.
 Preserve contributor attribution, source references and license notices when
 squashing changes or editing commit messages. Maintenance workflows retain
 their normal service-account identity.
+Credit human contributors in the author and co-author fields. Record tool use
+in the pull request description when relevant.
 
 ## Hardware bridges in Uke Control
 
